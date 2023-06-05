@@ -19,6 +19,12 @@ import (
 
 const (
 	maxTitleLength = 100
+
+	cmdStart    = "start"
+	cmdLater    = "later"
+	cmdToday    = "today"
+	cmdComplete = "comp"
+	cmdPostpone = "post"
 )
 
 var now = func() time.Time {
@@ -95,9 +101,9 @@ func (b *Bot) Reply(u UpdInterface) error {
 func (b *Bot) handlers() map[string]func([]string) error {
 	return map[string]func([]string) error{
 		// Direct user commands
-		"start":      b.showStart,
-		"today":      b.showToday,
-		"later":      b.showLater,
+		cmdStart:     b.showStart,
+		cmdToday:     b.showToday,
+		cmdLater:     b.showLater,
 		"notes":      b.showNotes,
 		"docs":       b.showDocs,
 		"checklists": b.showChecklists,
@@ -121,8 +127,8 @@ func (b *Bot) handlers() map[string]func([]string) error {
 		"mv_to_chk":     b.moveToChecklist,
 		"mv_to_new_chk": b.moveToNewChecklist,
 		"sc":            b.schedule,
-		"complete":      b.complete,
-		"p":             b.postpone,
+		cmdComplete:     b.complete,
+		cmdPostpone:     b.postpone,
 	}
 }
 
@@ -157,15 +163,15 @@ func (b *Bot) cmd(u UpdInterface) (*tg.Cmd, error) {
 
 func (b *Bot) cmdsOnlyNotes() map[string]func([]string) error {
 	return map[string]func([]string) error{
-		"start": b.showStart,
+		cmdStart: b.showStart,
 	}
 }
 
 func (b *Bot) allowedTextCmds() []string {
 	return []string{
-		"start",
-		"today",
-		"later",
+		cmdStart,
+		cmdToday,
+		cmdLater,
 		"notes",
 		"postpone",
 		"docs",
@@ -364,7 +370,7 @@ func (b *Bot) showList(params []string) error {
 			cmd := tg.NewCmd("task", []string{dir, fs.Hash(file.Name)})
 			btn = tg.NewBtn(str.Emoji("👀", file.Title), cmd)
 		} else {
-			cmd := tg.NewCmd("complete", []string{dir, fs.Hash(file.Name)})
+			cmd := tg.NewCmd(cmdComplete, []string{dir, fs.Hash(file.Name)})
 			btn = tg.NewBtn(file.Title, cmd)
 		}
 
@@ -400,7 +406,7 @@ func (b *Bot) showNotes(params []string) error {
 
 	var kb tg.Keyboard
 	for _, dir := range dirs {
-		cmd := tg.NewCmd("complete", []string{dir.Name, fs.Hash(dir.Name)})
+		cmd := tg.NewCmd(cmdComplete, []string{dir.Name, fs.Hash(dir.Name)})
 		btn := tg.NewBtn(dir.Title, cmd)
 
 		kb.AddRow(btn)
@@ -455,7 +461,7 @@ func (b *Bot) showChecklists(params []string) error {
 
 		kb.AddRow(btn)
 	}
-	kb.AddRow(tg.NewBtn(b.tr("🏠 Today"), tg.NewCmd("today", nil)))
+	kb.AddRow(tg.NewBtn(b.tr("🏠 Today"), tg.NewCmd(cmdToday, nil)))
 
 	err = b.show(b.tr("☑️ Checklists"), &kb, tg.MarkupHTML)
 	if err != nil {
@@ -473,13 +479,13 @@ func (b *Bot) showPostpone(params []string) error {
 
 	var kb tg.Keyboard
 	for _, file := range files {
-		cmd := tg.NewCmd("p", []string{fs.Hash(file.Name)})
+		cmd := tg.NewCmd(cmdPostpone, []string{fs.Hash(file.Name)})
 		kb.AddRow(tg.NewBtn(file.Title, cmd))
 	}
 
 	kb.AddRow(tg.NewRow(
 		tg.NewBtn(b.tr("Rename"), tg.NewCmd("rename", []string{})),
-		tg.NewBtn(b.tr("OK"), tg.NewCmd("today", []string{})),
+		tg.NewBtn(b.tr("OK"), tg.NewCmd(cmdToday, []string{})),
 	))
 
 	err = b.show(b.tr("🦥 Select a task to postpone:"), &kb, tg.MarkupHTML)
@@ -661,7 +667,7 @@ func (b *Bot) showChecklist(params []string) error {
 
 	kb := tg.NewKeyboard(nil)
 	for _, item := range items {
-		kb.AddRow(tg.NewBtn(item.Title, tg.NewCmd("complete", []string{})))
+		kb.AddRow(tg.NewBtn(item.Title, tg.NewCmd(cmdComplete, []string{})))
 	}
 	kb.AddRow(tg.NewRow(tg.NewBtn("back", tg.NewCmd("docs", nil))))
 
@@ -1103,7 +1109,7 @@ func (b *Bot) toChecklistKeyboard(filenameHash string) (*tg.Keyboard, error) {
 }
 
 func (b *Bot) todayLabel() (string, error) {
-	tasks, err := b.fs.FilesAndDirs("today")
+	tasks, err := b.fs.FilesAndDirs(cmdToday)
 	if err != nil {
 		return "", fmt.Errorf("b.todayLabel: can't get today label: %w", err)
 	}
