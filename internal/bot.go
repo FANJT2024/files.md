@@ -23,25 +23,33 @@ var now = func() time.Time {
 }
 
 const (
-	maxTitleLength       = 100
-	cmdShowStart         = "start"
-	cmdShowLater         = "later"
-	cmdShowToday         = "today"
-	cmdShowNotes         = "notes"
-	cmdShowPostpone      = "postpone"
-	cmdShowDocs          = "docs"
-	cmdShowRename        = "rename"
-	cmdShowChecklists    = "checklists"
-	cmdShowStats         = "stats"
-	cmdComplete          = "comp"
-	cmdPostpone          = "post"
-	cmdRenameFile        = "rename_file"
-	cmdShowMultilineTask = "task"
-	cmdShowDoc           = "doc"
-	cmdShowChecklist     = "checklist"
-	cmdShowChooseDay     = "to_day"
-	cmdShowToNote        = "to_note"
-	cmdShowToDoc         = "to_doc"
+	maxTitleLength        = 100
+	cmdShowStart          = "start"
+	cmdShowLater          = "later"
+	cmdShowToday          = "today"
+	cmdShowNotes          = "notes"
+	cmdShowPostpone       = "postpone"
+	cmdShowDocs           = "docs"
+	cmdShowRename         = "rename"
+	cmdShowChecklists     = "checklists"
+	cmdShowStats          = "stats"
+	cmdComplete           = "comp"
+	cmdPostpone           = "post"
+	cmdRenameFile         = "rename_file"
+	cmdShowMultilineTask  = "task"
+	cmdShowDoc            = "doc"
+	cmdShowChecklist      = "checklist"
+	cmdShowChooseDay      = "to_day"
+	cmdShowToNote         = "to_note"
+	cmdShowToDoc          = "to_doc"
+	cmdShowToChecklist    = "to_checklist"
+	cmdMove               = "mv"
+	cmdMoveToNewDir       = "mv_to_new_dir"
+	cmdMoveToDoc          = "mv_to_doc"
+	cmdMoveToNewDoc       = "mv_to_new_doc"
+	cmdMoveToChecklist    = "mv_to_chk"
+	cmdMoveToNewChecklist = "mv_to_new_chk"
+	cmdSchedule           = "sc"
 )
 
 // TGInterface provides a simple interface to telegram API
@@ -124,23 +132,23 @@ func (b *Bot) handlers() map[string]func([]string) error {
 		cmdShowRename:     b.showRename,
 		cmdShowStats:      b.showStats,
 		// Button's commands (callbacks)
-		cmdRenameFile:        b.showRenameFile,
-		cmdShowMultilineTask: b.showTask,
-		cmdShowDoc:           b.showDoc,
-		cmdShowChecklist:     b.showChecklist,
-		cmdShowChooseDay:     b.showChooseDay,
-		cmdShowToNote:        b.showToNote,
-		cmdShowToDoc:         b.showToDoc,
-		"to_checklist":       b.showToChecklist,
-		"mv":                 b.move,
-		"mv_to_new_dir":      b.moveToNewDir,
-		"mv_to_doc":          b.moveToDoc,
-		"mv_to_new_doc":      b.moveToNewDoc,
-		"mv_to_chk":          b.moveToChecklist,
-		"mv_to_new_chk":      b.moveToNewChecklist,
-		"sc":                 b.schedule,
-		cmdComplete:          b.complete,
-		cmdPostpone:          b.postpone,
+		cmdRenameFile:         b.showRenameFile,
+		cmdShowMultilineTask:  b.showTask,
+		cmdShowDoc:            b.showDoc,
+		cmdShowChecklist:      b.showChecklist,
+		cmdShowChooseDay:      b.showChooseDay,
+		cmdShowToNote:         b.showToNote,
+		cmdShowToDoc:          b.showToDoc,
+		cmdShowToChecklist:    b.showToChecklist,
+		cmdMove:               b.move,
+		cmdMoveToNewDir:       b.moveToNewDir,
+		cmdMoveToDoc:          b.moveToDoc,
+		cmdMoveToNewDoc:       b.moveToNewDoc,
+		cmdMoveToChecklist:    b.moveToChecklist,
+		cmdMoveToNewChecklist: b.moveToNewChecklist,
+		cmdSchedule:           b.schedule,
+		cmdComplete:           b.complete,
+		cmdPostpone:           b.postpone,
 	}
 }
 
@@ -336,13 +344,13 @@ func (b *Bot) showMove(params []string) error {
 
 	kb := tg.NewKeyboard([]tg.Row{
 		tg.NewRow(
-			tg.NewBtn(b.tr("For tmrw"), tg.NewCmd("sc", []string{filenameHash, str.I64(sched.Tomorrow()), ""})),
-			tg.NewBtn(b.tr("For later"), tg.NewCmd("mv", []string{fs.DirToday, filenameHash, "later"})),
+			tg.NewBtn(b.tr("For tmrw"), tg.NewCmd(cmdSchedule, []string{filenameHash, str.I64(sched.Tomorrow()), ""})),
+			tg.NewBtn(b.tr("For later"), tg.NewCmd(cmdMove, []string{fs.DirToday, filenameHash, "later"})),
 			tg.NewBtn(b.tr("For a day"), tg.NewCmd(cmdShowChooseDay, []string{filenameHash})),
 		),
 		tg.NewRow(
 			tg.NewBtn(b.tr("To Note"), tg.NewCmd(cmdShowToNote, []string{filenameHash})),
-			tg.NewBtn(b.tr("To Checklist"), tg.NewCmd("to_checklist", []string{filenameHash})),
+			tg.NewBtn(b.tr("To Checklist"), tg.NewCmd(cmdShowToChecklist, []string{filenameHash})),
 			tg.NewBtn(b.tr("To Doc"), tg.NewCmd(cmdShowToDoc, []string{filenameHash})),
 		),
 		tg.NewRow(
@@ -587,7 +595,7 @@ func (b *Bot) showRenameFile(params []string) error {
 		tg.NewRow(tg.NewBtn("back", tg.NewCmd(dir, []string{dir}))),
 	})
 
-	err = b.db.SetInputExpectation(b.userID, tg.NewCmd("mv", []string{dir, filename, dir, "%s"}))
+	err = b.db.SetInputExpectation(b.userID, tg.NewCmd(cmdMove, []string{dir, filename, dir, "%s"}))
 	if err != nil {
 		return fmt.Errorf("b.showRenameFile: can't set input expectation: %w", err)
 	}
@@ -961,7 +969,7 @@ func (b *Bot) showChooseDay(params []string) error {
 
 func (b *Bot) forADayKeyboard(filenameHash string) (*tg.Keyboard, error) {
 	newBtn := func(name, cron string) tg.Btn {
-		return tg.NewBtn(name, tg.NewCmd("sc", []string{filenameHash, str.I64(sched.Next(cron)), ""}))
+		return tg.NewBtn(name, tg.NewCmd(cmdSchedule, []string{filenameHash, str.I64(sched.Next(cron)), ""}))
 	}
 
 	kb := tg.NewKeyboard([]tg.Row{
@@ -1009,7 +1017,7 @@ func (b *Bot) showToNote(params []string) error {
 		return fmt.Errorf("b.showToNote: can't get keyboard: %w", err)
 	}
 
-	err = b.db.SetInputExpectation(b.userID, tg.NewCmd("mv_to_new_dir", []string{filenameHash, "%s"}))
+	err = b.db.SetInputExpectation(b.userID, tg.NewCmd(cmdMoveToNewDir, []string{filenameHash, "%s"}))
 	if err != nil {
 		return fmt.Errorf("b.showToNote: %w", err)
 	}
@@ -1030,7 +1038,7 @@ func (b *Bot) showToDoc(params []string) error {
 		return fmt.Errorf("b.toNote: can't get keyboard: %w", err)
 	}
 
-	err = b.db.SetInputExpectation(b.userID, tg.NewCmd("mv_to_new_doc", []string{filenameHash, "%s"}))
+	err = b.db.SetInputExpectation(b.userID, tg.NewCmd(cmdMoveToNewDoc, []string{filenameHash, "%s"}))
 	if err != nil {
 		return fmt.Errorf("b.showToDoc: can't set input expectation: %w", err)
 	}
@@ -1051,7 +1059,7 @@ func (b *Bot) showToChecklist(params []string) error {
 		return fmt.Errorf("b.showToChecklist: can't get keyboard: %w", err)
 	}
 
-	err = b.db.SetInputExpectation(b.userID, tg.NewCmd("mv_to_new_chk", []string{filenameHash, "%s"}))
+	err = b.db.SetInputExpectation(b.userID, tg.NewCmd(cmdMoveToNewChecklist, []string{filenameHash, "%s"}))
 	if err != nil {
 		return fmt.Errorf("b.showToChecklist: %w", err)
 	}
@@ -1075,7 +1083,7 @@ func (b *Bot) toDocKeyboard(filenameHash string) (*tg.Keyboard, error) {
 	}
 
 	newBtn := func(title, docHash string) tg.Btn {
-		return tg.NewBtn(title, tg.NewCmd("mv_to_doc", []string{filenameHash, docHash}))
+		return tg.NewBtn(title, tg.NewCmd(cmdMoveToDoc, []string{filenameHash, docHash}))
 	}
 	kb := tg.NewKeyboard(nil)
 	for _, file := range files {
@@ -1087,7 +1095,7 @@ func (b *Bot) toDocKeyboard(filenameHash string) (*tg.Keyboard, error) {
 
 func (b *Bot) toNoteKeyboard(filenameHash string) (*tg.Keyboard, error) {
 	newBtn := func(dir string) tg.Btn {
-		return tg.NewBtn(dir, tg.NewCmd("mv", []string{fs.DirInbox, filenameHash, dir}))
+		return tg.NewBtn(dir, tg.NewCmd(cmdMove, []string{fs.DirInbox, filenameHash, dir}))
 	}
 
 	dirs, err := b.fs.FilesAndDirs("")
@@ -1106,7 +1114,7 @@ func (b *Bot) toNoteKeyboard(filenameHash string) (*tg.Keyboard, error) {
 
 func (b *Bot) toChecklistKeyboard(filenameHash string) (*tg.Keyboard, error) {
 	newBtn := func(dir, title string) tg.Btn {
-		return tg.NewBtn(title, tg.NewCmd("mv_to_chk", []string{filenameHash, dir}))
+		return tg.NewBtn(title, tg.NewCmd(cmdMoveToChecklist, []string{filenameHash, dir}))
 	}
 
 	dirs, err := b.fs.FilesAndDirs("")
