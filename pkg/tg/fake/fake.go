@@ -1,8 +1,6 @@
 package fake
 
 import (
-	"errors"
-
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 
 	"zakirullin/dumpbot/pkg/tg"
@@ -42,16 +40,16 @@ func (m *Upd) MsgEntities() []tgbotapi.MessageEntity {
 	return nil
 }
 
-func (m *Upd) CallbackQueryID() (string, error) {
-	return "", nil
+func (m *Upd) CallbackQueryID() (string, bool) {
+	return "", true
 }
 
-func (m *Upd) InlineQueryID() (string, error) {
-	return "", errors.New("no key")
+func (m *Upd) InlineQueryID() (string, bool) {
+	return "", false
 }
 
-func (m *Upd) InlineQuery() (string, error) {
-	return "", nil
+func (m *Upd) InlineQuery() (string, bool) {
+	return "", false
 }
 
 func (m *Upd) IsForwarded() bool {

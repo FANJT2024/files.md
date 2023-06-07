@@ -42,9 +42,9 @@ type UpdInterface interface {
 	Cmd() *tg.Cmd
 	MsgEntities() []tgbotapi.MessageEntity
 	IsForwarded() bool
-	CallbackQueryID() (string, error)
-	InlineQueryID() (string, error)
-	InlineQuery() (string, error)
+	CallbackQueryID() (string, bool)
+	InlineQueryID() (string, bool)
+	InlineQuery() (string, bool)
 }
 
 // Bot provides commands that can be invoked by a user so to query
@@ -63,12 +63,8 @@ func NewBot(userID int64, tg TGInterface, fs *fs.FS, db *db.DB) *Bot {
 
 // Reply to incoming text message or command (inline queries aren't supported yet)
 func (b *Bot) Reply(u UpdInterface) error {
-	if _, err := u.InlineQueryID(); err == nil {
+	if _, ok := u.InlineQueryID(); ok {
 		return b.replyToInlineQuery(u)
-	}
-
-	if _, err := u.CallbackQueryID(); err != nil {
-		b.delAllKeyboards()
 	}
 
 	cmd, err := b.extractCmd(u)
@@ -76,6 +72,10 @@ func (b *Bot) Reply(u UpdInterface) error {
 		return fmt.Errorf("b.Reply: can't extract cmd: %w", err)
 	}
 	if cmd != nil {
+		if _, ok := u.CallbackQueryID(); !ok {
+			b.delAllKeyboards()
+		}
+
 		handler, ok := b.handlers()[cmd.Name]
 		if !ok {
 			return errors.New(fmt.Sprintf("b.Reply: no such command %s", cmd.Name))
@@ -86,7 +86,7 @@ func (b *Bot) Reply(u UpdInterface) error {
 			return err
 		}
 
-		if callbackQueryID, err := u.CallbackQueryID(); err != nil {
+		if callbackQueryID, ok := u.CallbackQueryID(); ok {
 			// We can tolerate an error here, that won't affect UX
 			_ = b.tg.AnswerCallbackQuery(callbackQueryID, "")
 		}
@@ -246,18 +246,14 @@ func (b *Bot) saveForward(u UpdInterface) error {
 }
 
 func (b *Bot) replyToInlineQuery(u UpdInterface) error {
-	query, err := u.InlineQuery()
-	if err != nil {
-		return fmt.Errorf("b.replyToIlineQuery: %w", err)
-	}
+	query, _ := u.InlineQuery()
 	query = strings.TrimSpace(query)
-
-	// Check for directory traversal attack
-	if strings.Contains(query, "/") {
+	if len(query) == 0 {
 		return nil
 	}
 
-	if len(query) == 0 {
+	// Check for directory traversal attack
+	if strings.Contains(query, "/") {
 		return nil
 	}
 
