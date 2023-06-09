@@ -1230,7 +1230,7 @@ func (b *Bot) togglePomodoro(_ []string) error {
 	if hasPomodoroInToday || hasPomodoroInTrash {
 		err := b.send(fmt.Sprintf("Pomodoro is stopped: no new \"%v\" tasks will appear automatially", fs.FilePomodoro))
 		if err != nil {
-			return fmt.Errorf("b.togglePomodoro: failed to show pomodoro hint message %w", err)
+			return fmt.Errorf("toggle pomodoro: failed to show pomodoro hint message %w", err)
 		}
 		return b.showToday(nil)
 	}
@@ -1239,7 +1239,7 @@ func (b *Bot) togglePomodoro(_ []string) error {
 	err = b.fs.Touch(fs.DirToday, fs.FilePomodoro)
 	if err != nil {
 		if err != nil {
-			return fmt.Errorf("b.togglePomodoro: failed to show pomodoro hint message %w", err)
+			return fmt.Errorf("toggle pomodoro: failed to show pomodoro hint message %w", err)
 		}
 	}
 
@@ -1247,7 +1247,7 @@ func (b *Bot) togglePomodoro(_ []string) error {
 		" It will get back in %v to let you know that you worked enough and deserved a break. To stop it just use /%v comand again",
 		fs.FilePomodoro, fs.DirToday, b.pomodoroDuration(), cmdPomodoro))
 	if err != nil {
-		return fmt.Errorf("b.togglePomodoro: failed to show pomodoro hint message %w", err)
+		return fmt.Errorf("toggle pomodoro: failed to show pomodoro hint message %w", err)
 	}
 
 	return b.showToday(nil)

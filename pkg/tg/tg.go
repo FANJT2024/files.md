@@ -34,7 +34,7 @@ func (tg *TG) Send(userID int64, text string, kb *Keyboard, markup string) (int,
 	resp, err := tg.api.Send(msg)
 	if err != nil {
 		js, _ := json.Marshal(msg)
-		return 0, fmt.Errorf("tg.Send: can't send json %s: %w", js, err)
+		return 0, fmt.Errorf("tg send: can't send json %s: %w", js, err)
 	}
 
 	return resp.MessageID, nil
@@ -47,7 +47,7 @@ func (tg *TG) Edit(userID int64, msgID int, text string, kb *Keyboard, markup st
 
 	_, err := tg.api.Send(msg)
 	if err != nil {
-		return fmt.Errorf("tg.Edit: %w", err)
+		return fmt.Errorf("tg edit: %w", err)
 	}
 
 	return nil
@@ -58,7 +58,7 @@ func (tg *TG) Del(userID int64, msgID int) error {
 
 	_, err := tg.api.Send(del)
 	if err != nil {
-		return fmt.Errorf("tg.Del: %w", err)
+		return fmt.Errorf("tg del: %w", err)
 	}
 
 	return nil
