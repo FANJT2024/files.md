@@ -45,7 +45,6 @@ const (
 // backends, like an in-memory backend, which we use for testing.
 // Check out types implementing afero.Fs for all available backends.
 type FS struct {
-	userID   int64
 	rootPath string
 	backend  afero.Fs
 }
@@ -62,7 +61,8 @@ type File struct {
 }
 
 // TODO create Unsorted
-func NewFS(userID int64, backend afero.Fs) (*FS, error) {
+// Root path
+func NewFS(rootPath string, backend afero.Fs) (*FS, error) {
 	rootDir := "./cmd/testdata"
 	for _, dir := range []string{DirArchive, DirToday, DirLater} {
 		path := fmt.Sprintf("%s/%s", rootDir, dir)
@@ -79,7 +79,7 @@ func NewFS(userID int64, backend afero.Fs) (*FS, error) {
 		}
 	}
 
-	return &FS{userID, rootDir, backend}, nil
+	return &FS{rootDir, backend}, nil
 }
 
 func (fs FS) Exists(dir, filename string) (bool, error) {
@@ -522,6 +522,23 @@ func OnlyDirs(entries []File) []File {
 	return dirs
 }
 
+// OnlyUserDirs returns only directories that look like user IDs
+func OnlyUserDirs(entries []File) []File {
+	var dirs []File
+	for _, file := range entries {
+		if !file.IsDir {
+			continue
+		}
+		if _, err := strconv.Atoi(file.Name); err != nil {
+			continue
+		}
+
+		dirs = append(dirs, file)
+	}
+
+	return dirs
+}
+
 func OnlyFilenames(entries []File) []string {
 	var filenames []string
 	for _, entry := range entries {
@@ -537,6 +554,10 @@ func SortByCtime(entries []File) []File {
 	})
 
 	return entries
+}
+
+func UserPath(storagePath string, userID int64) string {
+	return fmt.Sprintf("%s/%d", storagePath, userID)
 }
 
 // Touch updates an existing file's access and modification times.

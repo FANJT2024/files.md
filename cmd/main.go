@@ -32,6 +32,10 @@ func main() {
 	if err != nil {
 		panic(fmt.Sprintf("Error loading .env file: %s\n", err))
 	}
+	config, err := internal.LoadConfig()
+	if err != nil {
+		panic(fmt.Sprintf("Error loading config: %s\n", err))
+	}
 
 	err = i18n.LoadLangFile("i18n/ru.json")
 	if err != nil {
@@ -42,7 +46,7 @@ func main() {
 		panic(fmt.Sprintf("Error loading emoji: %s\n", err))
 	}
 
-	api, err := tgbotapi.NewBotAPI(os.Getenv("BOT_API_TOKEN"))
+	api, err := tgbotapi.NewBotAPI(config.BotAPIToken)
 	if err != nil {
 		panic(fmt.Sprintf("Can't create TG api: %s\n", err))
 	}
@@ -78,9 +82,9 @@ func main() {
 	}(redis, telegram)
 
 	// Service
-	config := tgbotapi.NewUpdate(0)
-	config.Timeout = 60
-	updates := api.GetUpdatesChan(config)
+	tgConfig := tgbotapi.NewUpdate(0)
+	tgConfig.Timeout = 60
+	updates := api.GetUpdatesChan(tgConfig)
 	for upd := range updates {
 		go func(upd tgbotapi.Update) {
 			defer func() {
@@ -96,7 +100,8 @@ func main() {
 
 			u := tg.NewUpd(upd)
 			userID := u.UserID()
-			fsys, err := fs.NewFS(userID, afero.NewOsFs())
+			userPath := fs.UserPath(config.StoragePath, userID)
+			fsys, err := fs.NewFS(userPath, afero.NewOsFs())
 			if err != nil {
 				slog.Error("Bot error: can't create FS", "err", err)
 				return

@@ -14,12 +14,13 @@ import (
 	"zakirullin/dumpbot/i18n"
 )
 
-var DefaultConfig = Config{
+var DefaultConfig = Config{ // TODO apply default config if some fields are missing
 	raw: raw{
 		Language:               "en",
 		HomeCmd:                "today",
 		MoveToCommands:         []string{"tomorrow", "later", "day", "note", "checklist", "doc", "recent", "journal"},
 		PomodoroDurationMinute: 25,
+		Schedules:              []Schedule{},
 	},
 }
 
@@ -41,19 +42,23 @@ type Config struct {
 	raw
 }
 
+type Schedule struct {
+	Filename   string
+	ScheduleAt int64
+	Cron       string
+	Cmd        string // For future use
+}
+
 type raw struct {
-	Language               string   `json:"language"`
-	HomeCmd                string   `json:"homeCmd"`
-	MoveToCommands         []string `json:"moveToCommands"`
-	PomodoroDurationMinute float64  `json:"pomodoroDurationMinute"`
+	Language               string     `json:"language"`
+	HomeCmd                string     `json:"homeCmd"`
+	MoveToCommands         []string   `json:"moveToCommands"`
+	PomodoroDurationMinute float64    `json:"pomodoroDurationMinute"`
+	Schedules              []Schedule `json:"schedules"`
 }
 
 func NewConfig() *Config {
 	return &Config{}
-}
-
-func (c *Config) UnmarshalJSON(b []byte) error {
-	return json.Unmarshal(b, &c.raw)
 }
 
 // TODO add file creation
@@ -77,8 +82,18 @@ func (c *Config) LoadOrCreate(path string) error {
 	return nil
 }
 
-func (c *Config) Save(path string) {
+func (c *Config) Save(path string) error { // TODO add lazy saving, save only if config was changed
+	bytes, err := json.MarshalIndent(c, "", "    ")
+	if err != nil {
+		return fmt.Errorf("config save: can't marshal config: %w", err)
+	}
 
+	err = os.WriteFile(path, bytes, 0644)
+	if err != nil {
+		return fmt.Errorf("config save: can't write config file: %w", err)
+	}
+
+	return nil
 }
 
 func (c *Config) MoveToCmds() []string {
@@ -121,4 +136,23 @@ func (c *Config) PomodoroDuration() time.Duration {
 		minutes = DefaultConfig.raw.PomodoroDurationMinute
 	}
 	return time.Duration(minutes * float64(time.Minute))
+}
+
+func (c *Config) Schedules() []Schedule {
+	return c.raw.Schedules
+}
+
+// AddToSchedule task from _archive_ or later at scheduleAt (Unix timestamp, sec). Tasks appear in today folder.
+// If cron is provided this task will be repeated. Other wise, it will be executed once.
+func (c *Config) AddToSchedule(filename string, scheduleAt int64, cron string) {
+	c.raw.Schedules = append(c.raw.Schedules, Schedule{filename, scheduleAt, cron, ""})
+}
+
+func (c *Config) DelFromSchedule(filename string) {
+	var newSchedules []Schedule
+	for _, schedule := range c.raw.Schedules {
+		if schedule.Filename != filename {
+			newSchedules = append(newSchedules, schedule)
+		}
+	}
 }

@@ -944,10 +944,7 @@ func (b *Bot) complete(params []string) error {
 	}
 
 	if dir == fs.DirToday && filename == fs.FilePomodoro {
-		err = b.db.AddToSchedule(b.userID, filename, time.Now().Unix()+int64(b.conf.PomodoroDuration().Seconds()), "")
-		if err != nil {
-			return fmt.Errorf("complete: can't add pomodoro task to schedule: %w", err)
-		}
+		b.conf.AddToSchedule(filename, time.Now().Unix()+int64(b.conf.PomodoroDuration().Seconds()), "")
 	}
 
 	err = b.showList(nil)
@@ -973,10 +970,7 @@ func (b *Bot) schedule(params []string) error {
 		return fmt.Errorf("schedule: can't unhash filename %s in list: %s", filenameHash, err)
 	}
 
-	err = b.db.AddToSchedule(b.userID, filename, scheduleTime, cron)
-	if err != nil {
-		return fmt.Errorf("schedule: can't save schedule for %s: %w", filename, err)
-	}
+	b.conf.AddToSchedule(filename, scheduleTime, cron)
 
 	err = b.fs.Rename(fs.DirToday, filename, fs.DirLater, filename)
 	if err != nil {
