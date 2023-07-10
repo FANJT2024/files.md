@@ -432,6 +432,7 @@ func (b *Bot) showList(params []string) error {
 		kb.AddRow(btn)
 	}
 
+	kb.AddRow(tg.NewRow(tg.NewBtn(i18n.EmDocs, tg.NewCmd(cmdShowDocs, []string{}))))
 	kb.AddRow(tg.NewBtn(oppositeLabel, tg.NewCmd(oppositeDir, []string{oppositeDir})))
 
 	var msg string

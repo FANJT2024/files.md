@@ -27,4 +27,7 @@ const (
 	StrSunday    = "7️⃣😴 Sn"
 	StrWeekdays  = "🏭 Weekdays"
 	StrEveryday  = "☀️ Every day"
+
+	// Emoji
+	EmDocs = "📝"
 )
