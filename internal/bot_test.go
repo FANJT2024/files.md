@@ -514,7 +514,7 @@ func TestBot_todayLabelIcons(t *testing.T) {
 	r.NotContains(label, "🍅")
 }
 
-func TestSettingsMainPanel(t *testing.T) {
+func makeBot(t *testing.T, conf *userconfig.Config) (*Bot, *fake.TG, *require.Assertions) {
 	r := require.New(t)
 	fsys, err := fs.NewFS("/", afero.NewMemMapFs())
 	r.NoError(err)
@@ -524,8 +524,12 @@ func TestSettingsMainPanel(t *testing.T) {
 
 	tgram := fake.NewTG()
 
-	bot := NewBot(-1, tgram, fsys, db.NewDB(redis), &userconfig.DefaultConfig)
-	err = bot.Reply(fake.NewUpdCmdFake(-1, tg.NewCmd("settings", nil)))
+	bot := NewBot(-1, tgram, fsys, db.NewDB(redis), conf)
+	return bot, tgram, r
+}
+func TestSettingsMainPanel(t *testing.T) {
+	var bot, tgram, r = makeBot(t, &userconfig.DefaultConfig)
+	var err = bot.Reply(fake.NewUpdCmdFake(-1, tg.NewCmd("settings", nil)))
 	r.NoError(err)
 	r.Equal("Settings: ", tgram.SentText)
 	r.Equal(tg.NewKeyboard([]tg.Row{
@@ -533,4 +537,79 @@ func TestSettingsMainPanel(t *testing.T) {
 		tg.NewBtn("🏠 Today", tg.NewCmd("today", nil))},
 	), tgram.SentKeyboard)
 
+}
+
+// Quick Panel Data-driven tests
+
+var btn_documents_del = tg.NewBtn("📝 Documents ➖", tg.NewCmd("panel_del", []string{"doc"}))
+var btn_checklists_del = tg.NewBtn("☑️ Checklists ➖", tg.NewCmd("panel_del", []string{"checklists"}))
+var btn_postpone_del = tg.NewBtn("🦥 Postpone ➖", tg.NewCmd("panel_del", []string{"postpone"}))
+
+var delimiter = tg.NewBtn("---", tg.NewCmd("", nil))
+var backBtn = tg.NewBtn("⬅️ Back", tg.NewCmd("settings", nil))
+
+var btn_documents_add = tg.NewBtn("📝 Documents ➕", tg.NewCmd("panel_add", []string{"doc"}))
+var btn_checklists_add = tg.NewBtn("☑️ Checklists ➕", tg.NewCmd("panel_add", []string{"checklists"}))
+var btn_postpone_add = tg.NewBtn("🦥 Postpone ➕", tg.NewCmd("panel_add", []string{"postpone"}))
+
+func TestConfigureQP_Empty_Default(t *testing.T) {
+	RunQuickPanelTc(PrefTableTestCase{
+		[]string{""},
+		fake.NewUpdCmdFake(-1, tg.NewCmd("configure_panel", nil)),
+		[]tg.Row{
+			delimiter,
+			btn_documents_add,
+			btn_checklists_add,
+			btn_postpone_add,
+			backBtn,
+		},
+	}, t)
+}
+
+func TestConfigureQP_Empty_AddDoc(t *testing.T) {
+	RunQuickPanelTc(PrefTableTestCase{
+		[]string{""},
+		fake.NewUpdCmdFake(-1, tg.NewCmd("panel_add", []string{"doc"})),
+		[]tg.Row{
+			btn_documents_del,
+			delimiter,
+			btn_checklists_add,
+			btn_postpone_add,
+			backBtn,
+		},
+	}, t)
+}
+
+func TestConfigureQP_Doc_AddCheckList(t *testing.T) {
+	RunQuickPanelTc(PrefTableTestCase{
+		[]string{"doc"},
+		fake.NewUpdCmdFake(-1, tg.NewCmd("panel_add", []string{"checklists"})),
+		[]tg.Row{
+			btn_documents_del,
+			btn_checklists_del,
+			delimiter,
+			btn_postpone_add,
+			backBtn,
+		},
+	}, t)
+}
+
+func RunQuickPanelTc(tc PrefTableTestCase, t *testing.T) {
+	var cnf = &userconfig.DefaultConfig
+	for _, opt := range tc.initial_opts {
+		cnf.AddPanelButton(opt)
+	}
+
+	var bot, tgram, r = makeBot(t, cnf)
+
+	var err = bot.Reply(tc.cmd_to_execute)
+	r.NoError(err)
+	r.Equal("Configure quick panel (➕ = add to panel, ➖ = to remove): ", tgram.SentText)
+	r.Equal(tg.NewKeyboard(tc.buttons), tgram.SentKeyboard)
+}
+
+type PrefTableTestCase struct {
+	initial_opts   []string
+	cmd_to_execute *fake.Upd
+	buttons        []tg.Row
 }
