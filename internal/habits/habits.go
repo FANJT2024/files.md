@@ -3,6 +3,7 @@ package habits
 import (
 	"errors"
 	"fmt"
+	"slices"
 	"strings"
 	"time"
 
@@ -24,7 +25,7 @@ const (
 )
 
 var (
-	moodEmojis            = []string{"", "🤕", "😔", "😐", "🙂", "😊"}
+	moodEmojis            = []string{"⚪️", "🤕", "😔", "😐", "🙂", "😊"}
 	errMalformedMonthLine = errors.New("malformed month line")
 	now                   = time.Now
 )
@@ -69,40 +70,47 @@ func Habits(userFS *fs.FS, year int) (map[string]Year, error) {
 		if len(daysAndHabit) < 2 {
 			continue
 		}
+		days, habit := daysAndHabit[0], daysAndHabit[1]
 
-		// Habits line
-		habitsMarker := fmt.Sprintf("%s%s%s", habitSkipped, habitCompletedAtWeekend, habitCompleted)
-		if strings.ContainsAny(line, habitsMarker) {
-			// At this point we are on habits line, which is
-			// [⚪️🟢... Habit name] i.e. completion status
-			// for every day of the above found month
+		firstDayOfMonth := time.Date(year, month, 1, 0, 0, 0, 0, time.UTC)
+		dayOfTheYear := firstDayOfMonth.YearDay()
 
-			habitName := strings.TrimSpace(daysAndHabit[1])
-			if _, ok := habits[habitName]; !ok {
-				habits[habitName] = make(Year)
-			}
-
-			firstDayOfMonth := time.Date(year, month, 1, 0, 0, 0, 0, time.UTC)
-			dayOfTheYear := firstDayOfMonth.YearDay()
-
-			days := daysAndHabit[0]
-			// See README.md ADRs
+		// Moods line
+		moodsMarker := mood
+		if strings.Contains(habit, moodsMarker) {
 			gr := uniseg.NewGraphemes(days)
 			dayOffset := 0
 			for gr.Next() {
-				habits[habitName][dayOfTheYear+dayOffset] = 0
-				if gr.Str() != habitSkipped {
-					habits[habitName][dayOfTheYear+dayOffset] = 1
-				}
+				power := slices.Index(moodEmojis, gr.Str())
+				habits[mood][dayOfTheYear+dayOffset] = power
 				dayOfTheYear++
 			}
-			continue;
+			continue
 		}
 
-		// Moods line
-		moodsMarker := strings.Join(moodEmojis, "")
-		if strings.ContainsAny(line, moodsMarker) {
+		habitsMarker := fmt.Sprintf("%s%s%s", habitSkipped, habitCompletedAtWeekend, habitCompleted)
+		if !strings.ContainsAny(days, habitsMarker) {
+			continue
+		}
 
+		// At this point we are on habits line, which is
+		// [⚪️🟢... Habit name] i.e. completion status
+		// for every day of the above found month
+		habitName := strings.TrimSpace(habit)
+		if _, ok := habits[habitName]; !ok {
+			habits[habitName] = make(Year)
+		}
+
+
+		// See README.md ADRs
+		gr := uniseg.NewGraphemes(days)
+		dayOffset := 0
+		for gr.Next() {
+			habits[habitName][dayOfTheYear+dayOffset] = 0
+			if gr.Str() != habitSkipped {
+				habits[habitName][dayOfTheYear+dayOffset] = 1
+			}
+			dayOfTheYear++
 		}
 	}
 
