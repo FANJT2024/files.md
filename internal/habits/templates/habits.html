@@ -105,17 +105,11 @@
         {{ range $habit, $year := . }}
             <tr>
                 {{ range $day, $status := .}}
-                    <td data-habit="<?= UrlHelper::base64Encode($habit) ?>" class="day {{ if eq $status 1 }} checked {{ end }}"><div class="text">{{$habit}}</div></td>
+                    <td data-day="{{$day}}" class="day {{ if eq $status 1 }}checked{{ end }}"><div class="text">{{$habit}}</div></td>
                 {{ end }}
             </tr>
         {{ end }}
     <tr>
-        <td class="emoji today_emoji" data-power="1">🤕</td>
-        <td class="emoji today_emoji" data-power="1">🤕</td>
-        <td class="emoji today_emoji" data-power="1">🤕</td>
-        <td class="emoji today_emoji" data-power="1">🤕</td>
-        <td class="emoji today_emoji" data-power="1">🤕</td>
-        <td class="emoji today_emoji" data-power="1">🤕</td>
         <td class="emoji today_emoji" data-power="1">🤕</td>
     </tr>
     </tbody>

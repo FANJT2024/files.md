@@ -11,16 +11,17 @@ import (
 //go:embed templates/habits.html
 var html string
 
-func Render(botFS *fs.FS) ([]byte, error) {
+func Render(userFS *fs.FS) ([]byte, error) {
 	tmpl, err := template.New("habits").Parse(html)
 	if err != nil {
 		return nil, fmt.Errorf("can't parse habits template: %w", err)
 	}
 
-	habits, err := LastWeekHabits(botFS)
+	habits, err := LastWeekHabits(userFS)
 	if err != nil {
-			return nil, fmt.Errorf("can't render habit: %w", err)
+		return nil, fmt.Errorf("can't render habit: %w", err)
 	}
+
 	var out bytes.Buffer
 	err = tmpl.Execute(&out, habits)
 	if err != nil {

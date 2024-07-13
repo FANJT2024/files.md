@@ -11,8 +11,8 @@ import (
 
 var now = time.Now
 
-func AddRecord(botFs *fs.FS, noteFilename string) error {
-	record, err := botFs.Read(fs.DirToday, noteFilename)
+func AddRecord(userFS *fs.FS, noteFilename string) error {
+	record, err := userFS.Read(fs.DirToday, noteFilename)
 	if err != nil {
 		return fmt.Errorf("failed to move to journal: can't get note content: %w", err)
 	}
@@ -23,14 +23,14 @@ func AddRecord(botFs *fs.FS, noteFilename string) error {
 	}
 
 	journalFilename := now().Format("2006 January.md")
-	exists, err := botFs.Exists(fs.DirJournal, journalFilename)
+	exists, err := userFS.Exists(fs.DirJournal, journalFilename)
 	if err != nil {
 		return err
 	}
 
 	var md string
 	if exists {
-		md, err = botFs.Read(fs.DirJournal, journalFilename)
+		md, err = userFS.Read(fs.DirJournal, journalFilename)
 		if err != nil {
 			return err
 		}
@@ -49,5 +49,5 @@ func AddRecord(botFs *fs.FS, noteFilename string) error {
 	record = fmt.Sprintf("%s %s\n", now().Format("`15:04`"), record)
 	md += record
 
-	return botFs.Write(fs.DirJournal, journalFilename, md)
+	return userFS.Write(fs.DirJournal, journalFilename, md)
 }

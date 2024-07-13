@@ -58,15 +58,15 @@ func TestAddRecord(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			botFS, err := fs.NewFS("/", afero.NewMemMapFs())
+			userFS, err := fs.NewFS("/", afero.NewMemMapFs())
 			r.NoError(err)
-			botFS.Write(fs.DirJournal, "2023 May.md", test.md)
-			botFS.Write(fs.DirToday, "record.md", test.record)
+			userFS.Write(fs.DirJournal, "2023 May.md", test.md)
+			userFS.Write(fs.DirToday, "record.md", test.record)
 
-			err = AddRecord(botFS, "record.md")
+			err = AddRecord(userFS, "record.md")
 			r.NoError(err)
 
-			md, err := botFS.Read(fs.DirJournal, "2023 May.md")
+			md, err := userFS.Read(fs.DirJournal, "2023 May.md")
 			r.NoError(err)
 			r.Equal(test.want, md)
 		})

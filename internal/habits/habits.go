@@ -19,16 +19,19 @@ const (
 	habitSkipped            = "⚪️"
 	habitCompleted          = "🟢"
 	habitCompletedAtWeekend = "🟡"
+
+	mood = "Mood"
 )
 
 var (
+	moodEmojis            = []string{"", "🤕", "😔", "😐", "🙂", "😊"}
 	errMalformedMonthLine = errors.New("malformed month line")
 	now                   = time.Now
 )
 
-func Habits(botFS *fs.FS, year int) (map[string]Year, error) {
+func Habits(userFS *fs.FS, year int) (map[string]Year, error) {
 	filename := "%d Habits.md"
-	habitsStr, err := botFS.Read(fs.DirInsights, fmt.Sprintf(filename, year))
+	habitsStr, err := userFS.Read(fs.DirInsights, fmt.Sprintf(filename, year))
 	if err != nil {
 		return nil, fmt.Errorf("read %s error: %w", filename, err)
 	}
@@ -99,8 +102,8 @@ func Habits(botFS *fs.FS, year int) (map[string]Year, error) {
 	return habits, nil
 }
 
-func LastWeekHabits(botFS *fs.FS) (map[string]Year, error) {
-	habitsForYear, err := Habits(botFS, now().Year())
+func LastWeekHabits(userFS *fs.FS) (map[string]Year, error) {
+	habitsForYear, err := Habits(userFS, now().Year())
 	if err != nil {
 		return nil, fmt.Errorf("can't get habits for last week: %w", err)
 	}
@@ -125,6 +128,6 @@ func LastWeekHabits(botFS *fs.FS) (map[string]Year, error) {
 	return habits, nil
 }
 
-// func Write(botFS *fs.FS, habits []Habit) error {
+// func Write(userFS *fs.FS, habits []Habit) error {
 // 	return nil
 // }

@@ -27,11 +27,11 @@ var twoMonthsMD string
 func TestHabits(t *testing.T) {
 	r := require.New(t)
 
-	botFS, err := fs.NewFS("/", afero.NewMemMapFs())
+	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
 	r.NoError(err)
-	botFS.Write(fs.DirInsights, "1970 Habits.md", monthMD)
+	userFS.Write(fs.DirInsights, "1970 Habits.md", monthMD)
 
-	habits, err := Habits(botFS, 1970)
+	habits, err := Habits(userFS, 1970)
 	r.NoError(err)
 
 	r.Len(habits, 6)
@@ -52,11 +52,11 @@ func TestHabits(t *testing.T) {
 func TestLastMonthHabits(t *testing.T) {
 	r := require.New(t)
 
-	botFS, err := fs.NewFS("/", afero.NewMemMapFs())
+	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
 	r.NoError(err)
-	botFS.Write(fs.DirInsights, "1970 Habits.md", lastMonthMD)
+	userFS.Write(fs.DirInsights, "1970 Habits.md", lastMonthMD)
 
-	habits, err := Habits(botFS, 1970)
+	habits, err := Habits(userFS, 1970)
 	r.NoError(err)
 
 	r.Len(habits, 1)
@@ -78,9 +78,9 @@ func TestLastMonthHabits(t *testing.T) {
 func TestLastWeekHabitsWhenWeekFallsIntoTwoMonths(t *testing.T) {
 	r := require.New(t)
 
-	botFS, err := fs.NewFS("/", afero.NewMemMapFs())
+	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
 	r.NoError(err)
-	botFS.Write(fs.DirInsights, "1970 Habits.md", twoMonthsMD)
+	userFS.Write(fs.DirInsights, "1970 Habits.md", twoMonthsMD)
 
 	savedNow := now
 	defer func() {
@@ -90,7 +90,7 @@ func TestLastWeekHabitsWhenWeekFallsIntoTwoMonths(t *testing.T) {
 		return time.Date(1970, time.September, 30, 0, 0, 0, 0, time.Local)
 	}
 
-	habits, err := LastWeekHabits(botFS)
+	habits, err := LastWeekHabits(userFS)
 	r.NoError(err)
 	r.Len(habits, 1)
 	r.Len(habits["Habit"], 7)
