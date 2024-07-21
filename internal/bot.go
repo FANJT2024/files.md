@@ -419,9 +419,14 @@ func (b *Bot) quickPanelRow() []tg.Btn {
 	// We iterate through hardcoded panel to preserve order of buttons in UI
 	for _, btn := range userconfig.QuickPanelAvailableBtns {
 		if b.conf.HasQuickPanelCmd(btn.Cmd) {
-			quickPanelRow = append(quickPanelRow, tg.NewBtn(
-				btn.Emoji,
-				tg.NewTypedCmd(btn.Cmd, []string{}, btn.CmdType)))
+			params := []string{}
+			if btn.Cmd == constants.CmdWebAppHabits {
+				habitsUrl := fmt.Sprintf("%s/habits/%d", Config.Host, b.userID)
+				params = []string{habitsUrl}
+			}
+
+			button := tg.NewBtn(btn.Emoji,tg.NewTypedCmd(btn.Cmd, params, btn.CmdType)) 
+			quickPanelRow = append(quickPanelRow, button)
 		}
 	}
 

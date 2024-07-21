@@ -39,7 +39,7 @@ func main() {
 	if err != nil {
 		panic(fmt.Sprintf("Error loading .env file: %s\n", err))
 	}
-	conf, err := internal.LoadConfig()
+	err = internal.LoadConfig()
 	if err != nil {
 		panic(fmt.Sprintf("Error loading conf: %s\n", err))
 	}
@@ -50,7 +50,7 @@ func main() {
 		panic(fmt.Sprintf("Error loading i18n: %s\n", err))
 	}
 
-	api, err := tgbotapi.NewBotAPI(conf.BotAPIToken)
+	api, err := tgbotapi.NewBotAPI(internal.Config.BotAPIToken)
 	if err != nil {
 		panic(fmt.Sprintf("Can't create TG api: %s\n", err))
 	}
@@ -79,7 +79,7 @@ func main() {
 		for {
 			select {
 			case <-ticker.C:
-				err := worker.MoveDueTasksToToday(conf.StoragePath, conf.ConfigFilename, fsBackend)
+				err := worker.MoveDueTasksToToday(internal.Config.StoragePath, internal.Config.ConfigFilename, fsBackend)
 				if err != nil {
 					fmt.Printf("Worker's error: %s\n", err)
 				}
@@ -105,7 +105,7 @@ func main() {
 				w.Write([]byte("err"))
 			}
 
-			userPath := path.Join(conf.StoragePath, txt.I64(userID))
+			userPath := path.Join(internal.Config.StoragePath, txt.I64(userID))
 			userFS, err := fs.NewFS(userPath, afero.NewOsFs())
 			if err != nil {
 				// TODO
@@ -147,7 +147,7 @@ func main() {
 			userLocker.Lock(userID, string(updJSON))
 			defer userLocker.Unlock(userID)
 
-			userPath := path.Join(conf.StoragePath, txt.I64(userID))
+			userPath := path.Join(internal.Config.StoragePath, txt.I64(userID))
 			userFS, err := fs.NewFS(userPath, afero.NewOsFs())
 			if err != nil {
 				slog.Error("Bot error: can't create fs", "err", err)
@@ -160,7 +160,7 @@ func main() {
 			}
 
 			userconf := userconfig.NewConfig()
-			userconfPath := userFS.Path("", conf.ConfigFilename)
+			userconfPath := userFS.Path("", internal.Config.ConfigFilename)
 			err = userconf.LoadOrCreate(userconfPath)
 			if err != nil {
 				slog.Error("Bot error: can't get or create conf", "err", err)

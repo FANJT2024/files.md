@@ -116,19 +116,33 @@ func (tg *TG) buildInlineKeyboard(kb *Keyboard) *tgbotapi.InlineKeyboardMarkup {
 
 func (tg *TG) buildBtn(btn Btn) tgbotapi.InlineKeyboardButton {
 	serializedCmd, _ := json.Marshal(btn.Cmd)
-	b := tgbotapi.InlineKeyboardButton{
+	button := tgbotapi.InlineKeyboardButton{
 		Text: btn.Name,
 	}
-	if btn.Cmd.Type == CmdTypeInlineQueryCurrentChat {
-		param := ""
-		if len(btn.Cmd.Params) > 1 {
-			param = btn.Cmd.Params[0]
+	switch btn.Cmd.Type {
+
+	case CmdTypeInlineQueryCurrentChat:
+		{
+			param := ""
+			if len(btn.Cmd.Params) > 0 {
+				param = btn.Cmd.Params[0]
+			}
+			button.SwitchInlineQueryCurrentChat = &param
 		}
-		b.SwitchInlineQueryCurrentChat = &param
-	} else {
-		str := string(serializedCmd)
-		b.CallbackData = &str
+	case CmdTypeWebApp:
+		{
+			param := ""
+			if len(btn.Cmd.Params) > 0 {
+				param = btn.Cmd.Params[0]
+			}
+			button.WebApp = &tgbotapi.WebAppInfo{URL: param}
+		}
+	default:
+		{
+			str := string(serializedCmd)
+			button.CallbackData = &str
+		}
 	}
 
-	return b
+	return button
 }

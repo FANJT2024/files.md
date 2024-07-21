@@ -196,4 +196,3 @@ func (c *Config) JournalHeaderFormat() string {
 func (c *Config) SetJournalHeaderFormat(format string) {
 	c.raw.JournalHeaderFormat = format
 }
-

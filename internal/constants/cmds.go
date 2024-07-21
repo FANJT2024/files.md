@@ -41,5 +41,7 @@ const (
 	CmdShowWatchChecklist = "watch"
 	CmdShowShopChecklist  = "shop"
 
-	InlineQuerySearchEveryWhere = "search"
+	CmdInlineQuerySearchEveryWhere = "search"
+
+	CmdWebAppHabits = "habits"
 )

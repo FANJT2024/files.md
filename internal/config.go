@@ -8,20 +8,22 @@ import (
 	"zakirullin/stuffbot/internal/fs"
 )
 
-type Config struct {
+type Configuration struct {
 	StoragePath    string `required:"true" envconfig:"STORAGE_PATH"`
 	BotAPIToken    string `required:"true" envconfig:"BOT_API_TOKEN"`
 	ConfigFilename string `default:"config.json"`
+	Host           string `default:"https://127.0.0.1"`
 }
 
-func LoadConfig() (Config, error) {
-	var cfg Config
+var Config Configuration
 
-	if err := envconfig.Process("", &cfg); err != nil {
-		return Config{}, fmt.Errorf("can't load config: %w", err)
+func LoadConfig() error {
+
+	if err := envconfig.Process("", &Config); err != nil {
+		return fmt.Errorf("can't load config: %w", err)
 	}
 
-	return cfg, nil
+	return nil
 }
 
 func shouldSplitChecklist(checklist string) bool {

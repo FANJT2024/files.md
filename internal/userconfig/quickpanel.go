@@ -14,13 +14,14 @@ type QuickPanelBtn struct {
 }
 
 var QuickPanelAvailableBtns = []QuickPanelBtn{
-	NewQuickPanelBtn(constants.InlineQuerySearchEveryWhere, tg.CmdTypeInlineQueryCurrentChat, i18n.Emoji("Search"), "Search"),
+	NewQuickPanelBtn(constants.CmdInlineQuerySearchEveryWhere, tg.CmdTypeInlineQueryCurrentChat, i18n.Emoji("Search"), "Search"),
 	NewQuickPanelBtn(constants.CmdShowDoc, tg.CmdTypeCallback, i18n.EmDocs, "Documents"),
 	NewQuickPanelBtn(constants.CmdShowChecklists, tg.CmdTypeCallback, i18n.EmCheckList, "Checklists"),
 	NewQuickPanelBtn(constants.CmdShowPostpone, tg.CmdTypeCallback, i18n.EmPostpone, "Postpone"),
 	NewQuickPanelBtn(constants.CmdShowReadChecklist, tg.CmdTypeCallback, i18n.Emoji("Read"), "Read"),
 	NewQuickPanelBtn(constants.CmdShowWatchChecklist, tg.CmdTypeCallback, i18n.Emoji("Watch"), "Watch"),
 	NewQuickPanelBtn(constants.CmdShowShopChecklist, tg.CmdTypeCallback, i18n.Emoji("Shop"), "Shop"),
+	NewQuickPanelBtn(constants.CmdWebAppHabits, tg.CmdTypeWebApp, i18n.Emoji("Habits"), "Habits"),
 }
 
 func NewQuickPanelBtn(cmd, cmdType, emoji, description string) QuickPanelBtn {
