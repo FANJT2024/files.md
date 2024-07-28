@@ -396,12 +396,12 @@ func (b *Bot) show(text string, kb *tg.Keyboard, markup string) error {
 		return fmt.Errorf("show: %w", err)
 	}
 
-	if mid == nil {
+	textChunks := txt.SplitTextIntoChunks(text, maxMsgLength)
+	if mid == nil || len(textChunks) > 1 {
 		b.delAllKeyboards()
 
 		// If our msg is too long, we send a few messages.
 		// Keyboard is attached to the last one
-		textChunks := txt.SplitTextIntoChunks(text, maxMsgLength)
 		textChunks = textChunks[max(0, len(textChunks)-maxMsgsToSend):]
 		lastText, textChunks := textChunks[len(textChunks)-1], textChunks[:len(textChunks)-1]
 		for _, textChunk := range textChunks {
