@@ -38,6 +38,7 @@ const (
 	DirInbox     = "inbox"
 	DirImg       = "img"
 	DirJournal   = "journal"
+	DirHabits    = "habits"
 	DirInsights  = "insights"
 	DirRead      = "-read-"
 	DirWatch     = "-watch-"
@@ -83,7 +84,18 @@ func NewFS(absRootPath string, backend afero.Fs) (*FS, error) {
 }
 
 func (fs FS) CreateUserDirs() error {
-	for _, dir := range []string{DirArchive, DirToday, DirLater, DirInbox, DirImg, DirRead, DirWatch, DirShop, DirInsights} {
+	for _, dir := range []string{
+		DirArchive,
+		DirToday,
+		DirLater,
+		DirInbox,
+		DirImg,
+		DirRead,
+		DirWatch,
+		DirShop,
+		DirHabits,
+		DirInsights,
+	} {
 		userPath := path.Join(fs.rootPath, dir)
 		exists, err := afero.Exists(fs.backend, userPath)
 		if err != nil {

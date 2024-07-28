@@ -31,13 +31,32 @@ var (
 	now                   = time.Now
 )
 
-// TODO What if there's no file? Create empty from ./habits
 // Habit name => [day1 => 1, day2 => 0, ..., day365 => 0]
 func Habits(userFS *fs.FS, year int) (map[string]Year, error) {
 	filename := fmt.Sprintf("%d Habits.md", year)
+
+	isExists, err := userFS.Exists(fs.DirInsights, filename)
+	if err != nil {
+		return nil, fmt.Errorf("habits: can't check whether the file exists: %w", err)
+	}
+
+	if !isExists {
+		existingHabits, err := userFS.FilesAndDirs(fs.DirHabits)
+		if err != nil {
+			return nil, fmt.Errorf("habits: can't read existing habits: %w", err)
+		}
+
+		habits := make(map[string]Year)
+		for _, existingHabit := range existingHabits {
+			habits[existingHabit.Title] = make(Year)
+		}
+
+		return habits, nil
+	}
+
 	habitsStr, err := userFS.Read(fs.DirInsights, filename)
 	if err != nil {
-		return nil, fmt.Errorf("read %s error: %w", filename, err)
+		return nil, fmt.Errorf("habits:read %s error: %w", filename, err)
 	}
 
 	habits := make(map[string]Year)

@@ -25,7 +25,7 @@ import (
 )
 
 var (
-	botPlugins []BotPluginInterface
+	botPlugins        []BotPluginInterface
 	errUnknownCommand = errors.New("unknown command")
 )
 
