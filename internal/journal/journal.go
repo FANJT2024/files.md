@@ -27,7 +27,7 @@ func AddRecord(userFS *fs.FS, noteFilename string) error {
 		record = fs.Title(noteFilename)
 	}
 
-	journalFilename := now().Format("2006 January.md")
+	journalFilename := now().Format("2006.01 January.md")
 	exists, err := userFS.Exists(fs.DirJournal, journalFilename)
 	if err != nil {
 		return err
@@ -93,5 +93,5 @@ func AddEmoji(userFS *fs.FS, emoji string) error {
 }
 
 func todayHeader() string {
-	return fmt.Sprintf("#### %d, %s", now().Day(), now().Weekday())
+	return fmt.Sprintf("#### %d %s, %s", now().Day(), now().Format("January"), now().Weekday())
 }

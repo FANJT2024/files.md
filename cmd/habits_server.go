@@ -18,7 +18,8 @@ import (
 func habitsServer() {
 	router := http.NewServeMux()
 	// TODO add hashing or secrets
-	router.HandleFunc("GET /{userID}/habits", func(w http.ResponseWriter, r *http.Request) {
+	// TODO before release habits_v2 => habits
+	router.HandleFunc("GET /habits_v2/{userID}", func(w http.ResponseWriter, r *http.Request) {
 		userID, err := strconv.ParseInt(r.PathValue("userID"), 10, 64)
 		if err != nil {
 			w.Write([]byte("can't parse userID"))
@@ -37,7 +38,7 @@ func habitsServer() {
 		w.Write(str)
 	})
 
-	router.HandleFunc("POST /{userID}/habits/{habitName}/{yearDay}/{status}", func(w http.ResponseWriter, r *http.Request) {
+	router.HandleFunc("POST /habits_v2/{userID}/{habitName}/{yearDay}/{status}", func(w http.ResponseWriter, r *http.Request) {
 		userID, err := strconv.ParseInt(r.PathValue("userID"), 10, 64)
 		if err != nil {
 			w.Write([]byte("can't parse userID"))
@@ -76,5 +77,8 @@ func habitsServer() {
 		}
 	})
 
-	http.ListenAndServe(":80", router)
+	err := http.ListenAndServe(":81", router)
+	if err != nil {
+		panic(err)
+	}
 }

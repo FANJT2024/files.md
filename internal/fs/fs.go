@@ -43,7 +43,7 @@ const (
 	DirRead      = "-read-"
 	DirWatch     = "-watch-"
 	DirShop      = "-shop-"
-	FilePomodoro = "Take a break.md"
+	FilePomodoro = "Took a break.md"
 	FileConfig   = "config.json"
 
 	minSearchSimilarity = 70

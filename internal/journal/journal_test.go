@@ -32,31 +32,31 @@ func TestAddRecord(t *testing.T) {
 		{
 			name:   "Empty MD",
 			record: "note 1",
-			want:   "#### 30, Tuesday\n`10:04` note 1\n",
+			want:   "#### 30 May, Tuesday\n`10:04` note 1\n",
 		},
 		{
 			name:   "No Headers",
 			md:     "some text",
 			record: "note 1",
-			want:   "some text\n#### 30, Tuesday\n`10:04` note 1\n",
+			want:   "some text\n#### 30 May, Tuesday\n`10:04` note 1\n",
 		},
 		{
 			name:   "Bare header",
-			md:     "#### 30, Tuesday\n",
+			md:     "#### 30 May, Tuesday\n",
 			record: "note 1",
-			want:   "#### 30, Tuesday\n`10:04` note 1\n",
+			want:   "#### 30 May, Tuesday\n`10:04` note 1\n",
 		},
 		{
 			name:   "New daily note",
-			md:     "#### 29, Tuesday\nnote 1",
+			md:     "#### 29 May, Tuesday\nnote 1",
 			record: "note 2",
-			want:   "#### 29, Tuesday\nnote 1\n#### 30, Tuesday\n`10:04` note 2\n",
+			want:   "#### 29 May, Tuesday\nnote 1\n#### 30 May, Tuesday\n`10:04` note 2\n",
 		},
 		{
 			name:   "Append daily note",
-			md:     "#### 29, Tuesday\nnote 1\n#### 30, Tuesday\nnote 2",
+			md:     "#### 29 May, Tuesday\nnote 1\n#### 30 May, Tuesday\nnote 2",
 			record: "note 3",
-			want:   "#### 29, Tuesday\nnote 1\n#### 30, Tuesday\nnote 2\n`10:04` note 3\n",
+			want:   "#### 29 May, Tuesday\nnote 1\n#### 30 May, Tuesday\nnote 2\n`10:04` note 3\n",
 		},
 	}
 
@@ -64,13 +64,13 @@ func TestAddRecord(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			userFS, err := fs.NewFS("/", afero.NewMemMapFs())
 			r.NoError(err)
-			userFS.Write(fs.DirJournal, "2023 May.md", test.md)
+			userFS.Write(fs.DirJournal, "2023.05 May.md", test.md)
 			userFS.Write(fs.DirToday, "record.md", test.record)
 
 			err = AddRecord(userFS, "record.md")
 			r.NoError(err)
 
-			md, err := userFS.Read(fs.DirJournal, "2023 May.md")
+			md, err := userFS.Read(fs.DirJournal, "2023.05 May.md")
 			r.NoError(err)
 			r.Equal(test.want, md)
 		})
@@ -96,14 +96,14 @@ func TestAddEmojiNewFile(t *testing.T) {
 	content, err := userFS.Read("journal", "2024 January.md")
 	r.NoError(err)
 
-	r.Equal("#### 1, Monday 🙂", content)
+	r.Equal("#### 1 January, Monday 🙂", content)
 }
 
 func TestAddEmojiExistingFile(t *testing.T) {
 	r := require.New(t)
 
 	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
-	md := "#### 0, Sunday\nSome Note\n#### 1, Monday\nSome Note"
+	md := "#### 0, Sunday\nSome Note\n#### 1 January, Monday\nSome Note"
 	userFS.Write("journal", "2024 January.md", md)
 
 	savedNow := now
@@ -120,7 +120,7 @@ func TestAddEmojiExistingFile(t *testing.T) {
 	content, err := userFS.Read("journal", "2024 January.md")
 	r.NoError(err)
 
-	r.Equal("#### 0, Sunday\nSome Note\n#### 1, Monday 🙂\nSome Note", content)
+	r.Equal("#### 0, Sunday\nSome Note\n#### 1 January, Monday 🙂\nSome Note", content)
 }
 
 func TestAddEmojiExistingFileMissingDay(t *testing.T) {
@@ -144,14 +144,14 @@ func TestAddEmojiExistingFileMissingDay(t *testing.T) {
 	content, err := userFS.Read("journal", "2024 January.md")
 	r.NoError(err)
 
-	r.Equal("#### 0, Sunday\nSome Note\n#### 1, Monday 🙂", content)
+	r.Equal("#### 0, Sunday\nSome Note\n#### 1 January, Monday 🙂", content)
 }
 
 func TestAddMoodEmojiExistingFileExistingEmojis(t *testing.T) {
 	r := require.New(t)
 
 	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
-	md := "#### 0, Sunday\nSome Note\n#### 1, Monday 🌱📵\nSome Note"
+	md := "#### 0, Sunday\nSome Note\n#### 1 January, Monday 🌱📵\nSome Note"
 	userFS.Write("journal", "2024 January.md", md)
 
 	savedNow := now
@@ -168,14 +168,14 @@ func TestAddMoodEmojiExistingFileExistingEmojis(t *testing.T) {
 	content, err := userFS.Read("journal", "2024 January.md")
 	r.NoError(err)
 
-	r.Equal("#### 0, Sunday\nSome Note\n#### 1, Monday 🙂🌱📵\nSome Note", content)
+	r.Equal("#### 0, Sunday\nSome Note\n#### 1 January, Monday 🙂🌱📵\nSome Note", content)
 }
 
 func TestAddRegularEmojiExistingFileExistingEmojis(t *testing.T) {
 	r := require.New(t)
 
 	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
-	md := "#### 0, Sunday\nSome Note\n#### 1, Monday 🌱📵\nSome Note"
+	md := "#### 0, Sunday\nSome Note\n#### 1 January, Monday 🌱📵\nSome Note"
 	userFS.Write("journal", "2024 January.md", md)
 
 	savedNow := now
@@ -192,5 +192,5 @@ func TestAddRegularEmojiExistingFileExistingEmojis(t *testing.T) {
 	content, err := userFS.Read("journal", "2024 January.md")
 	r.NoError(err)
 
-	r.Equal("#### 0, Sunday\nSome Note\n#### 1, Monday 🌱📵🎃\nSome Note", content)
+	r.Equal("#### 0, Sunday\nSome Note\n#### 1 January, Monday 🌱📵🎃\nSome Note", content)
 }

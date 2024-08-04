@@ -460,7 +460,7 @@ func (b *Bot) quickPanelRow() []tg.Btn {
 		if b.conf.HasQuickPanelCmd(btn.Cmd) {
 			params := []string{}
 			if btn.Cmd == constants.CmdWebAppHabits {
-				habitsUrl := fmt.Sprintf("%s/%d/habits", config.Config.Host, b.userID)
+				habitsUrl := fmt.Sprintf("%s/habits_v2/%d", config.Config.Host, b.userID)
 				params = []string{habitsUrl}
 			}
 
