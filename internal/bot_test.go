@@ -5,7 +5,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/alicebob/miniredis/v2"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/require"
 
@@ -29,13 +28,9 @@ func TestAddTaskToToday(t *testing.T) {
 	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
 	r.NoError(err)
 
-	redis, err := miniredis.Run()
-	r.NoError(err)
-	defer redis.Close()
-
 	tgram := fake.NewTG()
 
-	bot := NewBot(-1, tgram, userFS, db.NewDB(redis), &userconfig.DefaultConfig)
+	bot := NewBot(-1, tgram, userFS, db.NewDB(), &userconfig.DefaultConfig)
 	err = bot.Answer(fake.NewUpd(-1, "New task"))
 	r.NoError(err)
 
@@ -54,11 +49,7 @@ func TestAddMultilineTaskToToday(t *testing.T) {
 
 	tgram := fake.NewTG()
 
-	redis, err := miniredis.Run()
-	r.NoError(err)
-	defer redis.Close()
-
-	bot := NewBot(-1, tgram, userFS, db.NewDB(redis), &userconfig.DefaultConfig)
+	bot := NewBot(-1, tgram, userFS, db.NewDB(), &userconfig.DefaultConfig)
 	err = bot.Answer(fake.NewUpd(-1, "New task\nContent"))
 	r.NoError(err)
 
@@ -82,11 +73,7 @@ func TestAddTaskWithSpecCharsToToday(t *testing.T) {
 
 	tgram := fake.NewTG()
 
-	redis, err := miniredis.Run()
-	r.NoError(err)
-	defer redis.Close()
-
-	bot := NewBot(-1, tgram, userFS, db.NewDB(redis), &userconfig.DefaultConfig)
+	bot := NewBot(-1, tgram, userFS, db.NewDB(), &userconfig.DefaultConfig)
 	err = bot.Answer(fake.NewUpd(-1, "New task\nUrl! http://g.com (Also_text] ##header\n-item1\n-item2\n1+1=2"))
 	r.NoError(err)
 
@@ -114,11 +101,7 @@ func TestAddTaskToLater(t *testing.T) {
 
 	tgram := fake.NewTG()
 
-	redis, err := miniredis.Run()
-	r.NoError(err)
-	defer redis.Close()
-
-	bot := NewBot(-1, tgram, userFS, db.NewDB(redis), &userconfig.DefaultConfig)
+	bot := NewBot(-1, tgram, userFS, db.NewDB(), &userconfig.DefaultConfig)
 	err = bot.Answer(fake.NewUpdCmdFake(-1, tg.NewCmd("mv", []string{"today", "0824149b387", "later"})))
 	r.NoError(err)
 
@@ -141,13 +124,9 @@ func TestCompleteTask(t *testing.T) {
 	err = userFS.Write("today", "First task.md", "")
 	r.NoError(err)
 
-	redis, err := miniredis.Run()
-	r.NoError(err)
-	defer redis.Close()
-
 	tgram := fake.NewTG()
 
-	bot := NewBot(-1, tgram, userFS, db.NewDB(redis), &userconfig.DefaultConfig)
+	bot := NewBot(-1, tgram, userFS, db.NewDB(), &userconfig.DefaultConfig)
 	err = bot.Answer(fake.NewUpdCmdFake(-1, tg.NewCmd("comp", []string{"today", "0824149b387"})))
 	r.NoError(err)
 
@@ -171,13 +150,9 @@ func TestToday(t *testing.T) {
 	err = userFS.Write("today", "Second task", "")
 	r.NoError(err)
 
-	redis, err := miniredis.Run()
-	r.NoError(err)
-	defer redis.Close()
-
 	tgram := fake.NewTG()
 
-	bot := NewBot(-1, tgram, userFS, db.NewDB(redis), &userconfig.DefaultConfig)
+	bot := NewBot(-1, tgram, userFS, db.NewDB(), &userconfig.DefaultConfig)
 	err = bot.Answer(fake.NewUpdCmdFake(-1, tg.NewCmd("today", nil)))
 	r.NoError(err)
 
@@ -218,13 +193,9 @@ func TestLater(t *testing.T) {
 	err = userFS.Write("later", "Second task", "")
 	r.NoError(err)
 
-	redis, err := miniredis.Run()
-	r.NoError(err)
-	defer redis.Close()
-
 	tgram := fake.NewTG()
 
-	bot := NewBot(-1, tgram, userFS, db.NewDB(redis), &userconfig.DefaultConfig)
+	bot := NewBot(-1, tgram, userFS, db.NewDB(), &userconfig.DefaultConfig)
 	err = bot.Answer(fake.NewUpdCmdFake(-1, tg.NewCmd("later", nil)))
 	r.NoError(err)
 
@@ -267,14 +238,10 @@ func TestTodayWithMultilineTasks(t *testing.T) {
 	err = userFS.Write("today", "Second task", "")
 	r.NoError(err)
 
-	redis, err := miniredis.Run()
-	r.NoError(err)
-	defer redis.Close()
-
 	tgram := fake.NewTG()
 
 	upd := fake.NewUpdCmdFake(-1, tg.NewCmd("today", nil))
-	bot := NewBot(-1, tgram, userFS, db.NewDB(redis), &userconfig.DefaultConfig)
+	bot := NewBot(-1, tgram, userFS, db.NewDB(), &userconfig.DefaultConfig)
 	err = bot.Answer(upd)
 	r.NoError(err)
 
@@ -304,7 +271,7 @@ func TestTodayWithMultilineTasks(t *testing.T) {
 
 // 	tgram := fake.NewTG()
 
-// 	bot := NewBot(-1, tgram, userFS, db.NewDB(redis), &userconfig.DefaultConfig)
+// 	bot := NewBot(-1, tgram, userFS,db.NewDB(), &userconfig.DefaultConfig)
 // 	err = bot.Answer(fake.NewUpdCmdFake(-1, tg.NewCmd("files", nil)))
 // 	r.NoError(err)
 
@@ -327,13 +294,9 @@ func TestChecklists(t *testing.T) {
 	err = userFS.MakeDir("-checklist2-")
 	r.NoError(err)
 
-	redis, err := miniredis.Run()
-	r.NoError(err)
-	defer redis.Close()
-
 	tgram := fake.NewTG()
 
-	bot := NewBot(-1, tgram, userFS, db.NewDB(redis), &userconfig.DefaultConfig)
+	bot := NewBot(-1, tgram, userFS, db.NewDB(), &userconfig.DefaultConfig)
 	err = bot.Answer(fake.NewUpdCmdFake(-1, tg.NewCmd("checklists", nil)))
 	r.NoError(err)
 
@@ -356,12 +319,8 @@ func TestAddSingleItemToChecklist(t *testing.T) {
 	err = userFS.Write("today", "Item.md", "")
 	r.NoError(err)
 
-	redis, err := miniredis.Run()
-	r.NoError(err)
-	defer redis.Close()
-
 	tgram := fake.NewTG()
-	bot := NewBot(-1, tgram, userFS, db.NewDB(redis), &userconfig.DefaultConfig)
+	bot := NewBot(-1, tgram, userFS, db.NewDB(), &userconfig.DefaultConfig)
 	err = bot.Answer(fake.NewUpdCmdFake(-1, tg.NewCmd("mv_to_chk", []string{"7b72407ca70", "-checklist1-"})))
 	r.NoError(err)
 
@@ -385,12 +344,8 @@ func TestAddMultipleItemsToChecklist(t *testing.T) {
 	err = userFS.Write("today", "Item.md", "item\nitem2\nitem3\n\n")
 	r.NoError(err)
 
-	redis, err := miniredis.Run()
-	r.NoError(err)
-	defer redis.Close()
-
 	tgram := fake.NewTG()
-	bot := NewBot(-1, tgram, userFS, db.NewDB(redis), &userconfig.DefaultConfig)
+	bot := NewBot(-1, tgram, userFS, db.NewDB(), &userconfig.DefaultConfig)
 	err = bot.Answer(fake.NewUpdCmdFake(-1, tg.NewCmd("mv_to_chk", []string{"7b72407ca70", "-checklist1-"})))
 	r.NoError(err)
 
@@ -405,10 +360,7 @@ func TestBot_todayLabelIcons(t *testing.T) {
 	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
 	r.NoError(err)
 	tgram := fake.NewTG()
-	redis, err := miniredis.Run()
-	r.NoError(err)
-	defer redis.Close()
-	b := NewBot(-1, tgram, userFS, db.NewDB(redis), &userconfig.DefaultConfig)
+	b := NewBot(-1, tgram, userFS, db.NewDB(), &userconfig.DefaultConfig)
 
 	// Pomodoro is the only task in today
 	r.Nil(b.togglePomodoro(nil))
@@ -445,13 +397,9 @@ func makeBot(t *testing.T, conf *userconfig.Config) (*Bot, *fake.TG, *require.As
 	err = userFS.Write("later", "Second task", "")
 	r.NoError(err)
 
-	redis, err := miniredis.Run()
-	r.NoError(err)
-	defer redis.Close()
-
 	tgram := fake.NewTG()
 
-	bot := NewBot(-1, tgram, userFS, db.NewDB(redis), conf)
+	bot := NewBot(-1, tgram, userFS, db.NewDB(), conf)
 	return bot, tgram, r
 }
 
@@ -730,13 +678,9 @@ func TestShowToFileNoDirs(t *testing.T) {
 	err = userFS.Write("today", "Note.md", "")
 	r.NoError(err)
 
-	redis, err := miniredis.Run()
-	r.NoError(err)
-	defer redis.Close()
-
 	tgram := fake.NewTG()
 
-	bot := NewBot(-1, tgram, userFS, db.NewDB(redis), &userconfig.DefaultConfig)
+	bot := NewBot(-1, tgram, userFS, db.NewDB(), &userconfig.DefaultConfig)
 	err = bot.showToFile([]string{"345fbd7ab08"})
 	r.NoError(err)
 
@@ -756,13 +700,9 @@ func TestShowToFile(t *testing.T) {
 	err = userFS.MakeDir("dir")
 	r.NoError(err)
 
-	redis, err := miniredis.Run()
-	r.NoError(err)
-	defer redis.Close()
-
 	tgram := fake.NewTG()
 
-	bot := NewBot(-1, tgram, userFS, db.NewDB(redis), &userconfig.DefaultConfig)
+	bot := NewBot(-1, tgram, userFS, db.NewDB(), &userconfig.DefaultConfig)
 	err = bot.showToFile([]string{"345fbd7ab08"})
 	r.NoError(err)
 
@@ -780,13 +720,9 @@ func TestShow(t *testing.T) {
 	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
 	r.NoError(err)
 
-	redis, err := miniredis.Run()
-	r.NoError(err)
-	defer redis.Close()
-
 	tgram := fake.NewTG()
 
-	bot := NewBot(-1, tgram, userFS, db.NewDB(redis), &userconfig.DefaultConfig)
+	bot := NewBot(-1, tgram, userFS, db.NewDB(), &userconfig.DefaultConfig)
 	err = bot.show("text", nil, tg.MarkupHTML)
 	r.NoError(err)
 
@@ -799,13 +735,9 @@ func TestShowLongMessage(t *testing.T) {
 	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
 	r.NoError(err)
 
-	redis, err := miniredis.Run()
-	r.NoError(err)
-	defer redis.Close()
-
 	tgram := fake.NewTG()
 
-	bot := NewBot(-1, tgram, userFS, db.NewDB(redis), &userconfig.DefaultConfig)
+	bot := NewBot(-1, tgram, userFS, db.NewDB(), &userconfig.DefaultConfig)
 	err = bot.show(strings.Repeat("a", 4096)+"b", nil, tg.MarkupHTML)
 	r.NoError(err)
 
@@ -822,13 +754,9 @@ func TestShowLongMessageWithColoredEmojis(t *testing.T) {
 	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
 	r.NoError(err)
 
-	redis, err := miniredis.Run()
-	r.NoError(err)
-	defer redis.Close()
-
 	tgram := fake.NewTG()
 
-	bot := NewBot(-1, tgram, userFS, db.NewDB(redis), &userconfig.DefaultConfig)
+	bot := NewBot(-1, tgram, userFS, db.NewDB(), &userconfig.DefaultConfig)
 	err = bot.show(strings.Repeat("a", 4095)+"🟢", nil, tg.MarkupHTML)
 	r.NoError(err)
 
@@ -841,13 +769,9 @@ func TestShowLongMessageWithColoredEmoji(t *testing.T) {
 	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
 	r.NoError(err)
 
-	redis, err := miniredis.Run()
-	r.NoError(err)
-	defer redis.Close()
-
 	tgram := fake.NewTG()
 
-	bot := NewBot(-1, tgram, userFS, db.NewDB(redis), &userconfig.DefaultConfig)
+	bot := NewBot(-1, tgram, userFS, db.NewDB(), &userconfig.DefaultConfig)
 	err = bot.show(strings.Repeat("a", 4095)+"⚪️", nil, tg.MarkupHTML)
 	r.NoError(err)
 
@@ -860,13 +784,9 @@ func TestShowLongMessageSplitByNewLine(t *testing.T) {
 	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
 	r.NoError(err)
 
-	redis, err := miniredis.Run()
-	r.NoError(err)
-	defer redis.Close()
-
 	tgram := fake.NewTG()
 
-	bot := NewBot(-1, tgram, userFS, db.NewDB(redis), &userconfig.DefaultConfig)
+	bot := NewBot(-1, tgram, userFS, db.NewDB(), &userconfig.DefaultConfig)
 	err = bot.show(strings.Repeat("a", 4094)+"\nabc", nil, tg.MarkupHTML)
 	r.NoError(err)
 

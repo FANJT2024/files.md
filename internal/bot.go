@@ -204,25 +204,16 @@ func (b *Bot) handlers() map[string]func([]string) error {
 func (b *Bot) extractCmd(u UpdInterface) (*tg.Cmd, error) {
 	cmd := u.Cmd()
 	if cmd != nil {
-		err := b.db.DelInputExpectation(b.userID)
-		if err != nil {
-			return nil, fmt.Errorf("extract cmd from update: %w", err)
-		}
+		b.db.DelInputExpectation(b.userID)
 
 		return cmd, nil
 	}
 
 	// Input expectation is mostly used for renaming things
-	cmd, err := b.db.InputExpectation(b.userID)
-	if err != nil {
-		return nil, fmt.Errorf("extract cmd: %w", err)
-	}
+	cmd = b.db.InputExpectation(b.userID)
 	if cmd != nil {
 		slog.Debug("Got command from input expectation", "command", cmd.Name)
-		err = b.db.DelInputExpectation(b.userID)
-		if err != nil {
-			return nil, fmt.Errorf("extract cmd: %w", err)
-		}
+		b.db.DelInputExpectation(b.userID)
 
 		for i, param := range cmd.Params {
 			if param == "%s" {
@@ -404,13 +395,10 @@ func (b *Bot) tr(str string, args ...any) string {
 // Replace last message + keyboard with the new ones
 // Or show the new one (in case of photo)
 func (b *Bot) show(text string, kb *tg.Keyboard, markup string) error {
-	mid, err := b.db.LastKeyboardMsgID(b.userID)
-	if err != nil {
-		return fmt.Errorf("show: %w", err)
-	}
+	mid := b.db.LastKeyboardMsgID(b.userID)
 
 	textChunks := txt.SplitTextIntoChunks(text, maxMsgLength)
-	if mid == nil || len(textChunks) > 1 {
+	if mid == 0 || len(textChunks) > 1 {
 		b.delAllKeyboards()
 
 		// If our msg is too long, we send a few messages.
@@ -426,15 +414,12 @@ func (b *Bot) show(text string, kb *tg.Keyboard, markup string) error {
 			return fmt.Errorf("show: %w", err)
 		}
 
-		err = b.db.SetLastKeyboardMsgID(b.userID, mid)
-		if err != nil {
-			return fmt.Errorf("show: %w", err)
-		}
+		b.db.SetLastKeyboardMsgID(b.userID, mid)
 
 		return nil
 	}
 
-	return b.tg.Edit(b.userID, *mid, text, kb, markup)
+	return b.tg.Edit(b.userID, mid, text, kb, markup)
 }
 
 func (b *Bot) showMoveTo(params []string) error {
@@ -747,10 +732,7 @@ func (b *Bot) showRenameFile(params []string) error {
 	})
 
 	cmd := tg.NewCmd(constants.CmdMove, []string{dir, filename, dir, "%s"})
-	err = b.db.SetInputExpectation(b.userID, cmd)
-	if err != nil {
-		return fmt.Errorf("show rename: can't set input expectation: %w", err)
-	}
+	b.db.SetInputExpectation(b.userID, cmd)
 
 	err = b.show(fmt.Sprintf("%s\n%s", fs.Title(filename), content), kb, tg.MarkupHTML)
 	if err != nil {
@@ -852,6 +834,12 @@ func (b *Bot) showFile(params []string) error {
 	err = b.show(fmt.Sprintf("%s\n%s", fs.Title(filename), content), kb, tg.MarkupHTML)
 	if err != nil {
 		return fmt.Errorf("show file: %w", err)
+	}
+
+	msgID := b.db.LastKeyboardMsgID(b.userID)
+	if msgID != 0 {
+		b.db.SetFilenameByMsgID(b.userID, msgID, filename)
+		b.db.SetDirByMsgID(b.userID, msgID, dir)
 	}
 
 	return nil
@@ -1141,10 +1129,10 @@ func (b *Bot) schedule(params []string) error {
 
 func (b *Bot) delAllKeyboards() {
 	var msgIDs []int
-	mid, _ := b.db.LastKeyboardMsgID(b.userID)
-	if mid != nil {
-		_ = b.db.DelLastKeyboardMsgID(b.userID)
-		msgIDs = append(msgIDs, *mid)
+	mid := b.db.LastKeyboardMsgID(b.userID)
+	if mid != 0 {
+		b.db.DelLastKeyboardMsgID(b.userID)
+		msgIDs = append(msgIDs, mid)
 	}
 
 	// No worries if we fail - it will be cleaned up by the worker
@@ -1244,10 +1232,7 @@ func (b *Bot) showToFile(params []string) error {
 		kb.AddRow(row)
 	}
 
-	err = b.db.SetInputExpectation(b.userID, tg.NewCmd(constants.CmdMoveToNewDir, []string{filenameHash, "%s"}))
-	if err != nil {
-		return fmt.Errorf("to file dialog: %w", err)
-	}
+	b.db.SetInputExpectation(b.userID, tg.NewCmd(constants.CmdMoveToNewDir, []string{filenameHash, "%s"}))
 
 	err = b.show("🗂 Choose a dir or name a new one:", kb, tg.MarkupHTML)
 	if err != nil {
@@ -1265,10 +1250,7 @@ func (b *Bot) showToChecklist(params []string) error {
 		return fmt.Errorf("show to checklist: can't get keyboard: %w", err)
 	}
 
-	err = b.db.SetInputExpectation(b.userID, tg.NewCmd(constants.CmdMoveToNewChecklist, []string{filenameHash, "%s"}))
-	if err != nil {
-		return fmt.Errorf("show to checklist: %w", err)
-	}
+	b.db.SetInputExpectation(b.userID, tg.NewCmd(constants.CmdMoveToNewChecklist, []string{filenameHash, "%s"}))
 
 	err = b.show("choose your checklist", kb, tg.MarkupHTML)
 	if err != nil {

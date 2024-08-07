@@ -8,7 +8,7 @@ package worker
 //	redis, err := miniredis.Run()
 //	r.NoError(err)
 //	defer redis.Close()
-//	b2 := internal.NewBot(-1, tgram, userFS, db.NewDB(redis), &userconfig.DefaultConfig)
+//	b2 := internal.NewBot(-1, tgram, userFS,db.NewDB(), &userconfig.DefaultConfig)
 //	b := b2
 //
 //	pomodoroIn := func(dirName string) bool {
@@ -50,7 +50,7 @@ package worker
 // 	r.NoError(err)
 // 	defer redis.Close()
 
-// 	b := NewBot(-1, tgram, userFS, db.NewDB(redis), &userconfig.DefaultConfig)
+// 	b := NewBot(-1, tgram, userFS,db.NewDB(), &userconfig.DefaultConfig)
 
 // 	currentBackend := fs.DefaultBackend
 // 	fs.DefaultBackend = fsBackend
@@ -87,7 +87,7 @@ package worker
 //	redis, err := miniredis.Run()
 //	r.NoError(err)
 //	defer redis.Close()
-//	b := NewBot(-1, tgram, userFS, db.NewDB(redis), &userconfig.DefaultConfig)
+//	b := NewBot(-1, tgram, userFS,db.NewDB(), &userconfig.DefaultConfig)
 //
 //	currentBackend := fs.DefaultBackend
 //	fs.DefaultBackend = fsBackend

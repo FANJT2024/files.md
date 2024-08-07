@@ -7,7 +7,6 @@ import (
 	"path"
 	"time"
 
-	"github.com/alicebob/miniredis/v2"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/joho/godotenv"
 	"github.com/lmittmann/tint"
@@ -54,12 +53,6 @@ func main() {
 	}
 	telegram := tg.NewTG(api)
 
-	redis, err := miniredis.Run()
-	if err != nil {
-		panic(fmt.Sprintf("Can't create Redis: %s\n", err))
-	}
-	defer redis.Close()
-
 	// Initiate per-user locker
 	userLocker := sync.NewPerUserLocker()
 
@@ -71,13 +64,13 @@ func main() {
 	}(quit)
 
 	// Due tasks scheduler
-	go func(redis *miniredis.Miniredis, tg *tg.TG) {
+	go func(tg *tg.TG) {
 		fsBackend := afero.NewOsFs()
 		var lastFrozenRequestCheckAt time.Time // We use this parameter to avoid logging the same frozen request many times
 		for {
 			select {
 			case <-ticker.C:
-				err := worker.MoveDueTasksToToday(config.Config.StoragePath, config.Config.ConfigFilename, fsBackend, telegram, redis)
+				err := worker.MoveDueTasksToToday(config.Config.StoragePath, config.Config.ConfigFilename, fsBackend, telegram)
 				if err != nil {
 					fmt.Printf("Worker's error: %s\n", err)
 				}
@@ -91,7 +84,7 @@ func main() {
 				return
 			}
 		}
-	}(redis, telegram)
+	}(telegram)
 
 	go habitsServer()
 
@@ -145,7 +138,7 @@ func main() {
 				}
 			}()
 
-			bot := internal.NewBot(userID, telegram, userFS, db.NewDB(redis), userconf)
+			bot := internal.NewBot(userID, telegram, userFS, db.NewDB(), userconf)
 
 			if err := bot.Answer(u); err != nil {
 				slog.Error("Bot error", "err", err)

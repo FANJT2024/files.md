@@ -6,7 +6,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/alicebob/miniredis/v2"
 	"github.com/spf13/afero"
 	"golang.org/x/exp/slog"
 
@@ -23,7 +22,6 @@ func MoveDueTasksToToday(
 	configFilename string,
 	fsBackend afero.Fs,
 	telegram internal.TGInterface,
-	redis *miniredis.Miniredis,
 ) error {
 	rootFS, err := fs.NewFS(storagePath, fsBackend)
 	if err != nil {
@@ -64,7 +62,7 @@ func MoveDueTasksToToday(
 				slog.Error("schedule worker: can't move", "err", err)
 			}
 
-			bot := internal.NewBot(userID, telegram, userFS, db.NewDB(redis), userconf)
+			bot := internal.NewBot(userID, telegram, userFS, db.NewDB(), userconf)
 			bot.ShowTodayTasks(nil)
 
 			slog.Debug("Scheduled task moved to today", schedule.Filename, "filename")
