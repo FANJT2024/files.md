@@ -158,7 +158,32 @@ func (u *Upd) ReplyToMsgID() int {
 	return message.ReplyToMessage.MessageID
 }
 
-func (u *Upd) PhotoID() (string, bool) {
+func (u *Upd) PhotoOrImageID() (string, bool) {
+	photoID, found := u.photoID()
+	if found {
+		return photoID, true
+	}
+
+	imageID, found := u.imageID()
+	if found {
+		return imageID, true
+	}
+
+	return "", false
+}
+
+// Caption returns the caption for the animation, audio,
+// document, paid media, photo, video or voice
+func (u *Upd) Caption() string {
+	message := u.raw.Message
+	if message == nil {
+		return ""
+	}
+
+	return message.Caption
+}
+
+func (u *Upd) photoID() (string, bool) {
 	message := u.raw.Message
 	if message == nil {
 		return "", false
@@ -184,7 +209,7 @@ func (u *Upd) PhotoID() (string, bool) {
 	return photoID, found
 }
 
-func (u *Upd) ImageID() (string, bool) {
+func (u *Upd) imageID() (string, bool) {
 	message := u.raw.Message
 	if message == nil {
 		return "", false

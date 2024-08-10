@@ -249,6 +249,24 @@ func (fs FS) Rename(oldDir, oldFilename, newDir, newFilename string) error {
 	return nil
 }
 
+func (fs FS) UnsafeRename(unsafePath, newDir, newFilename string) error {
+	newPath := fs.UnsafePath(newDir, newFilename)
+	isSafe, err := fs.isSafe(newPath)
+	if err != nil {
+		return fmt.Errorf("fs rename: check if file is safe to access '%s': %w", newPath, err)
+	}
+	if !isSafe {
+		return fmt.Errorf("fs can't rename to '%s': %w", newPath, errUnsafePath)
+	}
+
+	err = fs.backend.Rename(unsafePath, newPath)
+	if err != nil {
+		return fmt.Errorf("can't rename from '%s' to '%s': %w", unsafePath, newPath, err)
+	}
+
+	return nil
+}
+
 func (fs FS) Unhash(dir, filenameHash string) (string, error) {
 	if dir == DirRoot && filenameHash == DirRoot {
 		return DirRoot, nil

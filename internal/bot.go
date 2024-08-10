@@ -55,8 +55,8 @@ type UpdInterface interface {
 	InlineQueryOffset() int
 	IsSentViaBot() bool
 	ReplyToMsgID() int
-	PhotoID() (string, bool)
-	ImageID() (string, bool)
+	PhotoOrImageID() (string, bool)
+	Caption() string
 }
 
 // TGInterface provides a simple interface to telegram API
@@ -170,40 +170,21 @@ func (b *Bot) Answer(u UpdInterface) error {
 
 	// Handle forwards
 	if u.IsForwarded() {
-		return b.saveForward(u)
+		return b.saveFromForward(u)
 	}
 
 	// Handle replies
 	isReply := u.ReplyToMsgID() != -1
 	if isReply {
-		return b.add(u)
+		return b.addToExistingFile(u)
 	}
 
-	// Handle images
-	var photoID string
-	var hasPhoto bool
-	if photoID, hasPhoto = u.PhotoID(); !hasPhoto {
-		photoID, hasPhoto = u.ImageID()
-	}
-	if hasPhoto {
-		// Return handle media?
-		outFile, path, err := b.fs.TempFile()
-		if err != nil {
-			return fmt.Errorf("can't create temp file: %w", err)
-		}
-		defer outFile.Close()
-
-		extension, err := b.tg.DownloadFile(photoID, outFile)
-		if err != nil {
-			return fmt.Errorf("can't download file: %w", err)
-		}
-
-		_, _ = path, extension
-
-		return nil
+	// Handle photos
+	if _, hasPhoto := u.PhotoOrImageID(); hasPhoto {
+		return b.saveFromPhoto(u)
 	}
 
-	return b.save(u)
+	return b.saveFromRegularMsg(u)
 }
 
 // Commands and their handlers.
@@ -292,7 +273,7 @@ func (b *Bot) allowedTextCmds() []string {
 	}
 }
 
-func (b *Bot) save(u UpdInterface) error {
+func (b *Bot) saveFromRegularMsg(u UpdInterface) error {
 	msg := txt.EntitiesToMarkdown(u.MsgText(), u.MsgEntities())
 	msg = strings.TrimSpace(txt.NormNewLines(msg))
 
@@ -316,40 +297,50 @@ func (b *Bot) save(u UpdInterface) error {
 	return b.showMoveTo([]string{fs.Hash(filename)})
 }
 
-func (b *Bot) add(u UpdInterface) error {
-	msg := txt.EntitiesToMarkdown(u.MsgText(), u.MsgEntities())
-	msg = strings.TrimSpace(txt.NormNewLines(msg))
-
-	dir := b.db.DirByMsgID(b.userID, u.ReplyToMsgID())
-	filename := b.db.FilenameByMsgID(b.userID, u.ReplyToMsgID())
-	if dir == "" || filename == "" {
-		// TODO?
-		return nil
-	}
-	existingContent, err := b.fs.Read(dir, filename)
+func (b *Bot) saveFromPhoto(u UpdInterface) error {
+	outFile, tmpImgPath, err := b.fs.TempFile()
 	if err != nil {
-		return fmt.Errorf("add: can't read: %w", err)
+		return fmt.Errorf("can't create temp file: %w", err)
 	}
+	defer outFile.Close()
 
-	header := fmt.Sprintf("### %s", now().Format("02.01.2006 Monday"))
-	var content string
-	if !strings.Contains(existingContent, header) {
-		content = fmt.Sprintf("%s\n%s\n%s", strings.TrimSpace(existingContent), header, msg)
-	} else {
-		content = fmt.Sprintf("%s\n%s", strings.TrimSpace(existingContent), msg)
-	}
-
-	err = b.fs.Write(dir, filename, content)
+	photoID, _ := u.PhotoOrImageID()
+	extension, err := b.tg.DownloadFile(photoID, outFile)
 	if err != nil {
-		return fmt.Errorf("add: can't write: %w", err)
+		return fmt.Errorf("can't download file: %w", err)
 	}
 
-	b.delAllKeyboards()
+	imgFilename := fmt.Sprintf("tg_%s%s", photoID, extension)
+	err = b.fs.UnsafeRename(tmpImgPath, fs.DirImg, imgFilename)
+	if err != nil {
+		return fmt.Errorf("can't rename tmp image: %w", err)
+	}
 
-	return b.ShowTodayTasks(nil)
+	imgPath := fmt.Sprintf("../%s/%s", fs.DirImg, imgFilename)
+	content := fmt.Sprintf("![[%s|center|400]]", imgPath)
+	if u.Caption() != "" {
+		content = fmt.Sprintf("%s\n%s", content, u.Caption())
+	}
+
+	title := strings.TrimSpace(u.Caption())
+	if len(title) > maxTitleLength {
+		title = txt.Substr(title, 0, maxTitleLength) + "..."
+	}
+	if title == "" {
+		title = fmt.Sprintf("Img %s", now().Format("02.01.06 15:04"))
+	}
+	sanitizedTitle := fs.SanitizeFilename(title)
+
+	filename := fs.Filename(sanitizedTitle)
+	err = b.createOrAdd(fs.DirToday, filename, content)
+	if err != nil {
+		return fmt.Errorf("save: %w", err)
+	}
+
+	return b.showMoveTo([]string{fs.Hash(filename)})
 }
 
-func (b *Bot) saveForward(u UpdInterface) error {
+func (b *Bot) saveFromForward(u UpdInterface) error {
 	msg := txt.EntitiesToMarkdown(u.MsgText(), u.MsgEntities())
 	msg = strings.TrimSpace(txt.NormNewLines(msg))
 
@@ -357,6 +348,8 @@ func (b *Bot) saveForward(u UpdInterface) error {
 	if err != nil {
 		return fmt.Errorf("save forward: %w", err)
 	}
+	// TODO what if sanitized content different same in
+	// case of regular save, we should save it in the body
 	title = fs.SanitizeFilename(title)
 	filename := fs.Filename(title)
 
@@ -389,6 +382,39 @@ func (b *Bot) saveForward(u UpdInterface) error {
 	}
 
 	return b.showMoveTo([]string{fs.Hash(filename)})
+}
+
+func (b *Bot) addToExistingFile(u UpdInterface) error {
+	msg := txt.EntitiesToMarkdown(u.MsgText(), u.MsgEntities())
+	msg = strings.TrimSpace(txt.NormNewLines(msg))
+
+	dir := b.db.DirByMsgID(b.userID, u.ReplyToMsgID())
+	filename := b.db.FilenameByMsgID(b.userID, u.ReplyToMsgID())
+	if dir == "" || filename == "" {
+		// TODO?
+		return nil
+	}
+	existingContent, err := b.fs.Read(dir, filename)
+	if err != nil {
+		return fmt.Errorf("add: can't read: %w", err)
+	}
+
+	header := fmt.Sprintf("### %s", now().Format("02.01.2006 Monday"))
+	var content string
+	if !strings.Contains(existingContent, header) {
+		content = fmt.Sprintf("%s\n%s\n%s", strings.TrimSpace(existingContent), header, msg)
+	} else {
+		content = fmt.Sprintf("%s\n%s", strings.TrimSpace(existingContent), msg)
+	}
+
+	err = b.fs.Write(dir, filename, content)
+	if err != nil {
+		return fmt.Errorf("add: can't write: %w", err)
+	}
+
+	b.delAllKeyboards()
+
+	return b.ShowTodayTasks(nil)
 }
 
 func (b *Bot) search(u UpdInterface) error {

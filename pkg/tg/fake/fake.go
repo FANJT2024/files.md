@@ -70,12 +70,12 @@ func (m *Upd) ReplyToMsgID() int {
 	return -1
 }
 
-func (m *Upd) PhotoID() (string, bool) {
+func (m *Upd) PhotoOrImageID() (string, bool) {
 	return "", false
 }
 
-func (m *Upd) ImageID() (string, bool) {
-	return "", false
+func (m *Upd) Caption() string {
+	return ""
 }
 
 type TG struct {
