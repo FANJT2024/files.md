@@ -1,6 +1,8 @@
 package fake
 
 import (
+	"io"
+
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 
 	"zakirullin/stuffbot/pkg/tg"
@@ -68,6 +70,14 @@ func (m *Upd) ReplyToMsgID() int {
 	return -1
 }
 
+func (m *Upd) PhotoID() (string, bool) {
+	return "", false
+}
+
+func (m *Upd) ImageID() (string, bool) {
+	return "", false
+}
+
 type TG struct {
 	SentTexts      []string
 	LastSentText   string
@@ -105,4 +115,8 @@ func (f *TG) AnswerCallbackQuery(queryID string, text string) error {
 
 func (f *TG) AnswerInlineQuery(queryID string, results []interface{}, cacheTime int, offset string) error {
 	return nil
+}
+
+func (f *TG) DownloadFile(fileID string, writer io.Writer) (string, error) {
+	return "", nil
 }

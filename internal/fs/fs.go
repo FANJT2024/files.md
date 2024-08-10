@@ -9,6 +9,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"io"
 	"path"
 	"path/filepath"
 	"regexp"
@@ -187,10 +188,20 @@ func (fs FS) MakeDir(dir string) error {
 
 	err = fs.backend.Mkdir(path, 0o755)
 	if err != nil {
-		return fmt.Errorf("make dir: %w", err)
+		return fmt.Errorf("fs can't make dir: %w", err)
 	}
 
 	return nil
+}
+
+// TempFile returns a temporary file and its path.
+func (fs FS) TempFile() (io.WriteCloser, string, error) {
+	outFile, err := afero.TempFile(fs.backend, "", "")
+	if err != nil {
+		return nil, "", fmt.Errorf("fs can't create temp file: %w", err)
+	}
+
+	return outFile, outFile.Name(), nil
 }
 
 func (fs FS) Del(dir, filename string) error {

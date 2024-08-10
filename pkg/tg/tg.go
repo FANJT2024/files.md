@@ -3,6 +3,9 @@ package tg
 import (
 	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
+	"path"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
@@ -90,6 +93,28 @@ func (tg *TG) AnswerInlineQuery(queryID string, results []interface{}, cacheTime
 	}
 
 	return nil
+}
+
+// DownloadFile returns downloaded file extension
+func (tg *TG) DownloadFile(fileID string, outFile io.Writer) (string, error) {
+	file, err := tg.api.GetFile(tgbotapi.FileConfig{FileID: fileID})
+	if err != nil {
+		return "", fmt.Errorf("tg can't get file: %w", err)
+	}
+
+	fileURL := fmt.Sprintf("https://api.telegram.org/file/bot%s/%s", tg.api.Token, file.FilePath)
+	resp, err := http.Get(fileURL)
+	if err != nil {
+		return "", fmt.Errorf("tg can't download file: %w", err)
+	}
+	defer resp.Body.Close()
+
+	_, err = io.Copy(outFile, resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("tg can't save file: %w", err)
+	}
+
+	return path.Ext(file.FilePath), nil
 }
 
 func (tg *TG) buildInlineKeyboard(kb *Keyboard) *tgbotapi.InlineKeyboardMarkup {

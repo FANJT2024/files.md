@@ -3,6 +3,7 @@ package tg
 import (
 	"encoding/json"
 	"errors"
+	"slices"
 	"strconv"
 	"strings"
 	"unicode/utf16"
@@ -10,7 +11,17 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
-var errNoUserID = errors.New("update should always have at least one userID")
+var (
+	errNoUserID    = errors.New("update should always have at least one userID")
+	imageMimeTypes = []string{
+		"image/gif",
+		"image/jpeg",
+		"image/pjpeg",
+		"image/png",
+		"image/tiff",
+		"image/webp",
+	}
+)
 
 // Upd is a simple wrapper over Telegram Update object
 type Upd struct {
@@ -145,6 +156,48 @@ func (u *Upd) ReplyToMsgID() int {
 	}
 
 	return message.ReplyToMessage.MessageID
+}
+
+func (u *Upd) PhotoID() (string, bool) {
+	message := u.raw.Message
+	if message == nil {
+		return "", false
+	}
+
+	if message.Photo == nil {
+		return "", false
+	}
+
+	// Pick the photo with the maximum size
+	photoSize := 0
+	photoID := ""
+	found := false
+	for _, photo := range message.Photo {
+		if photo.FileSize > photoSize {
+			photoSize = photo.FileSize
+			photoID = photo.FileID
+			found = true
+		}
+	}
+
+	return photoID, found
+}
+
+func (u *Upd) ImageID() (string, bool) {
+	message := u.raw.Message
+	if message == nil {
+		return "", false
+	}
+
+	if message.Document == nil {
+		return "", false
+	}
+
+	if slices.Contains(imageMimeTypes, message.Document.MimeType) {
+		return message.Document.FileID, true
+	}
+
+	return "", false
 }
 
 // Takes into account Telegram's UTF-16 encoding

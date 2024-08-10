@@ -93,6 +93,7 @@ Refer to [the following handbook](https://github.com/zakirullin/cognitive-load) 
 - We write **tests**
 - We don't use get* prefix for methods
 - We don't use panics, errors are part of business logic
+- No generics and iterators
 - If we are ignoring an error - we leave a WHY comment
 - We wrap errors all the time, we should add method's context
 - We prefer fakes/real implementations over mocks and stubs

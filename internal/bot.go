@@ -3,6 +3,7 @@ package internal
 import (
 	"errors"
 	"fmt"
+	"io"
 	"slices"
 	"strconv"
 	"strings"
@@ -54,6 +55,8 @@ type UpdInterface interface {
 	InlineQueryOffset() int
 	IsSentViaBot() bool
 	ReplyToMsgID() int
+	PhotoID() (string, bool)
+	ImageID() (string, bool)
 }
 
 // TGInterface provides a simple interface to telegram API
@@ -63,6 +66,7 @@ type TGInterface interface {
 	Del(userID int64, msgID int) error
 	AnswerCallbackQuery(queryID string, text string) error
 	AnswerInlineQuery(queryID string, results []interface{}, cacheTime int, offset string) error
+	DownloadFile(fileID string, outFile io.Writer) (string, error)
 }
 
 type DBInterface interface {
@@ -105,6 +109,7 @@ func NewBot(userID int64, tg TGInterface, fs *fs.FS, db DBInterface, conf *userc
 
 // Answer to incoming text message or command (inline queries aren't supported yet)
 func (b *Bot) Answer(u UpdInterface) error {
+	// Handle inline queries
 	if _, ok := u.InlineQueryID(); ok {
 		return b.search(u)
 	}
@@ -115,6 +120,7 @@ func (b *Bot) Answer(u UpdInterface) error {
 		}
 	}
 
+	// Handle commands
 	cmd, err := b.extractCmd(u)
 	if err != nil {
 		return fmt.Errorf("answer: %w", err)
@@ -142,7 +148,7 @@ func (b *Bot) Answer(u UpdInterface) error {
 		return nil
 	}
 
-	// Show file requested from inline query
+	// Handle inline query file requests
 	// TODO write tests for all sorts of tricky input with ../
 	if u.IsSentViaBot() {
 		dirAndFilename := strings.Split(u.MsgText(), "/")
@@ -162,13 +168,38 @@ func (b *Bot) Answer(u UpdInterface) error {
 		return b.showFile([]string{dir, filename})
 	}
 
+	// Handle forwards
 	if u.IsForwarded() {
 		return b.saveForward(u)
 	}
 
+	// Handle replies
 	isReply := u.ReplyToMsgID() != -1
 	if isReply {
 		return b.add(u)
+	}
+
+	// Handle images
+	var photoID string
+	var hasPhoto bool
+	if photoID, hasPhoto = u.PhotoID(); !hasPhoto {
+		photoID, hasPhoto = u.ImageID()
+	}
+	if hasPhoto {
+		outFile, path, err := b.fs.TempFile()
+		if err != nil {
+			return fmt.Errorf("can't create temp file: %w", err)
+		}
+		defer outFile.Close()
+
+		extension, err := b.tg.DownloadFile(photoID, outFile)
+		if err != nil {
+			return fmt.Errorf("can't download file: %w", err)
+		}
+
+		_, _ = path, extension
+	
+		return nil
 	}
 
 	return b.save(u)
