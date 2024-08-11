@@ -34,7 +34,7 @@ func Render(userID int64, userFS *fs.FS) ([]byte, error) {
 	err = tmpl.Execute(&out, map[string]any{
 		"habits":     habits,
 		"moods":      moods,
-		"MoodEmojis": MoodEmojis,
+		"moodEmojis": MoodEmojis,
 		"host":       config.Config.Host,
 		"userID":     userID,
 		"currentDay": time.Now().YearDay(),
