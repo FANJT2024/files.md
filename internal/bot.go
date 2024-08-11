@@ -550,7 +550,7 @@ func (b *Bot) showMoveTo(params []string) error {
 		targetFilename := args[0]
 		unhashedTarget, err := b.fs.Unhash(fs.DirRoot, targetFilename)
 		if err == nil {
-			lastRow = append(lastRow, tg.NewBtn(unhashedTarget, tg.NewCmd(quickCmd, args)))
+			lastRow = append(lastRow, tg.NewBtn(fs.Title(unhashedTarget), tg.NewCmd(quickCmd, args)))
 		}
 	}
 	lastRow = append(lastRow, tg.NewBtn(i18n.StrBtnGoToToday, tg.NewCmd(constants.CmdShowToday, nil)))
