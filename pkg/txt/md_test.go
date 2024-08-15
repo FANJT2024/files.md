@@ -134,8 +134,7 @@ func TestMarkdownToHtmlBoldInsideItalic(t *testing.T) {
 	r.Equal("<i>italic and <b>bold</b></i>", MarkdownToHtml(md))
 
 	md = "*italic and **bold***"
-	// It is strange, but Obsidian renders in that inconsistent way
-	r.Equal("*italic and <b>bold</b>*", MarkdownToHtml(md))
+	r.Equal("<i>italic and <b>bold</b></i>", MarkdownToHtml(md))
 }
 
 func TestMarkdownToHtmlNoLists(t *testing.T) {

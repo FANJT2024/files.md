@@ -185,13 +185,45 @@ func MarkdownToHtml(md string) string {
 
 	text := markdown()
 	code := and(term("`"), and(text, term("`")))
+	italicNoCyclic := or(
+		and(openTerm("*"), and(some(or(
+			or(
+				and(openTerm("**"), and(or(code, text), closeTerm("**"))),
+				and(openTerm("__"), and(or(code, text), closeTerm("__"))),
+			),
+			or(code, text))),
+			closeTerm("*"))),
+		and(openTerm("_"), and(some(or(
+			or(
+				and(openTerm("**"), and(or(code, text), closeTerm("**"))),
+				and(openTerm("__"), and(or(code, text), closeTerm("__"))),
+			),
+			or(code, text))),
+			closeTerm("_"))),
+	)
+	boldNoCyclic := or(
+		and(openTerm("**"), and(some(or(
+			or(
+				and(openTerm("*"), and(or(code, text), closeTerm("*"))),
+				and(openTerm("_"), and(or(code, text), closeTerm("_"))),
+			),
+			or(code, text))),
+			closeTerm("**"))),
+		and(openTerm("__"), and(some(or(
+			or(
+				and(openTerm("*"), and(or(code, text), closeTerm("*"))),
+				and(openTerm("_"), and(or(code, text), closeTerm("_"))),
+			),
+			or(code, text))),
+			closeTerm("__"))),
+	)
 	italic := or(
-		and(openTerm("*"), and(or(code, text), closeTerm("*"))),
-		and(openTerm("_"), and(or(code, text), closeTerm("_"))),
+		and(openTerm("*"), and(some(or(boldNoCyclic, or(code, text))), closeTerm("*"))),
+		and(openTerm("_"), and(some(or(boldNoCyclic, or(code, text))), closeTerm("_"))),
 	)
 	bold := or(
-		and(openTerm("**"), and(or(italic, or(text, code)), closeTerm("**"))),
-		and(openTerm("__"), and(or(italic, or(text, code)), closeTerm("__"))),
+		and(openTerm("**"), and(some(or(italicNoCyclic, or(text, code))), closeTerm("**"))),
+		and(openTerm("__"), and(some(or(italicNoCyclic, or(text, code))), closeTerm("__"))),
 	)
 	//italicOrText := or(italic, text)
 	//bold := or(and(openTerm("**"), and(some(italicOrText), closeTerm("**"))), and(openTerm("__"), and(some(italicOrText), closeTerm("__"))))
@@ -203,6 +235,7 @@ func MarkdownToHtml(md string) string {
 		fmt.Printf("%v\n", tok.consumed)
 	}
 
+	// TODO only return if remained is empty?
 	for _, tok := range doc(md) {
 		return tok.consumed
 	}
