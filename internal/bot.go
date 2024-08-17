@@ -529,17 +529,8 @@ func (b *Bot) show(text string, kb *tg.Keyboard, markup string) error {
 func (b *Bot) showMoveTo(params []string) error {
 	filenameHash := params[0]
 
-	btns := []tg.Btn{
-		tg.NewBtn(i18n.StrForTomorrow, tg.NewCmd(consts.CmdSchedule, []string{filenameHash, txt.I64(sched.Tomorrow()), ""})),
-		tg.NewBtn(i18n.StrForLater, tg.NewCmd(consts.CmdMoveToDir, []string{fs.DirLater, fs.DirToday, filenameHash})),
-		tg.NewBtn(i18n.StrForDay, tg.NewCmd(consts.CmdShowScheduleForDay, []string{filenameHash})),
-		tg.NewBtn(i18n.StrToFile, tg.NewCmd(consts.CmdShowMoveToFile, []string{filenameHash})),
-		tg.NewBtn(i18n.StrToJournal, tg.NewCmd(consts.CmdMoveToJournal, []string{fs.DirToday, filenameHash})),
-		tg.NewBtn(i18n.StrToChecklist, tg.NewCmd(consts.CmdShowToChecklist, []string{filenameHash})),
-	}
-
 	var kb tg.Keyboard
-	userBtnsByRows := slice.Chunk(btns, btnsPerRow)
+	userBtnsByRows := slice.Chunk(b.moveToBtns(filenameHash), btnsPerRow)
 	for _, row := range userBtnsByRows {
 		kb.AddRow(row)
 	}
@@ -566,27 +557,6 @@ func (b *Bot) showMoveTo(params []string) error {
 	}
 
 	return nil
-}
-
-func (b *Bot) quickBtns() []tg.Btn {
-	quickPanelRow := tg.NewRow()
-	// We iterate through hardcoded panel to preserve order of buttons in UI
-	for _, cmd := range b.conf.QuickCmds() {
-		for _, btn := range userconfig.AvailableQuickBtns {
-			if btn.Cmd.Name == cmd {
-				if btn.Cmd.Name == consts.CmdWebAppHabits {
-					habitsUrl := fmt.Sprintf("%s/habits_v2/%d", config.Config.Host, b.userID)
-					btn.Cmd.Params = []string{habitsUrl}
-				}
-				btn.Name = i18n.Emoji(btn.Name)
-
-				quickPanelRow = append(quickPanelRow, btn)
-				break
-			}
-		}
-	}
-
-	return quickPanelRow
 }
 
 func (b *Bot) ShowTodayTasks(params []string) error {
@@ -900,10 +870,10 @@ func (b *Bot) showMultilineTask(params []string) error {
 	content = txt.Html(content)
 
 	var moveToBtn tg.Btn
-	btnLabel := i18n.StrMoveToLater
+	btnLabel := i18n.StrMoveToLaterLong
 	toDir := fs.DirLater
 	if dir == fs.DirLater {
-		btnLabel = i18n.StrMoveToToday
+		btnLabel = i18n.StrToToday
 		toDir = fs.DirToday
 	}
 	moveToBtn = tg.NewBtn(btnLabel, tg.NewCmd(consts.CmdMoveToDir, []string{toDir, dir, filenameHash}))
@@ -1188,9 +1158,8 @@ func (b *Bot) moveToNewChecklist(params []string) error {
 }
 
 func (b *Bot) moveToJournal(params []string) error {
-	dir := params[0]
-	filenameHash := params[1]
-	filename, err := b.fs.Unhash(dir, filenameHash)
+	filenameHash := params[0]
+	filename, err := b.fs.Unhash(fs.DirToday, filenameHash)
 	if err != nil {
 		return fmt.Errorf("failed to move to journal: can't unhash filename: %w", err)
 	}
@@ -1199,7 +1168,7 @@ func (b *Bot) moveToJournal(params []string) error {
 		return fmt.Errorf("failed to move to journal: can't add note: %w", err)
 	}
 
-	err = b.fs.Del(dir, filename)
+	err = b.fs.Del(fs.DirToday, filename)
 	if err != nil {
 		return fmt.Errorf("failed to move to journal: can't delete note: %w", err)
 	}

@@ -3,6 +3,7 @@ package internal
 import (
 	"fmt"
 
+	"zakirullin/stuffbot/config"
 	"zakirullin/stuffbot/i18n"
 	"zakirullin/stuffbot/internal/consts"
 	"zakirullin/stuffbot/internal/userconfig"
@@ -118,6 +119,27 @@ func (b *Bot) delFromQuickBtns(params []string) error {
 	return nil
 }
 
+func (b *Bot) quickBtns() []tg.Btn {
+	quickBtnsRow := tg.NewRow()
+	// We iterate through hardcoded panel to preserve order of buttons in UI
+	for _, cmd := range b.conf.QuickCmds() {
+		for _, btn := range userconfig.AvailableQuickBtns {
+			if btn.Cmd.Name == cmd {
+				if btn.Cmd.Name == consts.CmdWebAppHabits {
+					habitsUrl := fmt.Sprintf("%s/habits_v2/%d", config.Config.Host, b.userID)
+					btn.Cmd.Params = []string{habitsUrl}
+				}
+				btn.Name = i18n.Emoji(btn.Name)
+
+				quickBtnsRow = append(quickBtnsRow, btn)
+				break
+			}
+		}
+	}
+
+	return quickBtnsRow
+}
+
 // A little copy-paste from showQuickBtnsSettings
 func (b *Bot) showMoveToBtnsSettings(params []string) error {
 	var kb tg.Keyboard
@@ -207,4 +229,21 @@ func (b *Bot) delFromMoveToBtns(params []string) error {
 
 	b.showMoveToBtnsSettings([]string{})
 	return nil
+}
+
+func (b *Bot) moveToBtns(filenameHash string) []tg.Btn {
+	moveToBtns := tg.NewRow()
+
+	// We iterate through hardcoded panel to preserve order of buttons in UI
+	for _, cmd := range b.conf.MoveToCmds() {
+		for _, btn := range userconfig.AvailableMoveToBtns {
+			if btn.Cmd.Name == cmd {
+				btn.Cmd.Params = []string{filenameHash}
+				moveToBtns = append(moveToBtns, btn)
+				break
+			}
+		}
+	}
+
+	return moveToBtns
 }
