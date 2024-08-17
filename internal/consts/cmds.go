@@ -1,4 +1,4 @@
-package constants
+package consts
 
 // Telegram only allows 64 bytes in callback_data,
 // So we have to be really short :)

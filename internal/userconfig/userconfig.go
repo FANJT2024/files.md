@@ -12,7 +12,7 @@ import (
 	"golang.org/x/exp/slog"
 
 	"zakirullin/stuffbot/i18n"
-	"zakirullin/stuffbot/internal/constants"
+	"zakirullin/stuffbot/internal/consts"
 	"zakirullin/stuffbot/internal/fs"
 )
 
@@ -21,11 +21,11 @@ var DefaultConfig = Config{ // TODO apply default config if some fields are miss
 		Language: "en",
 		HomeCmd:  "today",
 		MoveToCmds: []string{
-			constants.CmdScheduleForTmrw,
-			constants.CmdLater,
-			constants.CmdShowScheduleForDay,
-			constants.CmdShowMoveToFile,
-			constants.CmdMoveToJournal,
+			consts.CmdScheduleForTmrw,
+			consts.CmdLater,
+			consts.CmdShowScheduleForDay,
+			consts.CmdShowMoveToFile,
+			consts.CmdMoveToJournal,
 			//"checklist",
 		},
 		PomodoroDurationMinute: 25,
