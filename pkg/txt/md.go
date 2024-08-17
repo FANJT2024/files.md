@@ -122,9 +122,9 @@ func recursive(input string, parser Parser, depth int) []token {
 	return results
 }
 
-// some applies the parser for more than one time. Each parse result is combined with the previous result.
+// oneOrMore applies the parser for more than one time. Each parse result is combined with the previous result.
 // And each parse can generate multiple results.
-func some(parser Parser) Parser {
+func oneOrMore(parser Parser) Parser {
 	return func(input string) []token {
 		return recursive(input, parser, 0)
 	}
@@ -186,11 +186,11 @@ func Html(md string) string {
 		and(openTerm("__"), and(or(code, text), closeTerm("__"))),
 	)
 	italicNoCyclic := or(
-		and(openTerm("*"), and(some(or(
+		and(openTerm("*"), and(oneOrMore(or(
 			onlyBold,
 			or(code, text))),
 			closeTerm("*"))),
-		and(openTerm("_"), and(some(or(
+		and(openTerm("_"), and(oneOrMore(or(
 			onlyBold,
 			or(code, text))),
 			closeTerm("_"))),
@@ -200,26 +200,26 @@ func Html(md string) string {
 		and(openTerm("_"), and(or(code, text), closeTerm("_"))),
 	)
 	boldNoCyclic := or(
-		and(openTerm("**"), and(some(or(
+		and(openTerm("**"), and(oneOrMore(or(
 			onlyItalic,
 			or(code, text))),
 			closeTerm("**"))),
-		and(openTerm("__"), and(some(or(
+		and(openTerm("__"), and(oneOrMore(or(
 			onlyItalic,
 			or(code, text))),
 			closeTerm("__"))),
 	)
 	italic := or(
-		and(openTerm("*"), and(some(or(boldNoCyclic, or(code, text))), closeTerm("*"))),
-		and(openTerm("_"), and(some(or(boldNoCyclic, or(code, text))), closeTerm("_"))),
+		and(openTerm("*"), and(oneOrMore(or(boldNoCyclic, or(code, text))), closeTerm("*"))),
+		and(openTerm("_"), and(oneOrMore(or(boldNoCyclic, or(code, text))), closeTerm("_"))),
 	)
 	bold := or(
-		and(openTerm("**"), and(some(or(italicNoCyclic, or(text, code))), closeTerm("**"))),
-		and(openTerm("__"), and(some(or(italicNoCyclic, or(text, code))), closeTerm("__"))),
+		and(openTerm("**"), and(oneOrMore(or(italicNoCyclic, or(text, code))), closeTerm("**"))),
+		and(openTerm("__"), and(oneOrMore(or(italicNoCyclic, or(text, code))), closeTerm("__"))),
 	)
 
 	span := or(bold, or(italic, or(code, text)))
-	doc := some(span)
+	doc := oneOrMore(span)
 
 	for _, tok := range doc(md) {
 		fmt.Printf("%v\n", tok.consumed)

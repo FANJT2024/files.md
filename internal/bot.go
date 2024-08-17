@@ -978,6 +978,8 @@ func (b *Bot) showChecklist(params []string) error {
 	if err != nil {
 		return fmt.Errorf("show checklist: %w", err)
 	}
+	items = fs.SortByCtimeDesc(items)
+	slices.Reverse(items)
 	items = items[max(0, len(items)-maxBtns):]
 
 	kb := tg.NewKeyboard(nil)
