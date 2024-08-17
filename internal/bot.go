@@ -624,7 +624,7 @@ func (b *Bot) showLaterTasks(params []string) error {
 	}
 
 	var kb tg.Keyboard
-	scheduled := sched.FormattedSchedule(b.conf)
+	scheduled := sched.FilenamesAndSchedules(b.conf)
 	for _, file := range files {
 		var btn tg.Btn
 		name := i18n.Emojify(fs.UnsanitizeFilename(file.Title))
@@ -1076,7 +1076,7 @@ func (b *Bot) moveToNewDir(params []string) error {
 }
 
 func (b *Bot) moveToExistingFile(params []string) error {
-	// TODO Remove input expectations if dir is not list
+	// TODO Remove input expectations if dir is not today (?)
 	existingFilenameHash := params[0]
 	fromDirHash := params[1]
 	newFilenameHash := params[2]

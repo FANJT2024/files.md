@@ -75,7 +75,9 @@ func ScheduleReport(conf *userconfig.Config) string {
 	return strings.TrimSpace(report)
 }
 
-func FormattedSchedule(conf *userconfig.Config) map[string]string {
+// FilenamesAndSchedules returns filenames and schedules:
+// Filename.md => Tomorrow
+func FilenamesAndSchedules(conf *userconfig.Config) map[string]string {
 	formatted := make(map[string]string)
 	scheduledTasks := conf.Schedules()
 	for _, task := range scheduledTasks {
@@ -85,7 +87,6 @@ func FormattedSchedule(conf *userconfig.Config) map[string]string {
 	return formatted
 }
 
-// TODO write tests for that
 func formatTaskDate(scheduledAt int64) string {
 	today := now().Truncate(24 * time.Hour)
 	taskDate := time.Unix(scheduledAt, 0).Truncate(24 * time.Hour)

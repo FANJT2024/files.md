@@ -962,7 +962,7 @@ func TestShowToFileNoDirs(t *testing.T) {
 	), tgram.SentKeyboard)
 }
 
-func TestShowToFile(t *testing.T) {
+func TestShowMoveToFile(t *testing.T) {
 	r := require.New(t)
 
 	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
@@ -1111,4 +1111,35 @@ func TestMoveToExistingFile(t *testing.T) {
 	content, err := userFS.Read("", "Existing file.md")
 	r.NoError(err)
 	r.Equal("### 11.08.2024 Sunday\nNew file", content)
+}
+
+func TestMoveToExistingFileExistingRecord(t *testing.T) {
+	r := require.New(t)
+
+	savedNow := now
+	defer func() {
+		now = savedNow
+	}()
+	now = func() time.Time {
+		return time.Date(2024, 8, 11, 9, 54, 0, 0, time.UTC)
+	}
+
+	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
+	r.NoError(err)
+	err = userFS.Write("today", "Task.md", "")
+	r.NoError(err)
+	err = userFS.Write("", "New file.md", "")
+	r.NoError(err)
+	err = userFS.Write("", "Existing file.md", "### 11.08.2024 Sunday\nContent")
+	r.NoError(err)
+
+	tgram := fake.NewTG()
+	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), &userconfig.DefaultConfig)
+	upd := fake.NewUpdCmdFake(-1, tg.NewCmd("mf", []string{"1c8f819d075", "", "501ef2410e2"}))
+	err = bot.Answer(upd)
+	r.NoError(err)
+
+	content, err := userFS.Read("", "Existing file.md")
+	r.NoError(err)
+	r.Equal("### 11.08.2024 Sunday\nNew file\nContent", content)
 }
