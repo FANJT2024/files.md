@@ -29,7 +29,7 @@ var DefaultConfig = Config{ // TODO apply default config if some fields are miss
 			consts.CmdMoveToJournal,
 			//"checklist",
 		},
-		PomodoroDurationMinute: 25,
+		PomodoroDurationMinute: 50,
 		Schedules:              []Schedule{},
 		JournalFilenameFormat:  "January 2006.md",
 		JournalHeaderFormat:    "02, Monday",

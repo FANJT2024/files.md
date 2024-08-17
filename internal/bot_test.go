@@ -628,10 +628,12 @@ func TestCompleteItemInChecklist(t *testing.T) {
 
 func TestBotTodayLabelIcons(t *testing.T) {
 	r := require.New(t)
+
 	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
 	r.NoError(err)
 	tgram := fake.NewTG()
-	b := NewBot(-1, tgram, userFS, db.NewFakeDB(), &userconfig.DefaultConfig)
+	config := userconfig.DefaultConfig
+	b := NewBot(-1, tgram, userFS, db.NewFakeDB(), &config)
 
 	// Pomodoro is the only task in today
 	r.Nil(b.togglePomodoro(nil))
@@ -1171,4 +1173,44 @@ func TestShowMoveTo(t *testing.T) {
 		}},
 	)
 	r.Equal(kb, tgram.SentKeyboard)
+}
+
+func TestShowScheduleEmpty(t *testing.T) {
+	r := require.New(t)
+
+	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
+	r.NoError(err)
+
+	tgram := fake.NewTG()
+
+	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), &userconfig.DefaultConfig)
+	err = bot.Answer(fake.NewUpdCmdFake(-1, tg.NewCmd("schedule", nil)))
+	r.NoError(err)
+
+	r.Equal("You don't have any scheduled tasks! 🌴", tgram.SentTexts[0])
+}
+
+func TestShowSchedule(t *testing.T) {
+	r := require.New(t)
+
+	savedNow := now
+	defer func() {
+		now = savedNow
+	}()
+	now = func() time.Time {
+		return time.Date(1970, 1, 1, 0, 0, 0, 0, time.UTC)
+	}
+
+	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
+	r.NoError(err)
+
+	tgram := fake.NewTG()
+
+	conf := userconfig.DefaultConfig
+	conf.AddToSchedule("filename.md", 0, "")
+	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), &conf)
+	err = bot.Answer(fake.NewUpdCmdFake(-1, tg.NewCmd("schedule", nil)))
+	r.NoError(err)
+
+	r.Equal("<b>01 January, Thursday</b>\n- Filename", tgram.SentTexts[0])
 }

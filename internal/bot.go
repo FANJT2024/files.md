@@ -871,6 +871,9 @@ func (b *Bot) showStats(params []string) error {
 
 func (b *Bot) showSchedule(params []string) error {
 	schedule := sched.ScheduleReport(b.conf)
+	if len(schedule) == 0 {
+		schedule = i18n.Tr("You don't have any scheduled tasks! 🌴")
+	}
 
 	kb := tg.NewKeyboard([]tg.Row{tg.NewBtn(i18n.StrToday, tg.NewCmd(consts.CmdShowToday, nil))})
 	err := b.show(schedule, kb, tg.MarkupHTML)
@@ -1055,10 +1058,12 @@ func (b *Bot) moveToDir(params []string) error {
 		return fmt.Errorf("move: can't move: %w", err)
 	}
 
-	b.db.SetRecentCommand(b.userID, consts.CmdMoveToDir)
-	// Move from dir is today, because quick command
-	// appears when file is in today dir
-	b.db.SetRecentCommandParams(b.userID, []string{toDirHash, fs.Hash(fs.DirToday)})
+	if newDir != fs.DirLater {
+		b.db.SetRecentCommand(b.userID, consts.CmdMoveToDir)
+		// Move from dir is today, because quick command
+		// appears when file is in today dir
+		b.db.SetRecentCommandParams(b.userID, []string{toDirHash, fs.Hash(fs.DirToday)})
+	}
 
 	return b.ShowTodayTasks(nil)
 }
