@@ -173,3 +173,12 @@ func (c *Config) JournalHeaderFormat() string {
 func (c *Config) SetJournalHeaderFormat(format string) {
 	c.raw.JournalHeaderFormat = format
 }
+
+func (c *Config) ShouldSplitChecklist(checklist string) bool {
+	for _, unsplittableChecklist := range []string{fs.DirRead, fs.DirWatch} {
+		if checklist == unsplittableChecklist {
+			return false
+		}
+	}
+	return true
+}

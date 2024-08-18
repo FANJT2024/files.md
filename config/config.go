@@ -4,8 +4,6 @@ import (
 	"fmt"
 
 	"github.com/kelseyhightower/envconfig"
-
-	"zakirullin/stuffbot/internal/fs"
 )
 
 type Configuration struct {
@@ -23,13 +21,4 @@ func LoadConfig() error {
 	}
 
 	return nil
-}
-
-func ShouldSplitChecklist(checklist string) bool {
-	for _, unsplittableChecklist := range []string{fs.DirRead, fs.DirWatch} {
-		if checklist == unsplittableChecklist {
-			return false
-		}
-	}
-	return true
 }

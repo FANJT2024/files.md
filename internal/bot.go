@@ -13,7 +13,6 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"golang.org/x/exp/slog"
 
-	"zakirullin/stuffbot/config"
 	"zakirullin/stuffbot/i18n"
 	"zakirullin/stuffbot/internal/consts"
 	"zakirullin/stuffbot/internal/fs"
@@ -385,7 +384,6 @@ func (b *Bot) saveFromForward(u UpdInterface) error {
 	}
 
 	files = fs.SortByCtimeDesc(fs.OnlyMDFiles(files))
-	// TODO do we need that reverse?
 	slices.Reverse(files)
 	if len(files) > 0 {
 		file := files[len(files)-1]
@@ -778,7 +776,7 @@ func (b *Bot) showPostpone(params []string) error {
 }
 
 func (b *Bot) postpone(params []string) error {
-	// TODO Remove input expectations if dir is not list
+	// TODO Remove input expectations if dir is not today (?)
 	filenameHash := params[0]
 
 	filename, err := b.fs.Unhash(fs.DirToday, filenameHash)
@@ -1032,7 +1030,7 @@ func (b *Bot) showStart(params []string) error {
 }
 
 func (b *Bot) moveToDir(params []string) error {
-	// TODO Remove input expectations if dir is not list
+	// TODO Remove input expectations if dir is not today
 	toDirHash := params[0]
 	fromDirHash := params[1]
 	fromFilenameHash := params[2]
@@ -1057,7 +1055,7 @@ func (b *Bot) moveToDir(params []string) error {
 	}
 
 	// TODO touch
-	// TODO multiline
+	// TODO multiline ?
 	err = b.fs.Rename(oldDir, filename, newDir, newFilename)
 	if err != nil {
 		return fmt.Errorf("move: can't move: %w", err)
@@ -1160,8 +1158,7 @@ func (b *Bot) moveToChecklist(params []string) error {
 		return fmt.Errorf("move to checklist: %w", err)
 	}
 
-	// TODO multiline splitting seems to be broken
-	if isMultiline && config.ShouldSplitChecklist(checklist) {
+	if isMultiline && b.conf.ShouldSplitChecklist(checklist) {
 		content, err := b.fs.Read(fs.DirToday, filename)
 		if err != nil {
 			return fmt.Errorf("move to checklist: %w", err)
@@ -1170,6 +1167,7 @@ func (b *Bot) moveToChecklist(params []string) error {
 		content = strings.TrimSpace(txt.NormNewLines(content))
 		lines := strings.Split(content, "\n")
 		for _, line := range lines {
+			line = fs.SanitizeFilename(line)
 			err = b.fs.Write(checklist, fs.Filename(line), "")
 			if err != nil {
 				return fmt.Errorf("move to checklist: %w", err)
@@ -1251,7 +1249,6 @@ func (b *Bot) moveToJournal(params []string) error {
 func (b *Bot) moveToLater(params []string) error {
 	filenameHash := params[0]
 
-	// TODO no need to hash dir later/today?
 	return b.moveToDir([]string{fs.DirLater, fs.DirToday, filenameHash})
 }
 

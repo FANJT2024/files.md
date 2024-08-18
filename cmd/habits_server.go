@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/afero"
 
 	"zakirullin/stuffbot/config"
+	"zakirullin/stuffbot/i18n"
 	"zakirullin/stuffbot/internal/fs"
 	"zakirullin/stuffbot/internal/habits"
 	"zakirullin/stuffbot/internal/journal"
@@ -84,6 +85,12 @@ func habitsServer() {
 			}
 		} else {
 			emoji, _ = userFS.Read(fs.DirHabits, fs.Filename(habitName))
+			if emoji == "" {
+				emoji = i18n.Emoji(habitName)
+			}
+			if emoji == "" {
+				emoji = "⚡️"
+			}
 		}
 		err = journal.AddEmoji(userFS, emoji)
 		if err != nil {

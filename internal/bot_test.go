@@ -1362,3 +1362,26 @@ func TestAngerInTodayTasks(t *testing.T) {
 	},
 	), tgram.SentKeyboard)
 }
+
+func TestMoveToChecklistSplittable(t *testing.T) {
+	r := require.New(t)
+
+	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
+	r.NoError(err)
+	err = userFS.Write("today", "Item1.md", "Item1\nItem2")
+	r.NoError(err)
+	err = userFS.MakeDir("-checklist-")
+	r.NoError(err)
+
+	tgram := fake.NewTG()
+	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), &userconfig.DefaultConfig)
+	err = bot.moveToChecklist([]string{"Item1.md", "-checklist-"})
+	r.NoError(err)
+
+	files, err := userFS.FilesAndDirs("-checklist-")
+	r.NoError(err)
+
+	items := fs.OnlyFilenames(files)
+	r.ElementsMatch([]string{"Item1.md", "Item2.md"}, items)
+
+}
