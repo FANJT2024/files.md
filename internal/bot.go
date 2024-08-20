@@ -88,6 +88,21 @@ type DBInterface interface {
 	SetRecentCommandParams(userID int64, params []string)
 }
 
+type ConfigInterface interface {
+	AddQuickCmd(cmd string) error
+	QuickCmds() ([]string, error)
+	DelQuickCmd(cmd string) error
+	SetPomodoroDuration(duration time.Duration) error
+	PomodoroDuration() time.Duration
+	Schedules() ([]userconfig.Schedule, error)
+	AddToSchedule(filename string, scheduleAt int64, cron string) error
+	DelFromSchedule(filename string, scheduledAt int64) error
+	ShouldSplitChecklist(checklist string) bool
+	AddMoveToCmd(cmd string) error
+	MoveToCmds() ([]string, error)
+	DelMoveToCmd(cmd string) error
+}
+
 // Bot provides commands that can be invoked by a user so to query
 // server files and database. A user can also send all sort of things
 // to bot (texts, photos) - in that case we'd save everything.
@@ -96,7 +111,7 @@ type Bot struct {
 	tg     TGInterface
 	fs     *fs.FS
 	db     DBInterface
-	conf   *userconfig.Config
+	conf   ConfigInterface
 }
 
 type BotPluginInterface interface {
@@ -105,7 +120,7 @@ type BotPluginInterface interface {
 
 var now = time.Now
 
-func NewBot(userID int64, tg TGInterface, fs *fs.FS, db DBInterface, conf *userconfig.Config) *Bot {
+func NewBot(userID int64, tg TGInterface, fs *fs.FS, db DBInterface, conf ConfigInterface) *Bot {
 	botPlugins = append(botPlugins,
 		plugins.NewWorldClockPlugin(userID, tg),
 	)
@@ -627,7 +642,10 @@ func (b *Bot) showLaterTasks(params []string) error {
 	}
 
 	var kb tg.Keyboard
-	scheduled := sched.FilenamesAndSchedules(b.conf)
+	// This method is used for not-so-important informative purposes,
+	// so we can tolerate problematic read
+	scheduledTasks, _ := b.conf.Schedules()
+	scheduled := sched.FilenamesAndSchedules(scheduledTasks)
 	for _, file := range files {
 		var btn tg.Btn
 		name := i18n.Emojify(fs.UnsanitizeFilename(file.Title))

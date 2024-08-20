@@ -76,11 +76,8 @@ func ScheduleReport(scheduledTasks []userconfig.Schedule) string {
 
 // FilenamesAndSchedules returns filenames and schedules:
 // Filename.md => Tomorrow
-func FilenamesAndSchedules(conf *userconfig.Config) map[string]string {
+func FilenamesAndSchedules(scheduledTasks []userconfig.Schedule) map[string]string {
 	formatted := make(map[string]string)
-	// This method is used for not-so-important informative purposes,
-	// so we can tolerate problematic read
-	scheduledTasks, _ := conf.Schedules()
 	for _, task := range scheduledTasks {
 		formatted[task.Filename] = formatTaskDate(task.ScheduledAt)
 	}
