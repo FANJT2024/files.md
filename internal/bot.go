@@ -1344,6 +1344,9 @@ func (b *Bot) complete(params []string) error {
 		return b.showLaterTasks(nil)
 	}
 
+	// We can tolerate failure of writing to journal, since that's not single source of truth
+	_ = journal.AddRecord(b.fs, fmt.Sprintf("✅ %s", fs.Title(filename)))
+
 	return b.ShowTodayTasks(nil)
 }
 

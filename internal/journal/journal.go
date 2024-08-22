@@ -95,7 +95,12 @@ func AddEmoji(userFS *fs.FS, emoji string) error {
 		md += fmt.Sprintf("\n%s %s", todayHeader(), emoji)
 	}
 
-	return userFS.Write(fs.DirJournal, journalFilename, md)
+	err = userFS.Write(fs.DirJournal, journalFilename, md)
+	if err != nil {
+		return fmt.Errorf("failed to write to journal: %w", err)
+	}
+
+	return nil
 }
 
 func todayJournalFilename() string {
