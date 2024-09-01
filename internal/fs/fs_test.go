@@ -367,7 +367,7 @@ func TestFS_PathTraversalAttack(t *testing.T) {
 	r := require.New(t)
 
 	fs, _ := NewFS("/", afero.NewMemMapFs())
-	fs.rootPath = "/"
+	fs.RootPath = "/"
 
 	path := fs.UnsafePath("../root/.ssh/", "authorized_keys")
 	r.Equal("/root/.ssh/authorized_keys", path)

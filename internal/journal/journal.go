@@ -5,6 +5,7 @@ import (
 	"regexp"
 	"slices"
 	"strings"
+	"sync"
 	"time"
 
 	"zakirullin/stuffbot/internal/fs"
@@ -12,11 +13,19 @@ import (
 	"zakirullin/stuffbot/pkg/txt"
 )
 
-var Now = time.Now
+var (
+	Now       = time.Now
+	mu        sync.Mutex
+	userLocks map[string]*sync.Mutex
+)
 
 // AddRecord adds a record for the current day.
 // Creates a file if there's no one for the current month
 func AddRecord(userFS *fs.FS, record string, timezone *time.Location) error {
+	lock := userLock(userFS.RootPath)
+	lock.Lock()
+	defer lock.Unlock()
+
 	record = strings.TrimSpace(record)
 	journalFilename := todayJournalFilename(timezone)
 	exists, err := userFS.Exists(fs.DirJournal, journalFilename)
@@ -65,6 +74,10 @@ func AddEmoji(userFS *fs.FS, emoji string, timezone *time.Location) error {
 		return nil
 	}
 
+	lock := userLock(userFS.RootPath)
+	lock.Lock()
+	defer lock.Unlock()
+
 	journalFilename := todayJournalFilename(timezone)
 	exists, err := userFS.Exists(fs.DirJournal, journalFilename)
 	if err != nil {
@@ -110,4 +123,22 @@ func todayJournalFilename(timezone *time.Location) string {
 func todayHeader(timezone *time.Location) string {
 	nowTZ := Now().In(timezone)
 	return fmt.Sprintf("#### %d %s, %s", nowTZ.Day(), nowTZ.Format("January"), nowTZ.Weekday())
+}
+
+func userLock(rootPath string) *sync.Mutex {
+	mu.Lock()
+	defer mu.Unlock()
+
+	if userLocks == nil {
+		userLocks = make(map[string]*sync.Mutex)
+	}
+	if lock, exists := userLocks[rootPath]; exists {
+		return lock
+	}
+
+	newLock := &sync.Mutex{}
+	userLocks[rootPath] = newLock
+
+	return newLock
+
 }

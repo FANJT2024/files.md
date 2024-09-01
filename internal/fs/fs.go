@@ -53,7 +53,7 @@ const (
 // backends, like an in-memory backend, which we use for testing.
 // Check out types implementing afero.Fs for all available backends.
 type FS struct {
-	rootPath string
+	RootPath string
 	backend  afero.Fs
 }
 
@@ -101,7 +101,7 @@ func (fs FS) CreateDirsIfNotExist() error {
 		DirJournal,
 		DirInsights,
 	} {
-		userPath := path.Join(fs.rootPath, dir)
+		userPath := path.Join(fs.RootPath, dir)
 		exists, err := afero.Exists(fs.backend, userPath)
 		if err != nil {
 			return fmt.Errorf("create default dirs: %w", err)
@@ -275,12 +275,12 @@ func (fs FS) FilesAndDirs(dir string) ([]File, error) {
 		return nil, fmt.Errorf("exists: check if file is safe to access '%s': %w", userPath, err)
 	}
 	if !isSafe {
-		return nil, fmt.Errorf("can't get files for '%s': %w", path.Join(fs.rootPath, dir), errUnsafePath)
+		return nil, fmt.Errorf("can't get files for '%s': %w", path.Join(fs.RootPath, dir), errUnsafePath)
 	}
 
 	entries, err := afero.ReadDir(fs.backend, userPath)
 	if err != nil {
-		return nil, fmt.Errorf("can't get files for '%s': %w", path.Join(fs.rootPath, dir), err)
+		return nil, fmt.Errorf("can't get files for '%s': %w", path.Join(fs.RootPath, dir), err)
 	}
 
 	var files []File
@@ -333,13 +333,13 @@ func (fs FS) Dirs() ([]File, error) {
 // because we build our own paths (???)
 // TODO release remove error?
 // isSafe doesn't eval symlinks, so an attacker can create a symlink to a file
-// outside the rootPath. If we use filepath.EvalSymlinks to expand symlinks and
+// outside the RootPath. If we use filepath.EvalSymlinks to expand symlinks and
 // check the real path for safety - we are still prone to TOCTOU (time-of-check to time-of-use)
 // attacks due to the race condition. The only real way to prevent this is to disallow symlinks
 // at the OS level. We can do this by mounting a folder with nosymfollow flag, see README.md.
 func (fs FS) isSafe(path string) (bool, error) {
 	path = filepath.Clean(path)
-	if !strings.HasPrefix(path, fs.rootPath) {
+	if !strings.HasPrefix(path, fs.RootPath) {
 		return false, nil
 	}
 
@@ -477,7 +477,7 @@ func (fs FS) Touch(dir, filename string) error {
 // Sanitize Early, call SanitizeFilename
 // as soon as you get on dir and filename from user input
 func (fs FS) UnsafePath(dir, filename string) string {
-	p := path.Join(fs.rootPath, dir, filename)
+	p := path.Join(fs.RootPath, dir, filename)
 
 	return p
 }
