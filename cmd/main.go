@@ -19,7 +19,6 @@ import (
 	"zakirullin/stuffbot/internal/db"
 	"zakirullin/stuffbot/internal/fs"
 	"zakirullin/stuffbot/internal/sched/worker"
-	"zakirullin/stuffbot/internal/sync"
 	"zakirullin/stuffbot/internal/userconfig"
 	"zakirullin/stuffbot/pkg/tg"
 	"zakirullin/stuffbot/pkg/txt"
@@ -53,9 +52,6 @@ func main() {
 	}
 	telegram := tg.NewTG(api)
 
-	// Initiate per-user locker
-	userLocker := sync.NewPerUserLocker()
-
 	// Workers
 	ticker := time.NewTicker(5 * time.Second)
 	quit := make(chan struct{})
@@ -66,19 +62,12 @@ func main() {
 	// Due tasks scheduler
 	go func(tg *tg.TG) {
 		fsBackend := afero.NewOsFs()
-		// TODO release remove this complexity?
-		var lastFrozenRequestCheckAt time.Time // We use this parameter to avoid logging the same frozen request many times
 		for {
 			select {
 			case <-ticker.C:
 				err := worker.MoveDueTasks(config.Config.StoragePath, config.Config.ConfigFilename, fsBackend, telegram)
 				if err != nil {
 					fmt.Printf("Worker's error: %s\n", err)
-				}
-				reqs := userLocker.FrozenRequests(time.Second, lastFrozenRequestCheckAt.Add(-time.Second))
-				lastFrozenRequestCheckAt = time.Now()
-				for userID, req := range reqs {
-					slog.Error("Frozen request", "userID", userID, "req", req)
 				}
 			case <-quit:
 				ticker.Stop()
@@ -113,10 +102,6 @@ func main() {
 			var updJSON []byte
 			updJSON, _ = json.Marshal(upd)
 			slog.Debug("Bot update: ", "upd", string(updJSON))
-
-			// TODO release one global lock or per-user lock?
-			userLocker.Lock(userID, string(updJSON))
-			defer userLocker.Unlock(userID)
 
 			userPath := path.Join(config.Config.StoragePath, txt.I64(userID))
 			userFS, err := fs.NewFS(userPath, afero.NewOsFs())
