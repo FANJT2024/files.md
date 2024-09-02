@@ -290,7 +290,7 @@ func (b *Bot) extractCmd(u UpdInterface) (*tg.Cmd, error) {
 
 	for canonicCMD, schortcuts := range consts.Shortcuts {
 		for _, shortcut := range schortcuts {
-			re := regexp.MustCompile(fmt.Sprintf(`^%s\s+|\s+%s$`, shortcut, shortcut))
+			re := regexp.MustCompile(fmt.Sprintf(`(?i)^%s\s+|\s+%s$`, shortcut, shortcut))
 
 			if !re.MatchString(u.MsgText()) {
 				continue

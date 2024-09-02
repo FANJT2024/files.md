@@ -1517,6 +1517,43 @@ func TestAddToJournalFromShortcutRu(t *testing.T) {
 	r.Len(files, 1)
 }
 
+func TestAddToJournalFromShortcutRuCases(t *testing.T) {
+	r := require.New(t)
+
+	savedNow := journal.Now
+	defer func() {
+		now = savedNow
+	}()
+	journal.Now = func() time.Time {
+		return time.Date(1970, 1, 1, 0, 0, 0, 0, time.UTC)
+	}
+
+	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
+	err = userFS.CreateDirsIfNotExist()
+	r.NoError(err)
+
+	tgram := tg.NewFakeTG()
+
+	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), fakeConfig())
+	err = bot.Answer(tg.NewFakeUpd(-1, "жЖ запись"))
+	r.NoError(err)
+
+	files, err := userFS.FilesAndDirs("journal")
+	r.NoError(err)
+	r.Len(files, 1)
+
+	content, err := userFS.Read("journal", files[0].Name)
+	r.NoError(err)
+	r.Equal("#### 1 January, Thursday\n`00:00` Запись\n", content)
+
+	err = bot.Answer(tg.NewFakeUpd(-1, "Запись2 ЖЖ"))
+	r.NoError(err)
+
+	content, err = userFS.Read("journal", files[0].Name)
+	r.NoError(err)
+	r.Equal("#### 1 January, Thursday\n`00:00` Запись\n`00:00` Запись2\n", content)
+}
+
 func TestShowForADay(t *testing.T) {
 	r := require.New(t)
 
