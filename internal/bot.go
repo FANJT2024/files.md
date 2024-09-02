@@ -1076,11 +1076,11 @@ func (b *Bot) showChecklist(params []string) error {
 
 	kb := tg.NewKeyboard(nil)
 	for _, item := range items {
-		title := i18n.Emojify(fs.UnsanitizeFilename(item.Title))
 		if item.IsMultiline {
-			title := txt.Emoji(i18n.Emoji("eyes"), title)
+			title := txt.Emoji(i18n.Emoji("eyes"), fs.UnsanitizeFilename(item.Title))
 			kb.AddRow(tg.NewBtn(title, tg.NewCmd(consts.CmdShowChecklistItem, []string{dirHash, item.Hash})))
 		} else {
+			title := i18n.Emojify(fs.UnsanitizeFilename(item.Title))
 			kb.AddRow(tg.NewBtn(title, tg.NewCmd(consts.CmdCompleteChecklistItem, []string{dirHash, item.Hash})))
 		}
 	}
