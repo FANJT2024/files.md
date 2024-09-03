@@ -76,7 +76,9 @@ func Habits(userFS *fs.FS, year int) (map[string]Year, error) {
 				return nil, fmt.Errorf("read habits: can't parse month line '%s': %w", line, errMalformedMonthLine)
 			}
 
-			date, err := time.Parse("January", parts[1])
+			// We should extract only first month:"June, some,gibberish"
+			// TODO add tests
+			date, err := time.Parse("January", txt.FirstWord(parts[1]))
 			if err != nil {
 				return nil, fmt.Errorf("read habits: can't parse month %s: %w", line, err)
 			}

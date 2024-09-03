@@ -23,13 +23,14 @@ var defaultConfig = config{
 		consts.CmdScheduleForTmrw,
 		consts.CmdLater,
 		consts.CmdShowScheduleForDay,
-		consts.CmdShowMoveToFile,
+		consts.CmdShowMoveToDirOrFile,
 		consts.CmdMoveToJournal,
 		//"checklist",
 	},
 	PomodoroDurationInMinutes: 50,
 	Schedules:                 []Schedule{},
 	QuickCmds:                 []string{},
+	AllowTwoEmojisInButton:    false,
 }
 
 var (
@@ -58,6 +59,7 @@ type config struct {
 	PomodoroDurationInMinutes int64      `json:"pomodoroDurationInMinutes"`
 	Schedules                 []Schedule `json:"schedules"`
 	QuickCmds                 []string   `json:"quickCommands"`
+	AllowTwoEmojisInButton    bool       `json:"allowTwoEmojisInButton"`
 }
 
 func NewConfig(userFS *fs.FS, userID int64, filename string) *Config {
@@ -191,6 +193,12 @@ func (c *Config) ShouldSplitChecklist(checklist string) bool {
 		}
 	}
 	return true
+}
+
+func (c *Config) AllowTwoEmojisPerButton() bool {
+	cfg, _ := c.read(c.filename)
+
+	return cfg.AllowTwoEmojisInButton
 }
 
 func (c *Config) read(path string) (config, error) {

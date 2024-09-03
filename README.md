@@ -41,7 +41,8 @@ $ git checkout -b feature/feature_name
 - `content` - note's content (body/text)
 - `dir` - a dir that is meant to store notes under some category, like "happiness"
 - `userID` - chatID. For the most part we're only using chatID as userID (PM with the bot)
-- `ctime` -  data blocks or metadata change time: file's ownership, location, file type and permission settings changed time.  Parent folder renaming won't affect, moving the file does affect, renaming the file does affect. We need this to track file's location changes, like to understand when it was moved to archive
+- `ctime` for file -  data blocks or metadata change time: file's ownership, location, file type and permission settings changed time.  Parent folder renaming won't affect, moving the file does affect, renaming the file does affect. We need this to track file's location changes, like to understand when it was moved to archive
+- `ctime` for dir - adding or removing files or subdirectories (similar to `mtime`)
 
 Any file can be uniquely identified by filename and dir. We only support one level of nesting.
 

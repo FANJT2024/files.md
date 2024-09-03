@@ -215,6 +215,7 @@ func (fs FS) Del(dir, filename string) error {
 	return nil
 }
 
+// TODO check safety
 func (fs FS) Rename(oldDir, oldFilename, newDir, newFilename string) error {
 	oldPath := fs.UnsafePath(oldDir, oldFilename)
 	isSafe, err := fs.isSafe(oldPath)

@@ -22,7 +22,8 @@ const defaultTestCfg = `{
     ],
     "pomodoroDurationInMinutes": 50,
     "schedules": [],
-    "quickCommands": []
+    "quickCommands": [],
+    "allowTwoEmojisInButton": false
 }`
 
 const timezoneTestCfg = `{
@@ -38,7 +39,8 @@ const timezoneTestCfg = `{
     ],
     "pomodoroDurationInMinutes": 50,
     "schedules": [],
-    "quickCommands": []
+    "quickCommands": [],
+    "allowTwoEmojisInButton": false
 }`
 
 const invalidTimezoneTestCfg = `{
@@ -54,7 +56,8 @@ const invalidTimezoneTestCfg = `{
     ],
     "pomodoroDurationInMinutes": 50,
     "schedules": [],
-    "quickCommands": []
+    "quickCommands": [],
+    "allowTwoEmojisInButton": false
 }`
 
 func TestCreateDefaultIfNotExists(t *testing.T) {

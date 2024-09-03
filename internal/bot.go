@@ -41,6 +41,7 @@ const (
 	quickBtnsPerRow        = 4
 	maxBtns                = 50
 	maxBtnsInChecklist     = 5 // For -read- and -watch- checklists, so we're less likely to be overwhelmed :)
+	maxBtnsInMoveTo        = 6
 	maxInlineResults       = 50
 	maxMsgLength           = 4096 // In UTF-8 characters, skin-tone emojis count as 2
 	maxMsgsToSendAtOnce    = 5    // For lengthy messages
@@ -219,14 +220,14 @@ func (b *Bot) handlers() map[string]func([]string) error {
 		consts.CmdShowSchedule:       b.showSchedule,
 		consts.CmdShowSettings:       b.showSettings,
 		// Button's commands (callbacks)
-		consts.CmdRenameFile:                  b.showRenameFile,
+		consts.CmdShowRenameFile:              b.showRenameFile,
 		consts.CmdShowMultilineTask:           b.showMultilineTask,
 		consts.CmdShowFile:                    b.showFile,
 		consts.CmdShowChecklist:               b.showChecklist,
 		consts.CmdCompleteChecklistItem:       b.completeChecklistItem,
 		consts.CmdShowChecklistItem:           b.showChecklistItem,
 		consts.CmdShowScheduleForDay:          b.showToADay,
-		consts.CmdShowMoveToFile:              b.showMoveToFile,
+		consts.CmdShowMoveToDirOrFile:         b.showMoveToFileOrDir,
 		consts.CmdShowMoveToChecklist:         b.showToChecklist,
 		consts.CmdMoveToDir:                   b.moveToDir,
 		consts.CmdMoveToNewDir:                b.moveToNewDir,
@@ -253,6 +254,7 @@ func (b *Bot) handlers() map[string]func([]string) error {
 		consts.CmdDelFromMoveToBtns:           b.delFromMoveToBtns,
 		consts.CmdAddToJournalShortcut:        b.addToJournalFromShortcut,
 		consts.CmdAddToRecentFileShortcut:     b.addToRecentFileFromShortcut,
+		consts.CmdRename:                      b.rename,
 		// Used for button-like separators
 		consts.CmdDoNothing: func(s []string) error { return nil },
 	}
@@ -639,8 +641,11 @@ func (b *Bot) ShowTodayTasks(_ []string) error {
 			cmd := tg.NewCmd(consts.CmdComplete, []string{fs.DirToday, fs.Hash(file.Name)})
 
 			emoji := angerEmoji(file)
+			// TODO add tests for all that
 			if emoji == "" {
 				emoji = i18n.Emoji(file.Title)
+			} else if b.cfg.AllowTwoEmojisPerButton() {
+				emoji += i18n.Emoji(file.Title)
 			}
 			btn = tg.NewBtn(txt.Emoji(emoji, fs.UnsanitizeFilename(file.Title)), cmd)
 		}
@@ -811,7 +816,7 @@ func (b *Bot) showPostpone(_ []string) error {
 	}
 
 	kb.AddRow(tg.NewRow(
-		tg.NewBtn(b.tr(consts.CmdShowRename), tg.NewCmd(consts.CmdShowRename, []string{})),
+		tg.NewBtn(b.tr("Rename"), tg.NewCmd(consts.CmdShowRename, []string{})),
 		tg.NewBtn(b.tr("OK"), tg.NewCmd(consts.CmdShowToday, []string{})),
 	))
 
@@ -836,7 +841,7 @@ func (b *Bot) showMoveFromToday(_ []string) error {
 	}
 
 	kb.AddRow(tg.NewRow(
-		tg.NewBtn(b.tr(consts.CmdShowRename), tg.NewCmd(consts.CmdShowRename, []string{})),
+		tg.NewBtn(b.tr("Rename"), tg.NewCmd(consts.CmdShowRename, []string{})),
 		tg.NewBtn(b.tr("OK"), tg.NewCmd(consts.CmdShowToday, []string{})),
 	))
 
@@ -867,31 +872,26 @@ func (b *Bot) postpone(params []string) error {
 	return b.showPostpone(nil)
 }
 
+// TODO add tests
+// TODO add ability to rename later task?
 func (b *Bot) showRename(params []string) error {
 	dir := fs.DirToday
-	if len(params) > 0 {
-		dir = params[0]
-	}
-	otherDir := fs.DirLater
-	if dir == fs.DirLater {
-		otherDir = fs.DirToday
-	}
 
 	files, err := b.fs.FilesAndDirs(dir)
 	if err != nil {
 		return fmt.Errorf("rename: can't get files in %s dir: %w", dir, err)
 	}
+	files = fs.OnlyMDFiles(files)
 
 	var kb tg.Keyboard
 	for _, file := range files {
 		var btn tg.Btn
-		cmd := tg.NewCmd(consts.CmdRenameFile, []string{dir, fs.Hash(file.Name)})
+		cmd := tg.NewCmd(consts.CmdShowRenameFile, []string{dir, fs.Hash(file.Name)})
 		btn = tg.NewBtn(txt.Emoji(i18n.Emoji("eyes"), file.Title), cmd)
 
 		kb.AddRow(btn)
 	}
-
-	kb.AddRow(tg.NewBtn(otherDir, tg.NewCmd(otherDir, []string{otherDir})))
+	kb.AddRow(tg.NewBtn(i18n.StrToday, tg.NewCmd(consts.CmdShowToday, nil)))
 
 	err = b.show(b.todayLabel(), &kb, tg.MarkupHTML)
 	if err != nil {
@@ -910,24 +910,42 @@ func (b *Bot) showRenameFile(params []string) error {
 		return fmt.Errorf("show rename: can't unhash filename %s in %s: %w", filenameHash, dir, err)
 	}
 
-	content, err := b.fs.Read(dir, filename)
-	if err != nil {
-		return fmt.Errorf("show rename: can't get content for %s: %w", filename, err)
-	}
-
 	kb := tg.NewKeyboard([]tg.Row{
 		tg.NewRow(tg.NewBtn(i18n.StrBack, tg.NewCmd(dir, []string{dir}))),
 	})
 
-	cmd := tg.NewCmd(consts.CmdMoveToDir, []string{dir, filename, dir, "%s"})
+	cmd := tg.NewCmd(consts.CmdRename, []string{dir, filename, "%s"})
 	b.db.SetInputExpectation(b.userID, cmd)
 
-	err = b.show(fmt.Sprintf("%s\n%s", fs.Title(filename), content), kb, tg.MarkupHTML)
+	err = b.show(i18n.Tr("OK. Send me the new name for your task"), kb, tg.MarkupHTML)
 	if err != nil {
 		return fmt.Errorf("show rename: %w", err)
 	}
 
 	return nil
+}
+
+func (b *Bot) rename(params []string) error {
+	dirHash := params[0]
+	fromFilenameHash := params[1]
+	newFilenameFromUserInput := params[2]
+
+	dir, err := b.fs.Unhash(fs.DirRoot, dirHash)
+	if err != nil {
+		return fmt.Errorf("move: can't unhash old dir: %w", err)
+	}
+
+	filename, err := b.fs.Unhash(dir, fromFilenameHash)
+	if err != nil {
+		return fmt.Errorf("move: can't unhash old filename: %w", err)
+	}
+
+	err = b.fs.Rename(dir, filename, dir, newFilenameFromUserInput)
+	if err != nil {
+		return fmt.Errorf("move: can't move: %w", err)
+	}
+
+	return b.ShowTodayTasks(nil)
 }
 
 func (b *Bot) showStats(_ []string) error {
@@ -1172,6 +1190,7 @@ func (b *Bot) moveToExistingFile(params []string) error {
 	fromDirHash := params[1]
 	newFilenameHash := params[2]
 
+	// TODO add test for adding to same file, it seems it is broken (after we added short hash)
 	if newFilenameHash == existingFilenameHash {
 		return b.ShowTodayTasks(nil)
 	}
@@ -1279,16 +1298,39 @@ func (b *Bot) moveToShop(params []string) error {
 	return b.moveToChecklist([]string{filenameHash, fs.Hash(fs.DirShop)})
 }
 
+// TODO test
 func (b *Bot) moveToNewFile(params []string) error {
-	newFilenameHash := params[0]
-	existingFilename := params[1]
+	existingFilenameHash := params[0]
+	newFilenameFromUserInput := fs.Filename(params[1])
 
-	err := b.fs.Write(fs.DirRoot, txt.Ucfirst(existingFilename), "")
+	filename, err := b.fs.Unhash(fs.DirRoot, existingFilenameHash)
+	if err != nil {
+		return fmt.Errorf("move to new file: can't unhash existing file '%s': %w", existingFilenameHash, err)
+	}
+
+	// Save existing filename to content in case the content of new file is empty (i.e. not multiline)
+	content, err := b.fs.Read(fs.DirRoot, filename)
+	content = strings.TrimSpace(content)
+	if len(content) == 0 {
+		content = fs.Title(filename)
+		err = b.fs.Write(fs.DirRoot, filename, content)
+		if err != nil {
+			return fmt.Errorf("move to new file: can't write content of '%s': %w", filename, err)
+		}
+	}
+
+	// TODO check for safety
+	// TODO won't we lost some text here in case of multiline?
+	err = b.fs.Rename(fs.DirRoot, filename, fs.DirRoot, newFilenameFromUserInput)
 	if err != nil {
 		return fmt.Errorf("move to new file: can't create empty file: %w", err)
 	}
 
-	return b.moveToExistingFile([]string{fs.Hash(existingFilename), fs.DirRoot, newFilenameHash})
+	// TODO test
+	b.db.SetRecentCommand(b.userID, consts.CmdMoveToExistingFile)
+	b.db.SetRecentCommandParams(b.userID, []string{fs.ShortHash(newFilenameFromUserInput), fs.ShortHash(fs.DirToday)})
+
+	return b.ShowTodayTasks(nil)
 }
 
 func (b *Bot) moveToNewChecklist(params []string) error {
@@ -1575,45 +1617,78 @@ func (b *Bot) toADayKeyboard(filenameHash string) (*tg.Keyboard, error) {
 	return kb, nil
 }
 
-func (b *Bot) showMoveToFile(params []string) error {
+func (b *Bot) showMoveToFileOrDir(params []string) error {
 	filenameHash := params[0]
+	maxRecentBtns := maxBtnsInMoveTo
 
-	filename, err := b.fs.Unhash(fs.DirToday, filenameHash)
-	if err != nil {
-		return fmt.Errorf("to file dialog: %w", err)
-	}
+	filename := ""
+	// If there's a second param that we want to show all the buttons (user clicked More...)
+	userWantedAllBtns := len(params) > 1
+	if userWantedAllBtns {
+		maxRecentBtns = maxBtns
+		var err error
+		filename, err = b.fs.Unhash(fs.DirRoot, filenameHash)
+		if err != nil {
+			return fmt.Errorf("to file dialog: %w", err)
+		}
+	} else {
+		// For the first time we have to move file to the root directory, as this is not a task anymore
+		var err error
+		filename, err = b.fs.Unhash(fs.DirToday, filenameHash)
+		if err != nil {
+			return fmt.Errorf("to file dialog: %w", err)
+		}
 
-	err = b.fs.Rename(fs.DirToday, filename, fs.DirRoot, filename)
-	if err != nil {
-		return fmt.Errorf("to file dialog: %w", err)
+		err = b.fs.Rename(fs.DirToday, filename, fs.DirRoot, filename)
+		if err != nil {
+			return fmt.Errorf("to file dialog: %w", err)
+		}
 	}
 
 	kb := tg.NewKeyboard(nil)
-	dirBtns, err := b.toDirKeyboardButtons(filenameHash)
-	if err != nil {
-		return fmt.Errorf("to file dialog: %w", err)
-	}
-	dirBtnsByRows := slice.Chunk(dirBtns, btnsPerRow)
-	for _, row := range dirBtnsByRows {
-		kb.AddRow(row)
-	}
+	skippedBtns := false
 
-	fileBtns, err := b.toFileKeyboardButtons(filenameHash)
+	fileBtns, err := b.toFileBtns(fs.ShortHash(filename))
 	if err != nil {
 		return fmt.Errorf("to file dialog: %w", err)
 	}
-	shouldAddSeparator := len(dirBtns) > 0 && len(fileBtns) > 0
-	if shouldAddSeparator {
-		kb.AddRow(tg.NewBtn("Or choose a file:", tg.NewCmd(consts.CmdDoNothing, nil)))
+	if len(fileBtns) > maxRecentBtns {
+		fileBtns = fileBtns[:maxRecentBtns]
+		skippedBtns = true
+	}
+	if len(fileBtns) > 0 {
+		fileBtns = append(fileBtns[1:], fileBtns[0])
 	}
 	fileBtnsByRows := slice.Chunk(fileBtns, btnsPerRow)
 	for _, row := range fileBtnsByRows {
 		kb.AddRow(row)
 	}
 
-	b.db.SetInputExpectation(b.userID, tg.NewCmd(consts.CmdMoveToNewDir, []string{filenameHash, "%s"}))
+	dirBtns, err := b.toDirBtns(filenameHash)
+	if err != nil {
+		return fmt.Errorf("to file dialog: %w", err)
+	}
+	if len(dirBtns) > maxRecentBtns {
+		dirBtns = dirBtns[:maxRecentBtns]
+		skippedBtns = true
+	}
 
-	err = b.show("🗂 Choose a dir or name a new one:", kb, tg.MarkupHTML)
+	shouldAddSeparator := len(dirBtns) > 0 && len(fileBtns) > 0
+	if shouldAddSeparator {
+		kb.AddRow(tg.NewBtn(i18n.Tr("Or choose a dir:"), tg.NewCmd(consts.CmdDoNothing, nil)))
+	}
+	dirBtnsByRows := slice.Chunk(dirBtns, btnsPerRow)
+	for _, row := range dirBtnsByRows {
+		kb.AddRow(row)
+	}
+
+	if skippedBtns {
+		kb.AddRow(tg.NewBtn(i18n.Tr("More..."), tg.NewCmd(consts.CmdShowMoveToDirOrFile, []string{filenameHash, "full"})))
+	}
+
+	b.db.SetInputExpectation(b.userID, tg.NewCmd(consts.CmdMoveToNewFile, []string{filenameHash, "%s"}))
+
+	err = b.show("📄 Select a file or enter a name for a new one:", kb, tg.MarkupHTML)
 	if err != nil {
 		return fmt.Errorf("to file dialog: %w", err)
 	}
@@ -1639,12 +1714,13 @@ func (b *Bot) showToChecklist(params []string) error {
 	return nil
 }
 
-func (b *Bot) toFileKeyboardButtons(newFilenameHash string) ([]tg.Btn, error) {
+func (b *Bot) toFileBtns(newFilenameShortHash string) ([]tg.Btn, error) {
 	files, err := b.fs.FilesAndDirs(fs.DirRoot)
 	if err != nil {
 		return nil, fmt.Errorf("to doc keyboard: %w", err)
 	}
 	files = fs.OnlyMDFiles(files)
+	files = fs.SortByCtimeDesc(files)
 	if len(files) == 0 {
 		return nil, nil
 	}
@@ -1652,7 +1728,7 @@ func (b *Bot) toFileKeyboardButtons(newFilenameHash string) ([]tg.Btn, error) {
 	var buttons []tg.Btn
 	newBtn := func(title, existingFilenameHash string) tg.Btn {
 		title = fmt.Sprintf("%s %s", i18n.Emoji("file"), title)
-		params := []string{existingFilenameHash, fs.DirRoot, newFilenameHash}
+		params := []string{existingFilenameHash, fs.DirRoot, newFilenameShortHash}
 		return tg.NewBtn(title, tg.NewCmd(consts.CmdMoveToExistingFile, params))
 	}
 	for _, file := range files {
@@ -1662,7 +1738,7 @@ func (b *Bot) toFileKeyboardButtons(newFilenameHash string) ([]tg.Btn, error) {
 	return buttons, nil
 }
 
-func (b *Bot) toDirKeyboardButtons(filenameHash string) ([]tg.Btn, error) {
+func (b *Bot) toDirBtns(filenameHash string) ([]tg.Btn, error) {
 	newBtn := func(dir string) tg.Btn {
 		emojifiedDir := fmt.Sprintf("%s %s", i18n.Emoji("dir"), dir)
 		return tg.NewBtn(emojifiedDir, tg.NewCmd(consts.CmdMoveToDir, []string{fs.ShortHash(dir), fs.DirRoot, filenameHash}))
@@ -1673,6 +1749,7 @@ func (b *Bot) toDirKeyboardButtons(filenameHash string) ([]tg.Btn, error) {
 		return nil, fmt.Errorf("to note keyboard: %w", err)
 	}
 	dirs = fs.OnlyNoteDirs(fs.OnlyDirs(dirs))
+	dirs = fs.SortByCtimeDesc(dirs)
 
 	var buttons []tg.Btn
 	for _, dir := range dirs {

@@ -2,6 +2,7 @@ package txt
 
 import (
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 	"unicode"
@@ -97,4 +98,11 @@ func InsertTextAfterHeader(existingContent, header, newContent string) string {
 	content := strings.Replace(existingContent, header, headerAndContent, 1)
 
 	return strings.TrimSpace(content)
+}
+
+// TODO add tests
+func FirstWord(str string) string {
+	str = strings.TrimSpace(str)
+	re := regexp.MustCompile(`^[^\s\p{P}]+`)
+	return re.FindString(str)
 }
