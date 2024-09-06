@@ -1,0 +1,89 @@
+package main
+
+import (
+	"fmt"
+	"os"
+
+	"github.com/joho/godotenv"
+	"github.com/lmittmann/tint"
+	"github.com/spf13/afero"
+	"golang.org/x/exp/slog"
+
+	"zakirullin/stuffbot/config"
+	"zakirullin/stuffbot/i18n"
+	"zakirullin/stuffbot/internal"
+	"zakirullin/stuffbot/internal/consts"
+	"zakirullin/stuffbot/internal/db"
+	"zakirullin/stuffbot/internal/fs"
+	"zakirullin/stuffbot/internal/gui"
+	"zakirullin/stuffbot/internal/userconfig"
+	"zakirullin/stuffbot/pkg/tg"
+)
+
+var (
+	chat *gui.Chat
+)
+
+func main() {
+	opts := &tint.Options{
+		Level: slog.LevelDebug,
+	}
+	logger := slog.New(tint.NewHandler(os.Stderr, opts))
+	slog.SetDefault(logger)
+
+	err := godotenv.Load()
+	if err != nil {
+		panic(fmt.Sprintf("Error loading .env file: %s\n", err))
+	}
+	err = config.LoadConfig()
+	if err != nil {
+		panic(fmt.Sprintf("Error loading cfg: %s\n", err))
+	}
+
+	// TODO move to embed
+	err = i18n.LoadLangFile("i18n/ru.json")
+	if err != nil {
+		panic(fmt.Sprintf("Error loading i18n: %s\n", err))
+	}
+
+	updater := func(u internal.UpdInterface) error {
+		defer func() {
+			err := recover()
+			if err != nil {
+				slog.Error("Bot panic", "err", err)
+			}
+		}()
+
+		userID := u.UserID()
+
+		userPath := config.Config.GUIUserStoragePath
+		userFS, err := fs.NewFS(userPath, afero.NewOsFs())
+		if err != nil {
+			slog.Error("Bot error: can't create fs", "err", err)
+			return err
+		}
+		err = userFS.CreateDirsIfNotExist()
+		if err != nil {
+			slog.Error("Bot error: can't create user dirs", "err", err)
+			return err
+		}
+
+		confFilename := config.Config.ConfigFilename
+		userconf := userconfig.NewConfig(userFS, userID, confFilename)
+		err = userconf.CreateDefaultIfNotExists()
+		if err != nil {
+			slog.Error("Bot error: can't create default user config", "err", err)
+			return err
+		}
+
+		bot := internal.NewBot(userID, chat, userFS, db.NewDB(), userconf)
+		if err := bot.Answer(u); err != nil {
+			slog.Error("Bot error", "err", err)
+		}
+
+		return nil
+	}
+
+	chat = gui.NewChat(1, updater)
+	chat.Run(tg.NewCmd(consts.CmdShowToday, nil))
+}

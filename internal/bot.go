@@ -69,8 +69,8 @@ type UpdInterface interface {
 	Caption() string
 }
 
-// TGInterface provides a simple interface to telegram API
-type TGInterface interface {
+// ChatInterface provides a simple interface to telegram API
+type ChatInterface interface {
 	Send(userID int64, text string, kb *tg.Keyboard, markup string) (int, error)
 	Edit(userID int64, msgID int, text string, kb *tg.Keyboard, markup string) error
 	Del(userID int64, msgID int) error
@@ -101,7 +101,7 @@ type DBInterface interface {
 // to bot (texts, photos) - in that case we'd save everything.
 type Bot struct {
 	userID int64
-	tg     TGInterface
+	tg     ChatInterface
 	fs     *fs.FS
 	db     DBInterface
 	cfg    *userconfig.Config
@@ -113,7 +113,7 @@ type BotPluginInterface interface {
 
 var now = time.Now
 
-func NewBot(userID int64, tg TGInterface, fs *fs.FS, db DBInterface, cfg *userconfig.Config) *Bot {
+func NewBot(userID int64, tg ChatInterface, fs *fs.FS, db DBInterface, cfg *userconfig.Config) *Bot {
 	botPlugins = append(botPlugins,
 		plugins.NewWorldClockPlugin(userID, tg),
 	)
