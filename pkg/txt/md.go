@@ -48,7 +48,7 @@ var closeTags = map[string]string{
 func MDtoHTML(md string) string {
 	mdWithoutCode := EscapeHTML(md)
 	mdWithoutCode, codePlaceholders := ReplaceWithPlaceholders(mdWithoutCode, "(?s)```.*?```", "c0debl0ck")
-	mdWithoutCode, inlinePlaceholders := ReplaceWithPlaceholders(mdWithoutCode, "`[^`]*`", "inl1ne")
+	mdWithoutCode, inlinePlaceholders := ReplaceWithPlaceholders(mdWithoutCode, "`[^`]+`", "inl1ne")
 	// By this point our markdown is safe to send as HTML via Telegram.
 	// There won't be any issues like "missing closing HTML tag",
 	// for the cases when our markdown has some html tags.
@@ -72,9 +72,9 @@ func MDtoHTML(md string) string {
 
 	// We do dirty but simple md -> html conversion.
 	// Covert ` and ``` to <pre> and <code> HTML tags
-	reCodeBlock := regexp.MustCompile("(?s)```(.*?)```")
+	reCodeBlock := regexp.MustCompile("(?s)```(.+?)```")
 	mdWithCode = reCodeBlock.ReplaceAllString(mdWithCode, "<pre>$1</pre>")
-	reInlineCode := regexp.MustCompile("`(.*?)`")
+	reInlineCode := regexp.MustCompile("`([^`]+?)`")
 	mdWithCode = reInlineCode.ReplaceAllString(mdWithCode, "<code>$1</code>")
 
 	// Convert #+ Header to <b>Header</b>

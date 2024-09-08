@@ -42,13 +42,18 @@ func TestMDtoHtmlMultilineBold(t *testing.T) {
 	r.Equal("<b>bold\nstill bold</b>", html)
 }
 
-func TestMDtoHTMLEmptyBold(t *testing.T) {
+func TestMDtoHTMLEmptyBoldAndItalic(t *testing.T) {
 	r := require.New(t)
 
 	md := "**"
-	html := MDtoHTML(md)
+	r.Equal("**", MDtoHTML(md))
+	md = "*"
+	r.Equal("*", MDtoHTML(md))
 
-	r.Equal("**", html)
+	md = "__"
+	r.Equal("__", MDtoHTML(md))
+	md = "_"
+	r.Equal("_", MDtoHTML(md))
 }
 
 func TestMDtoHTMLNewLineChar(t *testing.T) {
@@ -110,6 +115,24 @@ func TestMDtoHTMLHtmlInsideCode(t *testing.T) {
 	r.Equal("<pre>some code a &gt; b</pre>", html)
 }
 
+func TestMDtoHTMLInlineCodeAndCodeBlock(t *testing.T) {
+	r := require.New(t)
+
+	md := "`inline code` and ```code block```"
+	html := MDtoHTML(md)
+
+	r.Equal("<code>inline code</code> and <pre>code block</pre>", html)
+}
+
+func TestMDtoHTMLInlineCodeBlockInsideCodeBlock(t *testing.T) {
+	r := require.New(t)
+
+	md := "```code block with `inline code` inside```"
+	html := MDtoHTML(md)
+
+	r.Equal("<pre>code block with <code>inline code</code> inside</pre>", html)
+}
+
 func TestMDToHTMLItalic(t *testing.T) {
 	r := require.New(t)
 
@@ -119,13 +142,15 @@ func TestMDToHTMLItalic(t *testing.T) {
 	r.Equal("<i>italic</i>", html)
 }
 
-func TestMDToHTMLInvalid(t *testing.T) {
+func TestMDToHTMLInvalidMD(t *testing.T) {
 	r := require.New(t)
 
 	md := "__valid__**invalid"
-	html := MDtoHTML(md)
+	r.Equal("<b>valid</b>**invalid", MDtoHTML(md))
 
-	r.Equal("<b>valid</b>**invalid", html)
+	r.Equal("*invalid_markdown", MDtoHTML("*invalid_markdown"))
+	r.Equal("*``invalid_markdown", MDtoHTML("*``invalid_markdown"))
+	r.Equal("*```invalid_markdown", MDtoHTML("*```invalid_markdown"))
 }
 
 func TestMDToHTMLMultiline(t *testing.T) {
