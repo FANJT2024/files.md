@@ -64,6 +64,6 @@ const (
 var (
 	Shortcuts = map[string][]string{
 		CmdAddToJournalShortcut:    {"/ж", "jj", "жж"},
-		CmdAddToRecentFileShortcut: {"&&"},
+		CmdAddToRecentFileShortcut: {"++"},
 	}
 )

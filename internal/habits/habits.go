@@ -183,10 +183,6 @@ func Write(userFS *fs.FS, year int, habits map[string]Year) error {
 		habitKeys = append(habitKeys, MoodHabit)
 	}
 
-	for _, k := range habitKeys {
-		fmt.Println(k, habits[k])
-	}
-
 	content := ""
 	day := time.Date(year, time.January, 1, 0, 0, 0, 0, time.UTC)
 	for day.Year() < year+1 {
