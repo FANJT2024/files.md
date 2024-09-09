@@ -130,8 +130,12 @@ func (c *ChatGUI) attachKeyboard(kb *tg.Keyboard, msgContainer *fyne.Container) 
 func sendMsg() {
 	msg := strings.TrimSpace(Chat.entry.Text)
 	if len(msg) > 0 {
-		Chat.messages.RemoveAll()
-		Chat.updater(tg.NewFakeUpd(1, msg))
+		if (msg[0] == '/') && (len(msg) > 1) {
+			Chat.updater(tg.NewFakeUpdCmd(1, tg.NewCmd(msg[1:], nil)))
+		} else {
+			Chat.messages.RemoveAll()
+			Chat.updater(tg.NewFakeUpd(1, msg))
+		}
 	}
 	Chat.entry.SetText("")
 }
