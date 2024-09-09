@@ -26,6 +26,12 @@ type ChatGUI struct {
 
 var Chat *ChatGUI
 
+const (
+	width           = 500
+	height          = 500
+	maxCharsPerLine = 80
+)
+
 func NewGui(userID int64, updater func(u internal.UpdInterface) error) *ChatGUI {
 	return &ChatGUI{userID: userID, messages: container.NewVBox(), entry: newEntry(), updater: updater}
 }
@@ -49,7 +55,7 @@ func (c *ChatGUI) Run(startupCMD tg.Cmd) {
 	cont := container.New(layout.NewBorderLayout(nil, inputLine, nil, nil), c.scroll, inputLine)
 
 	c.window.SetContent(cont)
-	c.window.Resize(fyne.NewSize(400, 400))
+	c.window.Resize(fyne.NewSize(width, height))
 	c.window.Show()
 	c.window.Canvas().Focus(c.entry)
 
@@ -58,14 +64,37 @@ func (c *ChatGUI) Run(startupCMD tg.Cmd) {
 }
 
 func (c *ChatGUI) Send(_ int64, text string, kb *tg.Keyboard, markup string) (int, error) {
+	text = txt.StripHTMLTags(text)
 	if len(text) == 0 {
 		return 0, nil
 	}
 
-	msgContainer := container.NewVBox(
-		widget.NewLabel(txt.StripHTMLTags(text)),
-	)
-	c.attachKeyboard(kb, msgContainer)
+	btnsContainer := container.NewVBox()
+	var msgContainer *fyne.Container
+	if len(text) > maxCharsPerLine {
+		multilineEntry := widget.NewMultiLineEntry()
+		var result []string
+		lines := strings.Split(text, "\n")
+		for _, line := range lines {
+			for len(line) > maxCharsPerLine {
+				result = append(result, line[:maxCharsPerLine])
+				line = line[maxCharsPerLine:]
+			}
+			result = append(result, line)
+		}
+		text = strings.Join(result, "\n")
+		multilineEntry.Text = text
+		multilineEntry.SetMinRowsVisible(len(result))
+		msgContainer = container.New(layout.NewBorderLayout(multilineEntry, btnsContainer, nil, nil))
+		msgContainer.Add(multilineEntry)
+		msgContainer.Add(btnsContainer)
+	} else {
+		label := widget.NewLabel(text)
+		msgContainer = container.New(layout.NewBorderLayout(label, btnsContainer, nil, nil))
+		msgContainer.Add(label)
+		msgContainer.Add(btnsContainer)
+	}
+	c.attachKeyboard(kb, btnsContainer)
 
 	c.messages.Add(msgContainer)
 	c.scroll.Refresh()
@@ -117,7 +146,8 @@ func (c *ChatGUI) attachKeyboard(kb *tg.Keyboard, msgContainer *fyne.Container) 
 		switch row.(type) {
 		case tg.Btn:
 			b := row.(tg.Btn)
-			msgContainer.Add(newButton(b.Name, btnCallback(b.Cmd)))
+			btn := newButton(b.Name, btnCallback(b.Cmd))
+			msgContainer.Add(btn)
 		case []tg.Btn:
 			btns := row.([]tg.Btn)
 			rowContainer := container.New(layout.NewGridLayoutWithColumns(len(btns)))
