@@ -68,6 +68,8 @@ func (c *ChatGUI) Send(_ int64, text string, kb *tg.Keyboard, markup string) (in
 	c.attachKeyboard(kb, msgContainer)
 
 	c.messages.Add(msgContainer)
+	c.scroll.Refresh()
+	c.scroll.ScrollToBottom()
 
 	return 0, nil
 }
