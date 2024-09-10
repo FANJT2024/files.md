@@ -25,5 +25,5 @@ deploy:
 	scp bot $(host):/app/bot && printf "$${GREEN}The binary is copied on the server$${RESET}\n" && \
 	rm bot && \
 	ssh $(host) "sudo setcap 'cap_net_bind_service=+ep' /app/bot" && \
-	ssh $(host) "su -c \"cd /app && nohup ./bot >> /app/log 2>&1 &\" -s /bin/sh www-data" && \
+	ssh $(host) "su -c \"cd /app && nohup ./bot >> /app/out 2>>/app/err &\" -s /bin/sh www-data" && \
 	printf "$${GREEN}Successfully deployed!$${RESET}\n"
