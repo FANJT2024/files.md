@@ -27,8 +27,8 @@ type ChatGUI struct {
 var Chat *ChatGUI
 
 const (
-	width           = 530
-	height          = 500
+	width           = 560
+	height          = 580
 	maxCharsPerLine = 50
 )
 
