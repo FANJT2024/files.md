@@ -5222,6 +5222,7 @@
     "building"
   ],
   "🏠": [
+    "fml",
     "house",
     "building",
     "home"
@@ -6848,7 +6849,8 @@
     "puzzle_piece",
     "interlocking",
     "puzzle",
-    "piece"
+    "piece",
+    "hob"
   ],
   "🧸": [
     "teddy_bear",
@@ -7922,7 +7924,8 @@
     "law",
     "legal",
     "job",
-    "career"
+    "career",
+    "wrk"
   ],
   "📁": [
     "file_folder",
