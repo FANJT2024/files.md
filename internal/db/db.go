@@ -118,10 +118,6 @@ func (db *DB) SetRecentCommandParams(userID int64, params []string) {
 	recentCommandsTargets.Store(userID, params)
 }
 
-func lastKeyboardMsgIDKey(userID int64) string {
-	return fmt.Sprintf("%d:lastKeyboardMsgIDs", userID)
-}
-
 func inputExpectationKey(userID int64) string {
 	return fmt.Sprintf("%d:inputExpectations", userID)
 }
@@ -132,11 +128,6 @@ func dirByMsgIDKey(userID int64, msgID int) string {
 
 func filenameByMsgIDKey(userID int64, msgID int) string {
 	return fmt.Sprintf("%d:filenameByMsgID:%d", userID, msgID)
-}
-
-// User-namespaced db key
-func (db *DB) key(userID int64, key string) string {
-	return fmt.Sprintf("%s:%d", key, userID)
 }
 
 func tmpFilePath(userID int64, name string) string {

@@ -46,33 +46,47 @@ func NewWorldClockPlugin(userID int64, tg Chat) *WorldClockPlugin {
 	return &WorldClockPlugin{userID, tg}
 }
 
-func (p *WorldClockPlugin) TryToRun(msgText string) bool {
+// Handle checks if the message is a date, time or timestamp and sends the current time in different timezones
+func (p *WorldClockPlugin) Handle(msgText string) (bool, error) {
 	var message string
-	var time time.Time
 	var err error
 
-	time, err = p.parseDate(msgText)
+	// Try to parse date
+	t, err := p.parseDate(msgText)
 	if err == nil {
-		message = p.buildMessage(time, p.fmtTimestamp)
-		p.tg.Send(p.userID, message, nil, tg.MarkupHTML)
-		return true
+		message = p.buildMessage(t, p.fmtTimestamp)
+		_, err = p.tg.Send(p.userID, message, nil, tg.MarkupHTML)
+		if err != nil {
+			return true, fmt.Errorf("world clock: %w", err)
+		}
+
+		return true, nil
 	}
 
-	time, err = p.parseTime(msgText)
+	// Try to parse time
+	t, err = p.parseTime(msgText)
 	if err == nil {
-		message = p.buildMessage(time, p.fmtTimestamp)
-		p.tg.Send(p.userID, message, nil, tg.MarkupHTML)
-		return true
+		message = p.buildMessage(t, p.fmtTimestamp)
+		_, err = p.tg.Send(p.userID, message, nil, tg.MarkupHTML)
+		if err != nil {
+			return true, fmt.Errorf("world clock: %w", err)
+		}
+
+		return true, nil
 	}
 
-	time, err = p.parseTimestamp(msgText)
+	// Try to parse timestamp
+	t, err = p.parseTimestamp(msgText)
 	if err == nil {
-		message = p.buildMessage(time, p.fmtTime)
-		p.tg.Send(p.userID, message, nil, tg.MarkupHTML)
-		return true
+		message = p.buildMessage(t, p.fmtTime)
+		_, err = p.tg.Send(p.userID, message, nil, tg.MarkupHTML)
+		if err != nil {
+			return true, fmt.Errorf("world clock: %w", err)
+		}
+		return true, nil
 	}
 
-	return false
+	return false, nil
 }
 
 func (p *WorldClockPlugin) parseTimestamp(message string) (time.Time, error) {

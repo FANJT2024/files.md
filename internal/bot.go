@@ -109,7 +109,7 @@ type Bot struct {
 }
 
 type BotPlugin interface {
-	TryToRun(string) bool
+	Handle(string) (bool, error)
 }
 
 var now = time.Now
@@ -130,8 +130,13 @@ func (b *Bot) Answer(u Update) error {
 	}
 
 	for _, plugin := range botPlugins {
-		if plugin.TryToRun(u.MsgText()) {
-			return b.ShowToday(nil)
+		if handled, err := plugin.Handle(u.MsgText()); err != nil {
+			return fmt.Errorf("answer: plugin error: %w", err)
+		} else if handled {
+			if err := b.ShowToday(nil); err != nil {
+				return fmt.Errorf("answer after plugin: %w", err)
+			}
+			return nil
 		}
 	}
 

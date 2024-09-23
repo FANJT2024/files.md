@@ -41,3 +41,7 @@ deploy:
 	ssh $(host) "su -c \"cd /app && nohup ./bot >> /app/log 2>>/app/err &\" -s /bin/sh www-data" && \
 	rm /tmp/bot && \
 	printf "$${GREEN}Successfully deployed!$${RESET}\n"
+
+
+lint:
+	golangci-lint run

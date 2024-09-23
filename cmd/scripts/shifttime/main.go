@@ -1,4 +1,4 @@
-package scripts
+package main
 
 import (
 	"bufio"
@@ -31,7 +31,7 @@ func adjustTime(line string, hours int) string {
 	return line
 }
 
-func run() {
+func main() {
 	if len(os.Args) < 3 {
 		fmt.Println("Usage: go run main.go <file.md> <hours>")
 		return

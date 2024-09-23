@@ -156,6 +156,7 @@ func TestMoveDueTasksFromArchive(t *testing.T) {
 	r.NoError(err)
 
 	sc, err := cfg.Schedules()
+	r.NoError(err)
 	r.Equal("due task.md", sc[0].Filename)
 	r.Equal(int64(0), sc[0].ScheduledAt)
 	r.Equal("", sc[0].Cmd)

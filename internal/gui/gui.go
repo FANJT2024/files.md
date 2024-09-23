@@ -1,6 +1,7 @@
 package gui
 
 import (
+	"fmt"
 	"io"
 	"strings"
 	"sync"
@@ -50,7 +51,8 @@ func (c *ChatGUI) Run(startupCMD tg.Cmd) {
 
 	handleCmd := func(cmd string) func() {
 		return func() {
-			c.updater(tg.NewFakeUpdCmd(1, tg.NewCmd(cmd, nil)))
+			// Log errors somewhere
+			_ = c.updater(tg.NewFakeUpdCmd(1, tg.NewCmd(cmd, nil)))
 		}
 	}
 
@@ -80,17 +82,18 @@ func (c *ChatGUI) Run(startupCMD tg.Cmd) {
 	c.window.Show()
 	c.window.Canvas().Focus(c.entry)
 
-	c.updater(tg.NewFakeUpdCmd(1, startupCMD))
+	// Log errors somewhere
+	_ = c.updater(tg.NewFakeUpdCmd(1, startupCMD))
 	a.Run()
 }
 
-func (c *ChatGUI) Send(_ int64, text string, kb *tg.Keyboard, markup string) (int, error) {
+func (c *ChatGUI) Send(_ int64, text string, kb *tg.Keyboard, _ string) (int, error) {
 	text = txt.StripHTMLTags(text)
 	if len(text) == 0 {
 		return 0, nil
 	}
 
-	// We don't need a separate container here I beleive
+	// We don't need a separate container here I believe
 	btnsContainer := container.NewVBox()
 	var msgContainer *fyne.Container
 	if len(text) > maxCharsPerLine {
@@ -132,7 +135,10 @@ func (c *ChatGUI) Edit(userID int64, _ int, text string, kb *tg.Keyboard, markup
 	}
 
 	removeBotMessages()
-	c.Send(userID, text, kb, markup)
+	_, err := c.Send(userID, text, kb, markup)
+	if err != nil {
+		return fmt.Errorf("failed to edit message: %w", err)
+	}
 
 	return nil
 }
@@ -183,21 +189,20 @@ func (c *ChatGUI) attachKeyboard(kb *tg.Keyboard, msgContainer *fyne.Container) 
 
 	btnCallback := func(cmd tg.Cmd) func() {
 		return func() {
-			c.updater(tg.NewFakeUpdCmd(1, cmd))
+			// Log errors somewhere
+			_ = c.updater(tg.NewFakeUpdCmd(1, cmd))
 			c.scroll.Refresh()
 			c.scroll.ScrollToBottom()
 		}
 	}
 	for _, row := range kb.Btns {
-		switch row.(type) {
+		switch row := row.(type) {
 		case tg.Btn:
-			b := row.(tg.Btn)
-			btn := newButton(b.Name, btnCallback(b.Cmd))
+			btn := newButton(row.Name, btnCallback(row.Cmd))
 			msgContainer.Add(btn)
 		case []tg.Btn:
-			btns := row.([]tg.Btn)
-			rowContainer := container.New(layout.NewGridLayoutWithColumns(len(btns)))
-			for _, b := range btns {
+			rowContainer := container.New(layout.NewGridLayoutWithColumns(len(row)))
+			for _, b := range row {
 				rowContainer.Add(newButton(b.Name, btnCallback(b.Cmd)))
 			}
 			msgContainer.Add(rowContainer)
@@ -209,13 +214,15 @@ func sendMsg() {
 	msg := strings.TrimSpace(Chat.entry.Text)
 	if len(msg) > 0 {
 		if (msg[0] == '/') && (len(msg) > 1) {
-			Chat.updater(tg.NewFakeUpdCmd(1, tg.NewCmd(msg[1:], nil)))
+			// Log errors somewhere
+			_ = Chat.updater(tg.NewFakeUpdCmd(1, tg.NewCmd(msg[1:], nil)))
 		} else {
 			removeBotMessages()
 			userMsg := widget.NewLabel(msg)
 			userMsg.Alignment = fyne.TextAlignTrailing
 			Chat.messages.Add(userMsg)
-			Chat.updater(tg.NewUpd(1, msg))
+			// Log errors somewhere
+			_ = Chat.updater(tg.NewUpd(1, msg))
 		}
 	}
 	Chat.entry.SetText("")
