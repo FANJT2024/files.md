@@ -17,7 +17,7 @@ func TestCmdNil(t *testing.T) {
 		Message:  &m,
 	}
 
-	u := NewUpd(rawUpdate)
+	u := NewTGUpd(rawUpdate)
 	cmd := u.Cmd()
 
 	r.Nil(cmd)
@@ -38,7 +38,7 @@ func TestCmdInTheBeginning(t *testing.T) {
 		Message:  &m,
 	}
 
-	u := NewUpd(rawUpdate)
+	u := NewTGUpd(rawUpdate)
 	cmd := u.Cmd()
 
 	r.NotNil(cmd)
@@ -61,7 +61,7 @@ func TestCmdAtTheEnd(t *testing.T) {
 		Message:  &m,
 	}
 
-	u := NewUpd(rawUpdate)
+	u := NewTGUpd(rawUpdate)
 	cmd := u.Cmd()
 
 	r.NotNil(cmd)

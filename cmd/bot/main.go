@@ -91,7 +91,7 @@ func main() {
 				}
 			}()
 
-			u := tg.NewUpd(upd)
+			u := tg.NewTGUpd(upd)
 			userID := u.UserID()
 
 			var updJSON []byte

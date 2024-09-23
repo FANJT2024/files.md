@@ -215,7 +215,7 @@ func sendMsg() {
 			userMsg := widget.NewLabel(msg)
 			userMsg.Alignment = fyne.TextAlignTrailing
 			Chat.messages.Add(userMsg)
-			Chat.updater(tg.NewFakeUpd(1, msg))
+			Chat.updater(tg.NewUpd(1, msg))
 		}
 	}
 	Chat.entry.SetText("")
