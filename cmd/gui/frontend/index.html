@@ -188,6 +188,12 @@
             return;
         }
 
+        // Focus the first command item
+        const firstCommandItem = commandPopup.querySelector('.command-item');
+        if (firstCommandItem) {
+            firstCommandItem.classList.add('focused');
+        }
+
         // Remove 'hidden' class to make the popup visible
         commandPopup.classList.remove('hidden');
 

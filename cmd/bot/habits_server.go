@@ -4,6 +4,7 @@ package main
 
 import (
 	"crypto/tls"
+	_ "embed"
 	"fmt"
 	"log"
 	"net/http"
@@ -23,6 +24,9 @@ import (
 	"zakirullin/stuffbot/internal/userconfig"
 	"zakirullin/stuffbot/pkg/txt"
 )
+
+//go:embed templates/index.html
+var html string
 
 // TODO release graceful shutdown etc
 func habitsServer(habitsHost, certDir, logFilename string) {
@@ -89,7 +93,7 @@ func setupRouter(router *http.ServeMux, logger *log.Logger) {
 	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 
-		_, err := w.Write([]byte(`<body style="text-align: center; background-color: #FFFCF0; color: #100F0F; padding: 10px; margin: 0; font-size: 1.4em; font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'IBM Plex Sans', 'Segoe UI', Helvetica, Arial, sans-serif;">Files made to last</body>`))
+		_, err := w.Write([]byte(html))
 		if err != nil {
 			logger.Printf("failed to write site response: %v", err)
 		}
