@@ -21,6 +21,7 @@
             font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'IBM Plex Sans', 'Segoe UI', Helvetica, Arial, sans-serif;
             -webkit-font-smoothing: antialiased;
             text-rendering: optimizeLegibility;
+            --color-selection:
         }
 
         :root {
@@ -80,6 +81,14 @@
 
         .muted {
             color: #6F6E69;
+        }
+
+        ::selection {
+            background: rgba(187, 220, 206, 0.3);
+        }
+
+        ::-moz-selection {
+            background: rgba(187, 220, 206, 0.3);
         }
     </style>
 </head>
