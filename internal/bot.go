@@ -650,8 +650,24 @@ func (b *Bot) showHTML(validHTML string, kb *tg.Keyboard) error {
 // Read "Markdown to HTML conversion" section in readme's ADRs
 // Chat allows 1-4096 characters AFTER entities parsing,
 // meaning we can have 4096 plain chars + any amount of tags.
-func (b *Bot) showMD(probablyInvalidMD string, kb *tg.Keyboard) error {
-	probablyInvalidMD, _, _ = txt.ExtractTextImgsLinks(probablyInvalidMD)
+func (b *Bot) showMD(probablyInvalidMD string) error {
+	probablyInvalidMD, _, links := txt.ExtractTextImgsLinks(probablyInvalidMD)
+
+	kb := tg.NewKeyboard(nil)
+	kb.AddRow(tg.NewRow(tg.NewBtn(i18n.StrToday, tg.NewCmd(consts.CmdShowToday, nil))))
+	for label, link := range links {
+		dir := fs.DirRoot
+		link = strings.TrimSpace(link)
+		parts := strings.SplitN(link, "/", 2)
+		if len(parts) == 2 {
+			dir = parts[0]
+			link = parts[1]
+		}
+
+		cmd := tg.NewCmd(consts.CmdShowFile, []string{fs.Hash(dir), fs.Hash(link)})
+		kb.AddRow(tg.NewRow(tg.NewBtn(txt.Ucfirst(label), cmd)))
+	}
+
 	mid, hasLastKeyboard := b.db.LastKeyboardMsgID(b.userID)
 	textChunks := txt.SplitTextIntoChunks(probablyInvalidMD, maxMsgLength)
 	if !hasLastKeyboard || len(textChunks) > 1 {
@@ -1183,12 +1199,8 @@ func (b *Bot) showFile(params []string) error {
 		return fmt.Errorf("show file: : %w", err)
 	}
 
-	kb := tg.NewKeyboard([]tg.Row{
-		tg.NewRow(tg.NewBtn(i18n.StrToday, tg.NewCmd(consts.CmdShowToday, nil))),
-	})
-
 	md := fmt.Sprintf("%s\n%s", fs.Title(filename), content)
-	err = b.showMD(md, kb)
+	err = b.showMD(md)
 	if err != nil {
 		return fmt.Errorf("show file: %w", err)
 	}
