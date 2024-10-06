@@ -940,22 +940,6 @@ func (b *Bot) showDirs(_ []string) error {
 	for _, row := range dirBtnsByRows {
 		kb.AddRow(row)
 	}
-	shouldAddSeparator := len(dirs) > 0 && len(files) > 0
-	if shouldAddSeparator {
-		kb.AddRow(tg.NewBtn("-", tg.NewCmd(consts.CmdDoNothing, nil)))
-	}
-
-	files = fs.ExcludeConfig(fs.OnlyMDFiles(files))
-	var fileBtns []tg.Btn
-	for _, file := range files {
-		cmd := tg.NewCmd(consts.CmdShowFile, []string{fs.DirRoot, fs.Hash(file.Name)})
-		btn := tg.NewBtn(fmt.Sprintf("📄 %s", fs.UnsanitizeFilename(file.Title)), cmd)
-		fileBtns = append(fileBtns, btn)
-	}
-	fileBtnsByRows := slice.Chunk(fileBtns, btnsPerRow)
-	for _, row := range fileBtnsByRows {
-		kb.AddRow(row)
-	}
 
 	inlineCmd := tg.NewCustomCmd(consts.CmdInlineQuerySearchEveryWhere, nil, tg.CmdTypeInlineQueryCurrentChat)
 	footer := tg.NewRow(tg.NewBtn(i18n.Tr("🔎 Search"), inlineCmd))

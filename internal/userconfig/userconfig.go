@@ -51,7 +51,7 @@ type config struct {
 	Schedules                 []Schedule `json:"schedules"`
 	QuickCmds                 []string   `json:"quickCommands"`
 	AllowTwoEmojisInButton    bool       `json:"allowTwoEmojisInButton"`
-	NotesOnlyMode             bool       `json:"filesOnlyMode"`
+	NotesOnlyMode             bool       `json:"notesOnlyMode"`
 }
 
 func NewConfig(userFS *fs.FS, userID int64, filename string) *Config {
