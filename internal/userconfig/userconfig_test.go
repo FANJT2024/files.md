@@ -17,7 +17,7 @@ const defaultTestCfg = `{
     "schedules": [],
     "quickCommands": [],
     "allowTwoEmojisInButton": false,
-    "filesOnlyMode": false
+    "notesOnlyMode": false
 }`
 
 const timezoneTestCfg = `{
@@ -34,7 +34,7 @@ const timezoneTestCfg = `{
     "schedules": [],
     "quickCommands": [],
     "allowTwoEmojisInButton": false,
-    "filesOnlyMode": false
+    "notesOnlyMode": false
 }`
 
 const invalidTimezoneTestCfg = `{
@@ -51,7 +51,7 @@ const invalidTimezoneTestCfg = `{
     "schedules": [],
     "quickCommands": [],
     "allowTwoEmojisInButton": false
-    "filesOnlyMode": false
+    "notesOnlyMode": false
 }`
 
 func TestCreateDefaultIfNotExists(t *testing.T) {
