@@ -31,11 +31,24 @@
         @media (max-width: 1024px) {
             :root {
                 #slider-container {
-                    padding-top: 30px;
+                    padding-top: 10px;
                     position: relative;
                     flex-direction: column;
                     align-items: center;
                     padding-right: 0;
+                }
+
+                #slider-container-message {
+                    position: relative;
+                    opacity: 0;
+                    transition: opacity 0.5s ease-out;
+                    margin-bottom: 0;
+                    display: flex;
+                    flex-direction: row;
+                    justify-content: center;
+                    align-items: center;
+                    gap: 60px;
+                    padding-right: 16px;
                 }
 
                 #slider {
@@ -74,7 +87,22 @@
             flex-direction: column;
         }
 
-        #slider-container input {
+        #slider-container-message {
+            font-size: var(--font-smaller);
+            color: var(--color-tx-faint);
+            padding-right: 55px;
+            position: absolute;
+            margin-bottom: 200px;
+            right: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 35px;
+            text-align: center;
+            cursor: pointer;
+            z-index: 0;
+        }
+
+        #slider {
             cursor: pointer;
             z-index: 1;
         }
@@ -98,9 +126,6 @@
         }
 
         #slider::-webkit-slider-runnable-track {
-        }
-
-        #slider {
         }
 
         #slider::-webkit-slider-thumb {
@@ -248,10 +273,21 @@
             background-color: blue;
             animation: highlight 1s infinite;
         }
+
+        .fade-in-out {
+            animation: fadeInOut 2s forwards;
+        }
+
+        @keyframes fadeInOut {
+            0% { opacity: 0; }
+            10%, 80% { opacity: 1; }
+            100% { opacity: 0; }
+        }
     </style>
 </head>
 <body>
 <div id="slider-container">
+    <div id="slider-container-message"></div>
     <input type="range" id="slider" min="1" max="3" value="1" class="slider">
     <div id="slider-container-labels">
         <span data-value="1">Short</span>
@@ -430,6 +466,8 @@ stuff // 🧠+
                 highlightNewBlocks('l3');
             }
 
+            showMessage(slider.value);
+
             const labels = document.querySelectorAll('#slider-container-labels span');
             labels.forEach((label) => {
                 if (label.dataset.value === String(slider.value)) {
@@ -450,6 +488,19 @@ stuff // 🧠+
             });
         }
 
+        const message = document.getElementById('slider-container-message');
+        const messages = {
+            1: "I am in hurry",
+            2: "I got some time",
+            3: "Let me read it all!"
+        };
+
+        function showMessage(value) {
+            message.textContent = messages[value];   // Set the appropriate message
+            message.classList.remove('fade-in-out'); // Reset animation
+            void message.offsetWidth;                // Trigger reflow to restart animation
+            message.classList.add('fade-in-out');    // Start fade-in-out animation
+        }
 
         window.addEventListener('load', updateContentBasedOnHash);
         window.addEventListener('hashchange', updateContentBasedOnHash);
