@@ -1283,7 +1283,7 @@ func (b *Bot) showStart(_ []string) error {
 		tg.NewRow(tg.NewBtn(txt.Emoji(i18n.Emoji("brain"), b.tr("Everything")), tg.NewCmd(consts.CmdFullMode, nil))),
 	})
 
-	return b.showHTML("Welcome 👋! What is your interest?", kb)
+	return b.showHTML("Welcome 👋! What is you need?", kb)
 }
 
 func (b *Bot) moveToDir(params []string) error {
@@ -2169,7 +2169,12 @@ func (b *Bot) showHelp(_ []string) error {
 }
 
 func (b *Bot) notesOnlyMode(_ []string) error {
-	return b.cfg.SetNotesOnlyMode(true)
+	err := b.cfg.SetNotesOnlyMode(true)
+	if err != nil {
+		return fmt.Errorf("notes only mode: can't set notes only mode %w", err)
+	}
+
+	return b.ShowToday(nil)
 }
 
 func (b *Bot) tasksOnlyMode(_ []string) error {
@@ -2202,7 +2207,7 @@ func (b *Bot) tasksOnlyMode(_ []string) error {
 		}
 	}
 
-	return nil
+	return b.ShowToday(nil)
 }
 
 func (b *Bot) fullMode(_ []string) error {
@@ -2228,7 +2233,7 @@ func (b *Bot) fullMode(_ []string) error {
 		}
 	}
 
-	return nil
+	return b.ShowToday(nil)
 }
 
 func extractMarkdown(u Update) string {
