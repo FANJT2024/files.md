@@ -609,11 +609,12 @@ func (b *Bot) restoreMsg(dir, filename string) (string, error) {
 	sanitizedContent := strings.ToLower(fs.SanitizeFilename(msg))
 	contentHasNoTitle := !strings.HasPrefix(sanitizedContent, strings.ToLower(nonTruncatedTitle))
 	if len(msg) == 0 {
-		msg = title
+		return title, nil
 	} else if contentHasNoTitle {
-		msg = fmt.Sprintf("%s\n%s", title, msg)
+		return fmt.Sprintf("%s\n%s", title, msg), nil
 	}
 
+	// msg has all the information, title doesn't have anything to add
 	return msg, nil
 }
 
