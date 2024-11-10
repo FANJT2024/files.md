@@ -77,9 +77,13 @@
     function buildSidebar() {
         var root = new TreeNode("zettel"); // Create the root-node
         for (dir in zettel) {
+            if (dir === "") {
+                continue;
+            }
+
             var dirNode = new TreeNode(dir, {expanded: false});
-            for (file in zettel[dir]) {
-                fileNode = new TreeNode(file, {expanded: false});
+            for (let file in zettel[dir]) {
+                let fileNode = new TreeNode(file, {expanded: false});
                 fileNode.on('click', function (n, node) {
                     editor.getDoc().setValue(zettel[node.parent.toString()][node.toString()].content);
                     editor.currentFolder = node.parent.toString();
@@ -89,6 +93,20 @@
                 dirNode.addChild(fileNode);
             }
             root.addChild(dirNode);
+        }
+
+        if (zettel[""]) {
+            // Adding root files after folders
+            for (let file in zettel[""]) {
+                let fileNode = new TreeNode(file, {expanded: false});
+                fileNode.on('click', function (n, node) {
+                    editor.getDoc().setValue(zettel[""][node.toString()].content);
+                    editor.currentFolder = "";
+                    editor.currentFile = node.toString();
+                    editor.focus();
+                });
+                root.addChild(fileNode)
+            }
         }
 
         var tree = new TreeView(root, "#editor-sidebar", {
@@ -197,7 +215,6 @@
         if (fileData && fileData.handle) {
             let content = editor.getValue();
             const header = filename.replace('.md', '').replace(/^\w/, (c) => c.toUpperCase());
-            console.log(header);
             const headerRegex = new RegExp(`^\\s*# ${header}`);
             content = content.replace(headerRegex, "").trimStart();
 
@@ -218,7 +235,7 @@
     document.addEventListener("keydown", function (event) {
         const folder = editor.currentFolder;
         const filename = editor.currentFile;
-        if (folder && filename) saveFile(folder, filename);
+        saveFile(folder, filename);
     });
 
     function initDB() {
