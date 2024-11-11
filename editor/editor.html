@@ -295,8 +295,8 @@
         }
         const targetChar = editor.getLine(targetLine).length;
         editor.setCursor({ line: targetLine, ch: targetChar });
-        editor.scrollTo(null, 0);
         editor.setCursor({ line: targetLine, ch: targetChar });
+        editor.scrollTo(null, 0);
         editor.focus();
     }
 
