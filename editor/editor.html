@@ -230,7 +230,8 @@
                 filename.endsWith('.jpg') ||
                 filename.endsWith('.jpeg') ||
                 filename.endsWith('.gif') ||
-                filename.endsWith('.md')
+                filename.endsWith('.md') ||
+                filename.endsWith('.txt')
             ) {
                 const folder = path.split('/').filter(Boolean).join('/');
                 if (!zettel[folder]) zettel[folder] = {};
