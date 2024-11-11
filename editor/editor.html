@@ -71,8 +71,7 @@
         },
     });
     editor.setSize(null, "100%");
-    editor.hmdResolveURL = async function (path, s) {
-        console.log(path,s );
+    editor.hmdResolveURL = function (path) {
         if (typeof path === 'undefined') {
             return path
         }
@@ -81,7 +80,7 @@
 
         if (/^(?!http|https|\[).+\.md$/.test(path)) {
             let parts = path.split('/');
-            await showFile(parts[0], parts[1]);
+            showFile(parts[0], parts[1]);
             return path;
         }
 
