@@ -421,7 +421,7 @@ func (b *Bot) savePhoto(u Update) (string, error) {
 		return "", fmt.Errorf("can't save photo: %w", err)
 	}
 
-	imgPath := fmt.Sprintf("../%s/%s", fs.DirImg, imgFilename)
+	imgPath := fmt.Sprintf("%s/%s", fs.DirImg, imgFilename)
 	content := fmt.Sprintf("![[%s|center|%d]]", imgPath, imgWidth)
 	if u.Caption() != "" {
 		caption := txt.TelegramEntitiesToMarkdown(u.Caption(), u.CaptionEntities())

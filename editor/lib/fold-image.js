@@ -36,8 +36,7 @@
                             return null; // Yup! bad URL?!
                         rawurl = tmp.content;
                     }
-                    url = 'https://i.imgur.com/sZlktY7.png';//read_link_1.splitLink(rawurl).url;
-                    //url = cm.hmdResolveURL(url);
+                    url = cm.hmdResolveURL(rawurl);
                 }
                 { // extract the title
                     title = cm.getRange({ line: lineNo, ch: from.ch + 2 }, { line: lineNo, ch: url_begin.token.start - 1 });
