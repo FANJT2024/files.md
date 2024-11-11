@@ -422,7 +422,7 @@ func (b *Bot) savePhoto(u Update) (string, error) {
 	}
 
 	imgPath := fmt.Sprintf("%s/%s", fs.DirImg, imgFilename)
-	content := fmt.Sprintf("![[%s|center|%d]]", imgPath, imgWidth)
+	content := fmt.Sprintf("![center|%d](%s)", imgWidth, imgPath)
 	if u.Caption() != "" {
 		caption := txt.TelegramEntitiesToMarkdown(u.Caption(), u.CaptionEntities())
 		caption = strings.TrimSpace(txt.NormNewLines(caption))

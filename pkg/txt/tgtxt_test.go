@@ -166,7 +166,7 @@ func TestExtractTextImgsLinks_NoImagesOrLinks(t *testing.T) {
 }
 
 func TestExtractTextImgsLinks_WithSingleImage(t *testing.T) {
-	text := "This text includes an image: ![[../img/tg_BQACAgIAAxkBAAIs.png|center]]."
+	text := "This text includes an image: ![center](../img/tg_BQACAgIAAxkBAAIs.png)."
 
 	resultText, images, links := ExtractTextImgsLinks(text)
 
@@ -176,7 +176,7 @@ func TestExtractTextImgsLinks_WithSingleImage(t *testing.T) {
 }
 
 func TestExtractTextImgsLinks_WithMultipleImages(t *testing.T) {
-	text := "Here are two images: ![[../img/tg_image1.png]] and ![[../img/tg_image2.jpg]]."
+	text := "Here are two images: ![](../img/tg_image1.png) and ![](../img/tg_image2.jpg)."
 
 	resultText, images, links := ExtractTextImgsLinks(text)
 
@@ -186,7 +186,7 @@ func TestExtractTextImgsLinks_WithMultipleImages(t *testing.T) {
 }
 
 func TestExtractTextImgsLinks_WithSingleLink(t *testing.T) {
-	text := "Check this link: [[/path/to/document.md|Document]]."
+	text := "Check this link: [Document](/path/to/document.md)."
 
 	resultText, images, links := ExtractTextImgsLinks(text)
 
@@ -196,7 +196,7 @@ func TestExtractTextImgsLinks_WithSingleLink(t *testing.T) {
 }
 
 func TestExtractTextImgsLinks_WithImageAndLink(t *testing.T) {
-	text := "Here is an image: ![[../img/tg_image.png]] and a link: [[/path/to/doc.md|Document]]."
+	text := "Here is an image: ![](img/tg_image.png) and a link: [Document](/path/to/doc.md)."
 
 	resultText, images, links := ExtractTextImgsLinks(text)
 
@@ -206,7 +206,7 @@ func TestExtractTextImgsLinks_WithImageAndLink(t *testing.T) {
 }
 
 func TestExtractTextImgsLinks_WithMultipleLinks(t *testing.T) {
-	text := "Multiple links: [[/path/to/doc1.md|Doc1]], [[/path/to/doc2.md|Doc2]]."
+	text := "Multiple links: [Doc1](/path/to/doc1.md), [Doc2](/path/to/doc2.md)."
 
 	resultText, images, links := ExtractTextImgsLinks(text)
 
@@ -220,7 +220,7 @@ func TestExtractTextImgsLinks_WithMultipleLinks(t *testing.T) {
 
 func TestExtractTextImgsLinks_WithBottomLink(t *testing.T) {
 	text := `Text with a bottom link.
-	[[/path/to/doc.md|Document]]`
+	[Document](/path/to/doc.md)`
 
 	resultText, images, links := ExtractTextImgsLinks(text)
 
@@ -230,7 +230,7 @@ func TestExtractTextImgsLinks_WithBottomLink(t *testing.T) {
 }
 
 func TestExtractTextImgsLinks_WithNestedLinksAndImages(t *testing.T) {
-	text := "Complex example with image and links:\n![[../img/tg_image.png]]\n[[/path/to/doc1.md|Doc1]]\n[[/path/to/doc2.md|Doc2]]"
+	text := "Complex example with image and links:\n![](img/tg_image.png)\n[Doc1](/path/to/doc1.md)\n[Doc2](/path/to/doc2.md)"
 
 	resultText, images, links := ExtractTextImgsLinks(text)
 
