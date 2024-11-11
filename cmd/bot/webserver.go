@@ -102,7 +102,8 @@ func setupRouter(router *http.ServeMux, logger *log.Logger) {
 			http.ServeFile(w, r, "./editor/editor.html")
 			return
 		}
-		http.StripPrefix("/app", http.FileServer(http.Dir("./editor"))).ServeHTTP(w, r)
+		fileServer := http.FileServer(http.Dir("./editor"))
+		http.StripPrefix("/app", http.StripPrefix("/app", fileServer))
 	})
 
 	// TODO add hashing or secrets
