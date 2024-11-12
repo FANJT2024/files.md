@@ -558,6 +558,20 @@
         }
     });
 
+    // Toggle focus mode
+    document.addEventListener('keydown', function(event) {
+        if ((event.altKey || event.metaKey) && event.key === 'Enter') {
+            event.preventDefault();
+            const sidebar = document.getElementById('editor-sidebar');
+            console.log(sidebar.style.display);
+            if (sidebar.style.display === 'none') {
+                sidebar.style.display = 'block';
+            } else {
+                sidebar.style.display = 'none'; // Hide the sidebar
+            }
+        }
+    });
+
     init();
 </script>
 </body>

@@ -55,6 +55,7 @@ body {
 }
 
 #editor-sidebar {
+    display: block;
     width: 400px;
     overflow: auto;
     height: 100%;
