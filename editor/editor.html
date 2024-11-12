@@ -281,10 +281,10 @@
         content = `# ${header}\n${content}`;
         content = content.replace(/\[\[(.+?)\|.*?\]\]/g, '[[$1]]');
 
-        editor.clearHistory();
         editor.currentFolder = folder;
         editor.currentFile = filename;
         editor.getDoc().setValue(content);
+        editor.clearHistory();
 
         const lastLine = editor.lastLine();
         let targetLine = lastLine;
@@ -509,6 +509,15 @@
     document.addEventListener('keydown', (event) => {
         if (event.key === 'Escape') {
             closeGoToFile();
+        }
+    });
+
+    // Scroll to bottom (like VIM)
+    document.addEventListener('keydown', function(event) {
+        if (event.shiftKey && event.key === 'G') {
+            event.preventDefault();
+            const lastLine = editor.lastLine();
+            editor.scrollIntoView({ line: lastLine, ch: 0 }, 300);
         }
     });
 
