@@ -301,7 +301,8 @@ func (b *Bot) extractCmd(u Update) (*tg.Cmd, error) {
 		for _, shortcut := range shortcuts {
 			escapedShortcut := regexp.QuoteMeta(shortcut)
 			reText := regexp.MustCompile(fmt.Sprintf(`(?i)^%s\s+|\s+%s$`, escapedShortcut, escapedShortcut))
-			reCaption := regexp.MustCompile(fmt.Sprintf(`(?i)^%s\s+|\s+%s$|^%s$`, escapedShortcut, escapedShortcut, escapedShortcut))
+			// The only difference from reText is that caption can contain only shortcut, with no other text
+			reCaption := regexp.MustCompile(fmt.Sprintf(`(?i)^%s\s+|\s+%s$|^\s*%s\s*$`, escapedShortcut, escapedShortcut, escapedShortcut))
 
 			doesntMatchText := !reText.MatchString(u.MsgText())
 			doesntMatchCaption := !reCaption.MatchString(u.Caption())
