@@ -300,10 +300,11 @@ func (b *Bot) extractCmd(u Update) (*tg.Cmd, error) {
 	for canonicalCMD, shortcuts := range consts.Shortcuts {
 		for _, shortcut := range shortcuts {
 			escapedShortcut := regexp.QuoteMeta(shortcut)
-			re := regexp.MustCompile(fmt.Sprintf(`(?i)^%s\s+|\s+%s$`, escapedShortcut, escapedShortcut))
+			reText := regexp.MustCompile(fmt.Sprintf(`(?i)^%s\s+|\s+%s$`, escapedShortcut, escapedShortcut))
+			reCaption := regexp.MustCompile(fmt.Sprintf(`(?i)^%s\s+|\s+%s$|^%s$`, escapedShortcut, escapedShortcut, escapedShortcut))
 
-			doesntMatchText := !re.MatchString(u.MsgText())
-			doesntMatchCaption := !re.MatchString(u.Caption())
+			doesntMatchText := !reText.MatchString(u.MsgText())
+			doesntMatchCaption := !reCaption.MatchString(u.Caption())
 			if doesntMatchText && doesntMatchCaption {
 				continue
 			}
