@@ -499,7 +499,7 @@ func SanitizeFilename(filename string) string {
 	filename = strings.ReplaceAll(filename, "\\", escapedBackwardSlash)
 
 	// colon is a reserved character in Windows, so we need to replace it with Modifier Letter Colon (U+A789)
-	// let's not care about Windows for now
+	// Let's not care about Windows for now, becuase linux/macos users suffer from this
 	//filename = strings.ReplaceAll(filename, ":", "꞉")
 
 	return filename

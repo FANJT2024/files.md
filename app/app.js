@@ -94,6 +94,23 @@ function initHyperMD(el) {
             }
         }
     });
+    editor.addKeyMap({
+        // For some reason in default configuration cursor can't be moved up if we have an image above
+        "Up": function(cm) {
+            const cursor = cm.getCursor();
+            let lineAbove = cursor.line - 1;
+            lineAbove = Math.max(0, lineAbove);
+
+            const aboveLineContent = cm.getLine(lineAbove);
+            let imgRE = /!\[.*?\]\(.*?\)/
+            const hasImageAbove = imgRE.test(aboveLineContent) || imgRE.test(cm.getLine(cursor.line));
+            if (hasImageAbove) {
+                cm.setCursor(lineAbove, 0);
+            } else {
+                cm.execCommand("goLineUp");
+            }
+        }
+    });
 }
 
 // We use it as links autocomplete
