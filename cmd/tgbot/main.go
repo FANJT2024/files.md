@@ -20,6 +20,7 @@ import (
 	"zakirullin/stuffbot/internal/fs"
 	"zakirullin/stuffbot/internal/sched/worker"
 	"zakirullin/stuffbot/internal/userconfig"
+	"zakirullin/stuffbot/internal/webserver"
 	"zakirullin/stuffbot/pkg/tg"
 	"zakirullin/stuffbot/pkg/txt"
 )
@@ -110,7 +111,7 @@ func main() {
 
 	// Launch habits server if needed
 	if config.BotCfg.HabitsHost != "" {
-		go habitsServer(config.BotCfg.HabitsHost, config.BotCfg.ServerCertDir, config.BotCfg.ServerLogFile)
+		go webserver.Serve(config.BotCfg.HabitsHost, config.BotCfg.ServerCertDir, config.BotCfg.ServerLogFile)
 	}
 
 	infolog := slog.New(slog.NewTextHandler(os.Stdout, nil))

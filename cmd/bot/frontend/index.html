@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Files.md</title>
-    <script src="./src/main.js" type="module"></script>
+    <title>files.md</title>
+    <script src="src/main.js" type="module"></script>
 </head>
 <body>
 
@@ -52,7 +52,7 @@
     }
 
     function processResponse(response) {
-        console.log(response)
+        console.log(JSON.stringify(response, null, 2))
         document.querySelectorAll('.bot').forEach(element => element.remove());
         document.querySelectorAll('.button-container').forEach(element => element.remove());
         response.Messages?.forEach(message => {
@@ -66,6 +66,8 @@
     }
 
     function attachKeyboard(buttons) {
+        console.log(JSON.stringify(buttons));
+
         const buttonContainer = document.createElement('div');
         buttonContainer.classList.add('button-container');
 
