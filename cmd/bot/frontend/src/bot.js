@@ -1,4 +1,4 @@
-import './style.css';
+import './bot.css';
 
 import {Send} from '../wailsjs/go/main/App';
 import {NewUpdate} from '../wailsjs/go/main/App';

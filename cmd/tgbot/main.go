@@ -20,7 +20,7 @@ import (
 	"zakirullin/stuffbot/internal/fs"
 	"zakirullin/stuffbot/internal/sched/worker"
 	"zakirullin/stuffbot/internal/userconfig"
-	"zakirullin/stuffbot/internal/webserver"
+	"zakirullin/stuffbot/internal/web"
 	"zakirullin/stuffbot/pkg/tg"
 	"zakirullin/stuffbot/pkg/txt"
 )
@@ -112,7 +112,7 @@ func main() {
 	// TODO apphost?
 	// Launch habits server if needed
 	if config.BotCfg.HabitsHost != "" {
-		go webserver.Serve(
+		go web.Serve(
 			config.BotCfg.HabitsHost,
 			config.BotCfg.AppHost,
 			config.BotCfg.ServerCertDir,
