@@ -41,18 +41,25 @@
                 { // extract the title
                     title = cm.getRange({ line: lineNo, ch: from.ch + 2 }, { line: lineNo, ch: url_begin.token.start - 1 });
                 }
-                var img = document.createElement("img");
+                let img = document.createElement("img");
+                // CUSTOMIZED, we don't want blank line with the cursor after image
+                let wrapper = document.createElement("span");
+                wrapper.style.display = "inline-flex";
+                wrapper.style.justifyContent = "center";
+                wrapper.style.alignItems = "center";
+                wrapper.style.width = "100%";
+                wrapper.style.textAlign = "center";
+                wrapper.appendChild(img);
                 var marker = cm.markText(from, to, {
                     clearOnEnter: true,
                     collapsed: true,
-                    replacedWith: img,
+                    replacedWith: wrapper,
                 });
                 img.addEventListener('load', function () {
                     img.classList.remove("hmd-image-loading");
                     marker.changed();
                 }, false);
                 img.addEventListener('error', function () {
-                    console.log("IMAGE ERROR");
                     img.classList.remove("hmd-image-loading");
                     img.classList.add("hmd-image-error");
                     marker.changed();

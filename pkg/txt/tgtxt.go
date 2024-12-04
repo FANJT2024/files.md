@@ -11,7 +11,7 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
-var ImgPattern = `!\[.*?\]\(.*?\)`
+const ImgPattern = `!\[.*?\]\(.*?\)`
 
 // TelegramEntitiesToMarkdown converts plain text with Telegram entities (with UTF-16 offsets) to CommonMark Markdown.
 // Telegram's formatting entities don't take the new lines into account. I.e. if we have a multiline
