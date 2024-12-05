@@ -668,4 +668,14 @@ document.getElementById('goToFile').addEventListener('keydown', (event) => {
             closeSearchModal();
         }
     }
+
+    if (event.key === 'ArrowDown') {
+        event.preventDefault();
+        focusedItemIndex = (focusedItemIndex + 1) % resultsList.length;
+        updateFocusedItem(resultsList);
+    } else if (event.key === 'ArrowUp') {
+        event.preventDefault();
+        focusedItemIndex = (focusedItemIndex - 1 + resultsList.length) % resultsList.length;
+        updateFocusedItem(resultsList);
+    }
 });
