@@ -146,7 +146,7 @@ function createAutocompleteDict() {
         if (ignoredFolders.includes(folder)) return;
 
         Object.keys(zettel[folder]).forEach(filename => {
-            const emojiKey = `${filename.replace(/\.md$/, "").replace(/\.[^/.]+$/, "")}`;
+            const emojiKey = `${filename.replace(/\.md$/, "")}`;
             const filePath = `${filename.replace(/\.md$/, "")}](${folder}/${filename})`;
             emojiDict[emojiKey] = filePath;
         });
