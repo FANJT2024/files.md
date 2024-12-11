@@ -37,7 +37,7 @@ var (
 	errUnknownCommand           = errors.New("unknown command")
 	errInvalidRequestFromInline = errors.New("invalid request from inline query")
 	errInvalidInlineQuery       = errors.New("invalid inline query")
-	botPlugins                  []BotPlugin{}
+	botPlugins                  = []BotPlugin{plugins.NewWorldClockPlugin()}
 )
 
 const (
@@ -117,16 +117,13 @@ type Bot struct {
 }
 
 type BotPlugin interface {
-	Handle(string) (bool, error)
+	CanHandle(string) bool
+	Handle(string) (output string, error error)
 }
 
 var now = time.Now
 
 func NewBot(userID int64, tg Chat, fs *fs.FS, db Database, cfg *userconfig.Config) *Bot {
-	botPlugins = append(botPlugins,
-		plugins.NewWorldClockPlugin(userID, tg),
-	)
-
 	return &Bot{userID, tg, fs, db, cfg}
 }
 
@@ -138,13 +135,17 @@ func (b *Bot) Answer(u Update) error {
 	}
 
 	for _, plugin := range botPlugins {
-		if handled, err := plugin.Handle(u.MsgText()); err != nil {
-			return fmt.Errorf("answer: plugin error: %w", err)
-		} else if handled {
-			if err := b.ShowToday(nil); err != nil {
+		if plugin.CanHandle(u.MsgText()) {
+			output, err := plugin.Handle(u.MsgText())
+			if err != nil {
+				return fmt.Errorf("answer: plugin error: %w", err)
+			}
+			_, _ = b.tg.Send(b.userID, output, nil, tg.MarkupHTML)
+
+			err = b.ShowToday(nil)
+			if err != nil {
 				return fmt.Errorf("answer after plugin: %w", err)
 			}
-			return nil
 		}
 	}
 

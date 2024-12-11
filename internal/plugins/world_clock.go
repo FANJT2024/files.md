@@ -7,14 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"zakirullin/stuffbot/pkg/tg"
-
 	"golang.org/x/exp/slog"
 )
-
-type Chat interface {
-	Send(userID int64, text string, kb *tg.Keyboard, markup string) (int, error)
-}
 
 const (
 	timeFormat = "02.01.2006 15:04:05"
@@ -37,17 +31,33 @@ var (
 	}
 )
 
-type WorldClockPlugin struct {
-	userID int64
-	tg     Chat
+type WorldClockPlugin struct{}
+
+func NewWorldClockPlugin() *WorldClockPlugin {
+	return &WorldClockPlugin{}
 }
 
-func NewWorldClockPlugin(userID int64, tg Chat) *WorldClockPlugin {
-	return &WorldClockPlugin{userID, tg}
+func (p *WorldClockPlugin) CanHandle(msgText string) bool {
+	_, err := p.parseDate(msgText)
+	if err == nil {
+		return true
+	}
+
+	_, err = p.parseTime(msgText)
+	if err == nil {
+		return true
+	}
+
+	_, err = p.parseTimestamp(msgText)
+	if err == nil {
+		return true
+	}
+
+	return false
 }
 
 // Handle checks if the message is a date, time or timestamp and sends the current time in different timezones
-func (p *WorldClockPlugin) Handle(msgText string) (bool, error) {
+func (p *WorldClockPlugin) Handle(msgText string) (string, error) {
 	var message string
 	var err error
 
@@ -55,38 +65,24 @@ func (p *WorldClockPlugin) Handle(msgText string) (bool, error) {
 	t, err := p.parseDate(msgText)
 	if err == nil {
 		message = p.buildMessage(t, p.fmtTimestamp)
-		_, err = p.tg.Send(p.userID, message, nil, tg.MarkupHTML)
-		if err != nil {
-			return true, fmt.Errorf("world clock: %w", err)
-		}
-
-		return true, nil
+		return message, nil
 	}
 
 	// Try to parse time
 	t, err = p.parseTime(msgText)
 	if err == nil {
 		message = p.buildMessage(t, p.fmtTimestamp)
-		_, err = p.tg.Send(p.userID, message, nil, tg.MarkupHTML)
-		if err != nil {
-			return true, fmt.Errorf("world clock: %w", err)
-		}
-
-		return true, nil
+		return message, nil
 	}
 
 	// Try to parse timestamp
 	t, err = p.parseTimestamp(msgText)
 	if err == nil {
 		message = p.buildMessage(t, p.fmtTime)
-		_, err = p.tg.Send(p.userID, message, nil, tg.MarkupHTML)
-		if err != nil {
-			return true, fmt.Errorf("world clock: %w", err)
-		}
-		return true, nil
+		return message, nil
 	}
 
-	return false, nil
+	return "", nil
 }
 
 func (p *WorldClockPlugin) parseTimestamp(message string) (time.Time, error) {
