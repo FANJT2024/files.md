@@ -40,12 +40,10 @@ async function init(el) {
             // Check if current file has been modified
             let dir = editor.currentDir;
             let file = editor.currentFile;
-            const currentFile = await files[dir][file].handle.getFile();
             const newFile = await newFiles[dir]?.[file].handle.getFile();
-            if (currentFile && newFile) {
-                let currentContent = currentFile.text();
-                let newContent = newFile.text();
-                if (currentContent !== newContent) {
+            if (newFile) {
+                let newContent = await newFile.text();
+                if (getCurrentContent() !== newContent) {
                     console.log("File was modified, reloading...");
                     await showFile(dir, file, false);
                 }
@@ -269,6 +267,7 @@ async function showFile(dir, filename, saveToHistory = true) {
     const header = filename.replace(/\.md$/, "").replace(/^\w/, (c) => c.toUpperCase());
     let content = await file.text();
     content = `# ${header}\n${content}`;
+    // Replace extended links with just link
     content = content.replace(/\[\[(.+?)\|.*?\]\]/g, '[[$1]]');
 
     editor.currentDir = dir;
@@ -586,19 +585,24 @@ async function saveFile() {
     const filename = editor.currentFile;
     const fileData = files[dir][filename];
     if (fileData && fileData.handle) {
-        let content = editor.getValue();
-        const header = filename.replace('.md', '').replace(/^\w/, (c) => c.toUpperCase());
-        content = content.trimStart();
-        if (content.startsWith(`# ${header}`)) {
-            content = content.slice(`# ${header}`.length).trimStart();
-        }
-
+        let content = getCurrentContent();
         const writable = await fileData.handle.createWritable();
         await writable.write(content);
         await writable.close();
     } else {
         alert(`Cannot save ${filename}. No file handle found.`);
     }
+}
+
+function getCurrentContent() {
+    let content = editor.getValue();
+    const header = editor.currentFile.replace('.md', '').replace(/^\w/, (c) => c.toUpperCase());
+    content = content.trimStart();
+    if (content.startsWith(`# ${header}`)) {
+        content = content.slice(`# ${header}`.length).trimStart();
+    }
+
+    return content;
 }
 
 async function getImageUrl(fileHandle) {
