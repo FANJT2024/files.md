@@ -108,17 +108,17 @@ type Database interface {
 	DelImgMsgID()
 }
 
+type BotPlugin interface {
+	CanHandle(string) bool
+	Handle(string) (output string, error error)
+}
+
 type Bot struct {
 	userID int64
 	tg     Chat
 	fs     *fs.FS
 	db     Database
 	cfg    *userconfig.Config
-}
-
-type BotPlugin interface {
-	CanHandle(string) bool
-	Handle(string) (output string, error error)
 }
 
 var now = time.Now
