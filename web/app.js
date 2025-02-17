@@ -344,8 +344,12 @@ async function showFile(dir, filename, saveToHistory = true) {
     }
 
     editor.getDoc().setValue(content);
-    focusLastLine();
     editor.clearHistory();
+
+    // Why 300? Setting to 0 makes #header blinking. Setting at the end of the page takes rendering time.
+    // Setting cursor somewhere after 300th line (supposedly below screen) helps.
+    editor.setCursor({line: 300, ch: 0});
+    editor.scrollTo(null, 0);
 
     // Set cursor at the end of the page.
     // We need to execute this code after some rendering loop. If we don't do that,
@@ -353,7 +357,8 @@ async function showFile(dir, filename, saveToHistory = true) {
     // P.S. Is it try after we set infinite loading?
     setTimeout(() => {
         focusLastLine();
-    }, 100);
+    }, 200);
+
 }
 
 function focusLastLine() {
