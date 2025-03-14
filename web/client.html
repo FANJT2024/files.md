@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YJS Sync Client (Optimized for 5K+ documents)</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            height: 100vh;
+            margin: 0;
+            padding: 0;
+        }
+
+        .sidebar {
+            width: 250px;
+            border-right: 1px solid #ccc;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .main {
+            flex: 1;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #editor {
+            flex: 1;
+            border: 1px solid #ccc;
+            padding: 10px;
+            font-family: monospace;
+            min-height: 300px;
+            resize: none;
+        }
+
+        .toolbar {
+            display: flex;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+
+        #file-list {
+            list-style: none;
+            padding: 0;
+            margin: 20px 0;
+        }
+
+        #file-list li {
+            padding: 8px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        #file-list li:hover {
+            background-color: #f0f0f0;
+        }
+
+        #file-list li.active {
+            background-color: #0066cc;
+            color: white;
+        }
+
+        input, button {
+            padding: 8px;
+            margin-right: 10px;
+        }
+
+        .status-bar {
+            padding: 10px;
+            margin-top: 10px;
+            background-color: #f5f5f5;
+            border-radius: 4px;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            margin-top: 10px;
+        }
+
+        .pagination button {
+            margin: 0 5px;
+        }
+
+        .pagination-info {
+            margin: 10px 0;
+            text-align: center;
+            font-size: 0.9em;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+<div class="sidebar">
+    <h2>Files</h2>
+    <div class="toolbar">
+        <input type="text" id="new-file-name" placeholder="New file name">
+        <button id="new-file-btn">Create</button>
+    </div>
+    <ul id="file-list"></ul>
+    <div class="pagination-info" id="pagination-info"></div>
+    <div class="pagination">
+        <button id="prev-page" disabled>&laquo; Prev</button>
+        <button id="next-page">Next &raquo;</button>
+    </div>
+</div>
+<div class="main">
+    <h2>Editor</h2>
+    <textarea id="editor" placeholder="Select a file to edit"></textarea>
+    <div class="status-bar">
+        Status: <span id="status">Initializing...</span>
+    </div>
+</div>
+
+<script type="module">
+    import * as Y from 'https://esm.sh/yjs@13';
+    import { fromBase64, toBase64 } from 'https://esm.sh/js-base64@3.7.5';
+
+    // Configuration
+    const SERVER_URL = 'http://localhost:3000';
+    const SYNC_INTERVAL = 5000; // How often to sync with server (ms)
+    const CLIENT_ID = `client_${Date.now()}_${Math.floor(Math.random() * 10000)}`;
+    const PAGE_SIZE = 100; // Number of files to fetch per page
+
+    // Main data structures
+    const rootDoc = new Y.Doc(); // Single root document for all files
+    const docsMap = rootDoc.getMap('documents'); // Map to store all documents
+    let activePath = null; // Path of the active document
+    let fileList = []; // List of available files
+    let currentPage = 1;
+    let totalPages = 1;
+    let modifiedDocs = new Set(); // Track which documents have been modified locally
+
+    // DOM Elements
+    let fileListElement;
+    let editorElement;
+    let newFileButton;
+    let newFileNameInput;
+    let statusElement;
+    let prevPageButton;
+    let nextPageButton;
+    let paginationInfoElement;
+
+    // Initialize client
+    function initClient() {
+        console.log(`Initializing client with ID: ${CLIENT_ID}`);
+
+        // Set up DOM elements
+        fileListElement = document.getElementById('file-list');
+        editorElement = document.getElementById('editor');
+        newFileButton = document.getElementById('new-file-btn');
+        newFileNameInput = document.getElementById('new-file-name');
+        statusElement = document.getElementById('status');
+        prevPageButton = document.getElementById('prev-page');
+        nextPageButton = document.getElementById('next-page');
+        paginationInfoElement = document.getElementById('pagination-info');
+
+        // Set up event listeners
+        editorElement.addEventListener('input', handleEditorChange);
+        newFileButton.addEventListener('click', handleNewFile);
+        prevPageButton.addEventListener('click', () => changePage(-1));
+        nextPageButton.addEventListener('click', () => changePage(1));
+
+        // Initial fetch of file list
+        updateStatus('Connecting to server...');
+        fetchFileList(currentPage);
+
+        // Set up the YDoc observation
+        setupDocObserver();
+
+        // Start periodic sync loop (but don't sync immediately)
+        setInterval(() => syncWithServer(currentPage), SYNC_INTERVAL);
+    }
+
+    // Set up observer for the Y.Map to detect remote changes
+    function setupDocObserver() {
+        docsMap.observe(event => {
+            console.log('Y.Map changed:', event);
+
+            // If this is the active document and it changed, update the editor
+            if (activePath && event.keysChanged.has(activePath)) {
+                console.log(`Active document ${activePath} changed remotely`);
+                updateEditorContent();
+            }
+        });
+    }
+
+    // Fetch file list with pagination
+    async function fetchFileList(page = 1) {
+        try {
+            const response = await fetch(`${SERVER_URL}/files?clientId=${CLIENT_ID}&page=${page}&pageSize=${PAGE_SIZE}`);
+            if (!response.ok) throw new Error(`Server responded with status: ${response.status}`);
+
+            const data = await response.json();
+
+            // Process file list
+            fileList = data.files || [];
+
+            // Update pagination info
+            if (data.pagination) {
+                currentPage = data.pagination.page;
+                totalPages = data.pagination.totalPages;
+                updatePaginationControls();
+            }
+
+            updateFileList();
+            updateStatus(`Connected to server (Page ${currentPage}/${totalPages})`);
+        } catch (err) {
+            console.error('Error fetching file list:', err);
+            updateStatus('Error connecting: ' + err.message);
+        }
+    }
+
+    // Change page in file list
+    function changePage(delta) {
+        const newPage = currentPage + delta;
+        if (newPage >= 1 && newPage <= totalPages) {
+            fetchFileList(newPage);
+        }
+    }
+
+    // Update pagination controls
+    function updatePaginationControls() {
+        paginationInfoElement.textContent = `Page ${currentPage} of ${totalPages}`;
+        prevPageButton.disabled = currentPage <= 1;
+        nextPageButton.disabled = currentPage >= totalPages;
+    }
+
+    // Convert Uint8Array to Base64 string
+    function toBase64String(uint8Array) {
+        // Make sure we're actually dealing with a Uint8Array
+        if (!(uint8Array instanceof Uint8Array)) {
+            console.warn('Expected Uint8Array but got', typeof uint8Array);
+            if (typeof uint8Array === 'string') {
+                // If somehow we got a string, try to convert it to Uint8Array
+                const arr = new Uint8Array(uint8Array.length);
+                for (let i = 0; i < uint8Array.length; i++) {
+                    arr[i] = uint8Array.charCodeAt(i);
+                }
+                uint8Array = arr;
+            }
+        }
+        return toBase64(uint8Array);
+    }
+
+    // Convert Base64 string to Uint8Array
+    function fromBase64String(base64String) {
+        // The key fix here - explicitly convert to Uint8Array
+        const binary = fromBase64(base64String);
+        if (binary instanceof Uint8Array) {
+            return binary;
+        }
+
+        // If it's a string, convert it to Uint8Array
+        if (typeof binary === 'string') {
+            console.log('Converting string to Uint8Array...');
+            const uint8Array = new Uint8Array(binary.length);
+            for (let i = 0; i < binary.length; i++) {
+                uint8Array[i] = binary.charCodeAt(i);
+            }
+            return uint8Array;
+        }
+
+        console.error('Unknown type returned from fromBase64:', typeof binary);
+        return binary;
+    }
+
+    // Sync with server (with pagination support)
+    async function syncWithServer(page = 1) {
+        try {
+            // Get state vector from root document
+            const sv = Y.encodeStateVector(rootDoc);
+            const encodedSV = toBase64String(sv);
+
+            console.log(`Syncing with server, page ${page}, SV length: ${encodedSV.length}`);
+
+            // Fetch updates from server
+            const response = await fetch(`${SERVER_URL}/sync?clientId=${CLIENT_ID}&sv=${encodedSV}&page=${page}&pageSize=${PAGE_SIZE}`);
+            if (!response.ok) throw new Error(`Server responded with status: ${response.status}`);
+
+            const data = await response.json();
+
+            // Process file list if received
+            if (data.files && data.files.length > 0) {
+                fileList = data.files;
+                updateFileList();
+            }
+
+            // Process pagination info
+            if (data.pagination) {
+                currentPage = data.pagination.page;
+                totalPages = data.pagination.totalPages;
+                updatePaginationControls();
+            }
+
+            // Check if we received any updates
+            if (data.updates && Array.isArray(data.updates) && data.updates.length > 0) {
+                console.log(`Received ${data.updates.length} updates from server`);
+
+                // Apply updates to our documents
+                for (const update of data.updates) {
+                    await applyServerUpdate(update);
+                }
+
+                // Update editor if active doc was updated
+                if (activePath) {
+                    updateEditorContent();
+                }
+
+                updateStatus(`Synced ${data.updates.length} updates from server`);
+            } else {
+                updateStatus(`Already in sync with server (Page ${currentPage}/${totalPages})`);
+            }
+
+            // Check if we need to load the next page
+            if (data.pagination && data.pagination.hasMorePages && data.updates && data.updates.length > 0) {
+                // Auto-fetch next page only if we received updates (indicating there might be more)
+                console.log(`Auto-fetching next page ${page + 1}`);
+                await syncWithServer(page + 1);
+            }
+
+            // Send any local changes back to server
+            await sendLocalUpdates();
+        } catch (err) {
+            console.error('Error syncing with server:', err);
+            updateStatus('Error syncing: ' + err.message);
+        }
+    }
+
+    // Apply update from server
+    async function applyServerUpdate(update) {
+        try {
+            const { file, update: encodedUpdate, content } = update;
+
+            console.log(`Applying update for ${file}`);
+
+            // Apply the update to the root document
+            try {
+                const binaryUpdate = fromBase64String(encodedUpdate);
+                console.log(`Binary update length: ${binaryUpdate.length}, type: ${binaryUpdate.constructor.name}`);
+
+                Y.applyUpdate(rootDoc, binaryUpdate);
+                console.log(`Applied update to root document`);
+            } catch (updateErr) {
+                console.error(`Error applying update:`, updateErr);
+
+                // If applying the update failed but we have direct content, use it as fallback
+                if (content && content.length > 0) {
+                    console.log(`Using fallback content for ${file}`);
+
+                    // Create or update the Y.Text directly
+                    let ytext = docsMap.get(file);
+                    if (!ytext) {
+                        ytext = new Y.Text(content);
+                        docsMap.set(file, ytext);
+                    } else {
+                        // Handle with transaction to avoid observer loops
+                        rootDoc.transact(() => {
+                            ytext.delete(0, ytext.length);
+                            ytext.insert(0, content);
+                        });
+                    }
+                }
+            }
+
+            // Verify the document is in the map
+            const ytext = docsMap.get(file);
+            if (ytext) {
+                const docContent = ytext.toString();
+                console.log(`Document ${file} content length: ${docContent.length}`);
+            } else {
+                console.warn(`Document ${file} not found in map after update`);
+            }
+
+            return true;
+        } catch (err) {
+            console.error('Error applying server update:', err);
+            return false;
+        }
+    }
+
+    // Create a new file
+    async function createNewFile(fileName) {
+        try {
+            if (!fileName.endsWith('.md')) {
+                fileName += '.md';
+            }
+
+            // Create new Y.Text
+            const initialContent = '# New Document\n\nStart writing here...';
+            const ytext = new Y.Text(initialContent);
+
+            // Add to root document's map
+            docsMap.set(fileName, ytext);
+
+            // Mark as modified locally
+            modifiedDocs.add(fileName);
+
+            // Send to server
+            const response = await fetch(`${SERVER_URL}/update`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    clientId: CLIENT_ID,
+                    newFiles: [{
+                        file: fileName,
+                        content: initialContent
+                    }]
+                })
+            });
+
+            if (!response.ok) throw new Error(`Server responded with status: ${response.status}`);
+
+            console.log(`Created new file: ${fileName}`);
+            updateStatus(`Created new file: ${fileName}`);
+
+            // Update file list and switch to the new file
+            if (!fileList.includes(fileName)) {
+                fileList.push(fileName);
+                updateFileList();
+            }
+
+            openFile(fileName);
+
+            // Remove from modified set as it's been saved
+            modifiedDocs.delete(fileName);
+
+            return true;
+        } catch (err) {
+            console.error('Error creating new file:', err);
+            updateStatus('Error creating file: ' + err.message);
+            return false;
+        }
+    }
+
+    // Update the file list UI
+    function updateFileList() {
+        fileListElement.innerHTML = '';
+
+        fileList.sort().forEach(file => {
+            const item = document.createElement('li');
+            item.className = file === activePath ? 'active' : '';
+            item.textContent = file;
+            item.addEventListener('click', () => openFile(file));
+            fileListElement.appendChild(item);
+        });
+    }
+
+    // Open a file in the editor
+    async function openFile(filePath) {
+        try {
+            console.log(`Opening file: ${filePath}`);
+
+            // Check if we already have this document in our map
+            let ytext = docsMap.get(filePath);
+
+            if (ytext) {
+                console.log(`File found in local docs, loading directly`);
+                activePath = filePath;
+
+                // Update editor immediately
+                updateEditorContent();
+
+                // Update UI
+                document.querySelectorAll('#file-list li').forEach(li => {
+                    li.className = li.textContent === filePath ? 'active' : '';
+                });
+
+                updateStatus(`Opened file: ${filePath}`);
+                return;
+            }
+
+            // If we don't have this doc yet, we need to get it from server
+            console.log(`File not in local docs, requesting from server...`);
+
+            // Request file content from server
+            const response = await fetch(`${SERVER_URL}/sync?clientId=${CLIENT_ID}&file=${encodeURIComponent(filePath)}`);
+            if (response.ok) {
+                const data = await response.json();
+
+                if (data.updates) {
+                    for (const update of data.updates) {
+                        if (update.file === filePath) {
+                            await applyServerUpdate(update);
+                            break;
+                        }
+                    }
+                }
+
+                // Check again if we now have the document
+                ytext = docsMap.get(filePath);
+                if (!ytext && data.updates && data.updates.length > 0) {
+                    // If we still don't have it but got content, create it manually
+                    const updateWithContent = data.updates.find(u => u.file === filePath && u.content);
+                    if (updateWithContent) {
+                        ytext = new Y.Text(updateWithContent.content);
+                        docsMap.set(filePath, ytext);
+                    }
+                }
+
+                if (!ytext) {
+                    // If we still don't have it, create an empty document
+                    ytext = new Y.Text('');
+                    docsMap.set(filePath, ytext);
+                }
+            }
+
+            // Set as active document
+            activePath = filePath;
+
+            // Update editor
+            updateEditorContent();
+
+            // Update UI
+            document.querySelectorAll('#file-list li').forEach(li => {
+                li.className = li.textContent === filePath ? 'active' : '';
+            });
+
+            updateStatus(`Opened file: ${filePath}`);
+        } catch (err) {
+            console.error(`Error opening file ${filePath}:`, err);
+            updateStatus(`Error opening file: ${err.message}`);
+        }
+    }
+
+    // Update editor content from active doc
+    function updateEditorContent() {
+        if (!activePath) return;
+
+        try {
+            const ytext = docsMap.get(activePath);
+            if (!ytext) {
+                console.error(`Active document ${activePath} not found in map`);
+                editorElement.value = '';
+                return;
+            }
+
+            const content = ytext.toString();
+
+            console.log(`Updating editor with content for ${activePath}, length: ${content.length}`);
+
+            // Only update if content has changed
+            if (editorElement.value !== content) {
+                editorElement.value = content;
+            }
+        } catch (err) {
+            console.error(`Error updating editor content:`, err);
+            updateStatus(`Error showing file content: ${err.message}`);
+        }
+    }
+
+    // Handle editor changes
+    function handleEditorChange() {
+        if (!activePath) return;
+
+        const content = editorElement.value;
+        const ytext = docsMap.get(activePath);
+
+        if (!ytext) {
+            console.error(`Cannot update document ${activePath} - not found in map`);
+            return;
+        }
+
+        // Perform a transaction to avoid observation loops
+        rootDoc.transact(() => {
+            // Replace entire content
+            ytext.delete(0, ytext.length);
+            ytext.insert(0, content);
+        });
+
+        // Mark this document as modified locally
+        modifiedDocs.add(activePath);
+
+        // Update status to show unsaved changes
+        updateStatus(`Editing: ${activePath} (unsaved changes)`);
+    }
+
+    // Send local updates to server
+    async function sendLocalUpdates() {
+        if (modifiedDocs.size === 0) {
+            // No modified documents to send
+            return;
+        }
+
+        try {
+            console.log(`Preparing to send updates for ${modifiedDocs.size} modified documents`);
+
+            // Get the update of the root document
+            const update = Y.encodeStateAsUpdate(rootDoc);
+            const encodedUpdate = toBase64String(update);
+
+            // Prepare the list of modified files
+            const modifiedFiles = Array.from(modifiedDocs);
+
+            console.log(`Sending update to server (${modifiedFiles.length} files)`);
+
+            // Send updates to server
+            const response = await fetch(`${SERVER_URL}/update`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    clientId: CLIENT_ID,
+                    updates: [{
+                        // We send one update with the root document's state
+                        update: encodedUpdate,
+                        // Include the list of files that were modified locally
+                        modifiedFiles: modifiedFiles
+                    }]
+                })
+            });
+
+            if (!response.ok) throw new Error(`Server responded with status: ${response.status}`);
+
+            // Clear the modified status for all documents
+            modifiedDocs.clear();
+
+            console.log(`Sent updates for ${modifiedFiles.length} files to server`);
+            updateStatus(`Sent updates to server`);
+        } catch (err) {
+            console.error('Error sending updates to server:', err);
+            updateStatus('Error sending updates: ' + err.message);
+        }
+    }
+
+    // Handle new file creation
+    function handleNewFile() {
+        const fileName = newFileNameInput.value.trim();
+        if (!fileName) {
+            updateStatus('Please enter a file name');
+            return;
+        }
+
+        createNewFile(fileName);
+        newFileNameInput.value = '';
+    }
+
+    // Update status display
+    function updateStatus(message) {
+        statusElement.textContent = message;
+    }
+
+    // Initialize when DOM is ready
+    document.addEventListener('DOMContentLoaded', initClient);
+</script>
+</body>
+</html>

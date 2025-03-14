@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yjs Textarea Sync Demo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .container {
+            display: flex;
+            gap: 20px;
+        }
+        .editor-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            padding: 10px;
+        }
+        textarea {
+            height: 300px;
+            padding: 10px;
+            font-family: monospace;
+            margin-bottom: 10px;
+            resize: vertical;
+        }
+        button {
+            padding: 8px 12px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 5px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        h1, h2 {
+            color: #333;
+        }
+        #log {
+            margin-top: 20px;
+            height: 200px;
+            overflow: auto;
+            border: 1px solid #ccc;
+            padding: 10px;
+            background-color: #f9f9f9;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+<h1>Yjs Textarea Sync Demo</h1>
+<p>This demo shows bidirectional sync between two text areas using Yjs. Both text areas will stay in sync as you type, and you can also simulate external changes.</p>
+
+<div class="container">
+    <div class="editor-container">
+        <h2>Editor 1</h2>
+        <textarea id="editor1"></textarea>
+        <button id="externalChange1">Simulate External Change</button>
+    </div>
+
+    <div class="editor-container">
+        <h2>Editor 2</h2>
+        <textarea id="editor2"></textarea>
+        <button id="externalChange2">Simulate External Change</button>
+    </div>
+</div>
+
+<h2>Sync Log (Diffs shown in console)</h2>
+<div id="log"></div>
+
+<!-- Load Yjs and necessary providers -->
+<script type="module">
+    import * as Y from 'https://esm.sh/yjs@13'
+    // Initialize Yjs document
+    const ydoc = new Y.Doc();
+    const ytext = ydoc.getText('content');
+
+    // Flag to prevent update loops
+    let isUpdating1 = false;
+    let isUpdating2 = false;
+
+    // Get DOM elements
+    const editor1 = document.getElementById('editor1');
+    const editor2 = document.getElementById('editor2');
+    const externalChangeBtn1 = document.getElementById('externalChange1');
+    const externalChangeBtn2 = document.getElementById('externalChange2');
+    const logElement = document.getElementById('log');
+
+    // Function to log messages
+    function log(message) {
+        const timestamp = new Date().toLocaleTimeString();
+        logElement.textContent += `[${timestamp}] ${message}\n`;
+        logElement.scrollTop = logElement.scrollHeight;
+        console.log(`[${timestamp}] ${message}`);
+    }
+
+    // Initialize the editors
+    editor1.value = '';
+    editor2.value = '';
+
+    // Set up listeners for editor 1
+    editor1.addEventListener('input', () => {
+        if (isUpdating1) return;
+
+        const oldContent = ytext.toString();
+        const newContent = editor1.value;
+
+        // Log the diff
+        logDiff(oldContent, newContent, 'Editor 1');
+
+        // Update Yjs document
+        ytext.delete(0, ytext.length);
+        ytext.insert(0, newContent);
+
+        log('Editor 1 updated the document');
+    });
+
+    // Set up listeners for editor 2
+    editor2.addEventListener('input', () => {
+        if (isUpdating2) return;
+
+        const oldContent = ytext.toString();
+        const newContent = editor2.value;
+
+        // Log the diff
+        logDiff(oldContent, newContent, 'Editor 2');
+
+        // Update Yjs document
+        ytext.delete(0, ytext.length);
+        ytext.insert(0, newContent);
+
+        log('Editor 2 updated the document');
+    });
+
+    // Listen for changes from Yjs
+    ytext.observe(event => {
+        const content = ytext.toString();
+
+        // Update editor 1 if it wasn't the source
+        isUpdating1 = true;
+        const selectionStart1 = editor1.selectionStart;
+        const selectionEnd1 = editor1.selectionEnd;
+        editor1.value = content;
+        editor1.setSelectionRange(selectionStart1, selectionEnd1);
+        isUpdating1 = false;
+
+        // Update editor 2 if it wasn't the source
+        isUpdating2 = true;
+        const selectionStart2 = editor2.selectionStart;
+        const selectionEnd2 = editor2.selectionEnd;
+        editor2.value = content;
+        editor2.setSelectionRange(selectionStart2, selectionEnd2);
+        isUpdating2 = false;
+    });
+
+    // Function to simulate external changes
+    function simulateExternalChange(editorNum) {
+        const externalContent = `This content was changed externally at ${new Date().toLocaleTimeString()}!
+
+Previous content is preserved below:
+----------------------------
+${ytext.toString()}`;
+
+        const oldContent = ytext.toString();
+
+        // Log the diff
+        logDiff(oldContent, externalContent, `External System (Editor ${editorNum})`);
+
+        // Update Yjs document
+        ytext.delete(0, ytext.length);
+        ytext.insert(0, externalContent);
+
+        log(`External change applied to Editor ${editorNum}`);
+    }
+
+    // Add event listeners for external change buttons
+    externalChangeBtn1.addEventListener('click', () => simulateExternalChange(1));
+    externalChangeBtn2.addEventListener('click', () => simulateExternalChange(2));
+
+    // Simple diff function to show changes
+    function logDiff(oldText, newText, source) {
+        if (oldText === newText) return;
+
+        console.group(`Diff from ${source}:`);
+        console.log('--- OLD CONTENT ---');
+        console.log(oldText);
+        console.log('--- NEW CONTENT ---');
+        console.log(newText);
+
+        // Simple character-level diff visualization
+        let diffInfo = calculateSimpleDiff(oldText, newText);
+        console.log('--- CHANGES ---');
+        console.log(`${diffInfo.added} characters added, ${diffInfo.deleted} characters deleted`);
+        console.log(`Diff: ${diffInfo.visualization}`);
+        console.groupEnd();
+
+        log(`${source} changed the text (${diffInfo.added} added, ${diffInfo.deleted} deleted)`);
+    }
+
+    // Very simple diff calculation (not efficient but works for demo)
+    function calculateSimpleDiff(oldText, newText) {
+        let added = 0;
+        let deleted = 0;
+        let visualization = '';
+
+        // Find common prefix
+        let i = 0;
+        while (i < oldText.length && i < newText.length && oldText[i] === newText[i]) {
+            i++;
+        }
+
+        // Find common suffix
+        let oldEnd = oldText.length - 1;
+        let newEnd = newText.length - 1;
+        while (oldEnd >= i && newEnd >= i && oldText[oldEnd] === newText[newEnd]) {
+            oldEnd--;
+            newEnd--;
+        }
+
+        // Calculate changes
+        const deletedText = oldText.substring(i, oldEnd + 1);
+        const addedText = newText.substring(i, newEnd + 1);
+
+        deleted = deletedText.length;
+        added = addedText.length;
+
+        // Create visualization
+        if (deleted > 0 || added > 0) {
+            visualization = `...${oldText.substring(Math.max(0, i-10), i)}`;
+
+            if (deleted > 0) {
+                visualization += `[-${deletedText.length > 20 ?
+                    deletedText.substring(0, 10) + '...' + deletedText.substring(deletedText.length - 10) :
+                    deletedText}-]`;
+            }
+
+            if (added > 0) {
+                visualization += `[+${addedText.length > 20 ?
+                    addedText.substring(0, 10) + '...' + addedText.substring(addedText.length - 10) :
+                    addedText}+]`;
+            }
+
+            visualization += `${oldText.substring(oldEnd + 1, Math.min(oldText.length, oldEnd + 11))}...`;
+        }
+
+        return { added, deleted, visualization };
+    }
+
+    // Initialize with some content
+    ytext.insert(0, 'Welcome to the Yjs sync demo!\n\nStart typing in either text area to see changes sync bidirectionally.\n\nYou can also simulate external changes by clicking the buttons below.');
+    log('Yjs document initialized');
+</script>
+</body>
+</html>

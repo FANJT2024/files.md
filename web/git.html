@@ -1,0 +1,96 @@
+<script src="https://unpkg.com/@isomorphic-git/lightning-fs"></script>
+<script src="https://unpkg.com/isomorphic-git"></script>
+<script type="module">
+    import http from 'https://unpkg.com/isomorphic-git/http/web/index.js'
+
+    // Initialize the filesystem
+    window.fs = new LightningFS('fs')
+    const fs = window.fs
+    const git = window.git
+
+    // Define directory
+    const dir = '/'
+    console.log("Initial directory:", dir)
+
+    // Function to read a file
+    async function readFile(filepath) {
+        return new Promise((resolve, reject) => {
+            fs.readFile(dir + filepath, 'utf8', (err, data) => {
+                if (err) reject(err)
+                else resolve(data)
+            })
+        })
+    }
+
+    // Function to list directory contents
+    async function listDir(path) {
+        return new Promise((resolve, reject) => {
+            fs.readdir(dir + path, (err, files) => {
+                if (err) reject(err)
+                else resolve(files)
+            })
+        })
+    }
+
+    // Create an async function to use await
+    async function cloneAndViewRepo() {
+        try {
+            console.log("Starting clone...")
+
+            await git.clone({
+                fs,
+                http,
+                dir,
+                url: 'http://127.0.0.1:8080',
+                ref: 'main',
+                singleBranch: true,
+                depth: 10,
+                headers: {
+                    // 'X-Auth-Token': 'your-secret-token'
+                }
+            })
+
+            console.log("Clone completed")
+
+            // List root directory contents
+            const rootFiles = await listDir('')
+            console.log("Root directory contents:", rootFiles)
+
+            // Read README.md
+            // try {
+            //     const readmeContent = await readFile('README.md')
+            //     console.log("README.md content:", readmeContent)
+            // } catch (error) {
+            //     console.error("Error reading README:", error)
+            // }
+
+            // List all files in the repo recursively
+            async function listAllFiles(dirPath) {
+                const files = await listDir(dirPath)
+                console.log(`Files in ${dirPath || 'root'}:`, files)
+
+                for (const file of files) {
+                    const filePath = dirPath ? `${dirPath}/${file}` : file
+                    try {
+                        // Check if it's a directory by trying to list it
+                        const subFiles = await listDir(filePath)
+                        // If no error, it's a directory, recurse
+                        await listAllFiles(filePath)
+                    } catch (error) {
+                        // If error, it's a file, not a directory - you can read it if needed
+                        console.log(`File: ${filePath}`)
+                    }
+                }
+            }
+
+            // List all files
+            await listAllFiles('')
+
+        } catch (error) {
+            console.error("Error occurred:", error)
+        }
+    }
+
+    // Call the async function
+    cloneAndViewRepo()
+</script>
