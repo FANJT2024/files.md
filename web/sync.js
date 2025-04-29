@@ -1,5 +1,5 @@
-let filesMetadata = {};
-const SYNC_STORAGE_KEY = 'serverFileStates';
+let filesMetadata = {files: {}, timestamps: {}};
+const SYNC_STORAGE_KEY = 'files';
 
 async function initFilesMetadata() {
     const savedStates = localStorage.getItem(SYNC_STORAGE_KEY);
@@ -50,17 +50,19 @@ async function syncWithServer() {
     try {
         const response = await fetch('https://habits.files.md/sync', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Token': 'your-really-secret-token-2'},
-            body: JSON.stringify({ files: filesToSync })
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'your-really-secret-token-2'},
+            body: JSON.stringify({
+                files: filesToSync,
+                timestamps: filesMetadata['timestamps'] || {},
+            })
         });
 
         if (!response.ok) {
             throw new Error(`Server responded with ${response.status}`);
         }
 
-        const syncResult = await response.json();
-
-        for (const fileInfo of syncResult.files) {
+        const server = await response.json();
+        for (const fileInfo of server.files) {
             const { path, content, last_modified } = fileInfo;
 
             let dir, filename;
@@ -90,12 +92,13 @@ async function syncWithServer() {
                 // await writable.close();
             }
 
-            if (!filesMetadata[dir]) filesMetadata[dir] = {};
-            filesMetadata[dir][filename] = {
-                hash,
+            if (!filesMetadata['files'][dir]) filesMetadata['files'][dir] = {};
+            filesMetadata['files'][dir][filename] = {
+                hash: hash,
                 lastModified: last_modified || Date.now()
             };
         }
+        filesMetadata['timestamps'] = server.timestamps;
 
         // Process files to upload
         // for (const fileInfo of syncResult.filesToUpload) {
@@ -135,7 +138,6 @@ async function syncWithServer() {
         //         console.error(`Error uploading ${dir}/${filename}:`, error);
         //     }
         // }
-
         saveFilesMetadata();
         console.log("Sync completed successfully");
 
