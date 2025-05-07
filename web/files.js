@@ -100,6 +100,7 @@ async function loadLocalFiles(dirHandle) {
 }
 
 async function syncWithServer() {
+    const startTime = performance.now();
     console.log("Starting sync with server...");
 
     // Send locally modified files and timestamps of last seen dirs from the server
@@ -179,8 +180,7 @@ async function syncWithServer() {
     }
     filesMetadata['timestamps'] = server.timestamps;
     localStorage.setItem(SYNC_STORAGE_KEY, JSON.stringify(filesMetadata));
-    console.log("Sync completed successfully");
-
+    console.log("Sync completed in " + (performance.now() - startTime) + "ms");
 }
 
 async function collectModifiedFiles() {

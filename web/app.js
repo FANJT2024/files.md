@@ -32,8 +32,7 @@ async function init(el) {
     // Track time to load
     const startTime = performance.now();
     files = await loadLocalFiles(savedDirectoryHandle);
-    const endTime = performance.now();
-    console.log(`Files loaded in ${endTime - startTime} ms`);
+    console.log(`Files loaded in ${performance.now() - startTime}ms`);
     await syncWithServer();
 
     changesPollingInterval = setInterval(async function() {
