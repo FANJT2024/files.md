@@ -1,30 +1,233 @@
-let defaultFiles = {
-    "brain": {
-        "We think that we understand, but in reality we just know.md": {
-            "content": "Reading and rereading can easily fool us into believing that we understand a text. Rereading is especially dangerous because of the mere-exposure effect: The moment we become familiar with something, we start believing we also understand it. On top of that, we also tend to like it it more.\n\n[Brain is the most complex object in known universe](brain/Brain is the most complex object in known universe.md)"
-        },
-        "Brain is the most complex object in known universe.md": {
-            "content": "Nothing will make you appreciate human intelligence like learning about how unbelievably challenging it is to try to create a computer as smart as we are. Building skyscrapers, putting humans in space, figuring out the details of how the Big Bang went down—all far easier than understanding our own brain or how to make something as cool as it\n\n[We think that we understand, but in reality we just know](brain/We think that we understand, but in reality we just know.md)"
-        },
-        "Change your environment instead of using willpower.md": {
-            "content": "When scientists analyze people who appear to have tremendous self-control, it turns out those individuals aren’t all that different from those who are struggling. Instead, “disciplined” people are better at structuring their lives in a way that does not require heroic willpower and self-control.\n\n"
-        },
-    },
-    "happiness": {
-        "Meditation.md": {
-            "content": "Once you are relaxed, picture yourself living in an abundant world. In this abundant world, there are no restraints or limitations. Good things flow past you continuously. Imagine every abundant thing you have ever desired–car, home, friends, love, joy, wealth, success, peace of mind, challenge. Visualize yourself living your life surrounded by this abundance. Repeat this visualization several times a day until it begins to feel real to you. Open your arms, your heart, and your mind. Get out of the way, and let it happen.\n\n[Boredom is just an emotion](happiness/Boredom is just an emotion.md)"
-        },
-        "Boredom is just an emotion.md": {
-            "content": "It's not an indicator that you're doing something wrong in your life\n\nBefore we had phones and technologies we would just sit around the fire and we would talk and we wouldn't call that boring that was just life\n\nAnd bow we have that endless need for entertainment, anything when nothing is happening we think it's wrong and we need to fix it\n\nNon eventfulness is just a part of our life and you can embrace it as\npeace or you can frantically try to create more chaos\n\n[Meditation](happiness/Meditation.md)"
-        },
-    },
-    "": {
-        "Welcome.md": {
-            "content": "Only essential features. No distractions.\n\nYou don't need a feature-rich tool or a fancy methodology to be successful at taking notes.\n"
-        },
-        "My amazing project.md": {
-            "content": "You can dump project related thoughts here"
+// Files structure:
+// {
+//   "dir": [
+//     {
+//       "filename": [
+//         {
+//           content: "File content here...",
+//           lastModified: <timestamp>,
+//           handle: <file handle>,
+//           imageUrl: <image url if any>
+//         },
+//         ...
+//       ]
+//     },
+//     ...
+//   ]
+// }
+let files= [];
+const supportedFileTypes = ['md', 'txt', 'png', 'jpg', 'jpeg', 'webp', 'gif',];
+const systemDirs = ["img", "archive", "_read_", "_watch_", "_shop_", "today", "later", "journal", "habits", "triggers", "places"];
+
+let filesMetadata = {files: {}, timestamps: {}};
+const SYNC_STORAGE_KEY = 'files';
+
+// Returns files in flattened structure:
+// {
+//   "dir": {
+//      ...
+//   },
+//   "dir/dir2": {
+//      ...
+//   },
+// }
+// The code is quite messy. We have to make lots of optimizations,
+// otherwise it's going to be slow even with 5K files.
+async function loadLocalFiles(dirHandle) {
+    let newFiles = {};
+
+    async function loadDir(dirHandle, path = "", depth = 1) {
+        const entries = [];
+        for await (const entry of dirHandle.values()) {
+            entries.push(entry);
+        }
+        entries.sort((a, b) => a.name.localeCompare(b.name));
+
+        const dirPromises = [];
+        for (const entry of entries) {
+            const filename = entry.name.normalize("NFC");
+
+            if (entry.kind === 'directory') {
+                if (filename.startsWith('.') || depth >= 5) continue;
+
+                const dir = `${path}${filename}/`;
+                newFiles[filename] = {};
+                dirPromises.push({ handle: entry, dir, depth: depth + 1 });
+            } else if (entry.kind === 'file' && supportedFileTypes.includes(filename.split('.').pop())) {
+                const dir = path.replace(/\/+$/, '');
+                if (!newFiles[dir]) newFiles[dir] = {};
+
+                // Reuse existing file handle if it exists
+                if (files?.[dir]?.[filename] !== undefined) {
+                    newFiles[dir][filename] = files[dir][filename];
+                    continue;
+                }
+                newFiles[dir][filename] = {handle: entry};
+
+                entry.getFile().then(file => {
+                    newFiles[dir][filename].lastModified = file.lastModified;
+                });
+
+                if (dir === 'img') {
+                    getImageUrl(entry).then(imageUrl => {
+                        newFiles[dir][filename].imageUrl = imageUrl;
+                    });
+                }
+            }
+        }
+
+        await Promise.all(dirPromises.map(({ handle, dir, depth }) =>
+            loadDir(handle, dir, depth)
+        ));
+    }
+    await loadDir(dirHandle);
+
+    // Remove empty dirs
+    for (const dir in newFiles) {
+        if (Object.keys(newFiles[dir]).length === 0) {
+            delete newFiles[dir];
+        }
+    }
+
+    // Load metadata
+    const savedStates = localStorage.getItem(SYNC_STORAGE_KEY);
+    if (savedStates) {
+        filesMetadata = JSON.parse(savedStates);
+    }
+
+    return newFiles;
+}
+
+async function saveFile()  {
+    const dir = editor.currentDir;
+    const filename = editor.currentFile;
+    const fileData = files[dir][filename];
+    if (fileData && fileData.handle) {
+        let content = getCurrentContent();
+        const writable = await fileData.handle.createWritable();
+        await writable.write(content);
+        await writable.close(); // Buffer is flushed on disk at this moment, it could be interrupted by the event pool, so maintain a flag
+    } else {
+        if (fileData.handle) {
+            alert(`Cannot save ${filename}. No file handle found.`);
         }
     }
 }
 
+function hash(str) {
+    let hash = 0;
+    for (let i = 0, len = str.length; i < len; i++) {
+        let chr = str.charCodeAt(i);
+        hash = (hash << 5) - hash + chr;
+        hash |= 0;
+    }
+    return hash;
+}
+
+async function syncWithServer() {
+    console.log("Starting sync with server...");
+
+    let filesToSend = [];
+    for (const dir in files) {
+        for (const filename in files[dir]) {
+            try {
+                if (dir === 'img') continue;
+
+                let content = "";
+                const file = await files[dir][filename].handle.getFile();
+                content = await file.text();
+
+                let path = filesMetadata?.files?.[dir]?.[filename]?.path;
+                if (!path) {
+                    console.log(`File ${dir}/${filename} not found on server, skipping...`);
+                }
+                let serverHash = filesMetadata?.files?.[dir]?.[filename]?.hash;
+                let serverTime = filesMetadata?.files?.[dir]?.[filename]?.lastModified;
+                let fileWasModifiedLocally = serverHash !== hash(content)
+                if (fileWasModifiedLocally) {
+                    filesToSend.push({
+                        content: content,
+                        path: path,
+                        lastModified: serverTime,
+                    });
+                }
+            } catch (error) {
+                console.error(`Error processing ${dir}/${filename}:`, error);
+            }
+        }
+    }
+
+    try {
+        const response = await fetch('https://habits.files.md/sync', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': localStorage.getItem('token')},
+            body: JSON.stringify({
+                files: filesToSend,
+                timestamps: filesMetadata['timestamps'] || [],
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error(`Server responded with ${response.status}`);
+        }
+
+        const server = await response.json();
+        for (const fileInfo of server.files) {
+            const { path, content, lastModified} = fileInfo;
+
+            // What about more than 2 levels nested?
+            let dir, filename;
+            if (path.includes('/')) {
+                const parts = path.split('/');
+                filename = parts.pop();
+                dir = parts.join('/');
+            } else {
+                dir = '';
+                filename = path;
+            }
+
+            // TODO for first sync, when we have all the files - we should not rewrite them
+            // TODO if file was modified locally, we need to re-read it before writing.
+            const dirs = path.split('/');
+            dirs.pop() // remove filename
+            let currentDirHandle = await getSavedDirectoryHandle();
+            for (const dirName of dirs) {
+                if (dirName) {
+                    currentDirHandle = await currentDirHandle.getDirectoryHandle(dirName, { create: true });
+                }
+            }
+
+            // TODO create dirs if not exist
+            console.log("Syncing " +filename);
+            let fileHandle;
+            try {
+                fileHandle = await currentDirHandle.getFileHandle(filename, { create: true });
+            } catch (error) {
+                console.error(`Error getting file handle for '${dir}/${filename}':`, error);
+                continue;
+            }
+            let file = await fileHandle.getFile()
+            let clientHash = hash(await file.text());
+            let serverHash = hash(content);
+            if (clientHash !== serverHash) {
+                console.log("Hashes do not match, writing file...");
+                const writable = await fileHandle.createWritable();
+                await writable.write(content);
+                await writable.close();
+            } else {
+                console.log("Hashes match, no need to write file.");
+            }
+            if (!filesMetadata['files'][dir]) filesMetadata['files'][dir] = {};
+            filesMetadata['files'][dir][filename] = {
+                hash: hash(content),
+                lastModified: lastModified,
+                path: path
+            };
+        }
+        filesMetadata['timestamps'] = server.timestamps;
+        localStorage.setItem(SYNC_STORAGE_KEY, JSON.stringify(filesMetadata));
+        console.log("Sync completed successfully");
+    } catch (error) {
+        console.error("Sync failed:", error);
+    }
+}

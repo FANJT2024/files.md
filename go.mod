@@ -16,7 +16,6 @@ require (
 )
 
 require (
-	github.com/AaronO/go-git-http v0.0.0-20161214145340-1d9485b3a98f
 	github.com/lmittmann/tint v1.0.5
 	github.com/rivo/uniseg v0.4.7
 	github.com/wailsapp/wails/v2 v2.9.2
