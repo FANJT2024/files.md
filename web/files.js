@@ -180,7 +180,6 @@ async function syncFileWithServer(dir, filename) {
 
     console.log(serverTimestamp, file);
 
-    return;
     let serverFile = {};
     try {
         let response = await fetch('https://habits.files.md/syncFile', {
@@ -198,6 +197,7 @@ async function syncFileWithServer(dir, filename) {
         }
 
         serverFile = await response.json();
+        console.log(serverFile);
     } catch (error) {
         console.error("Network error occurred:", error.message);
         return;

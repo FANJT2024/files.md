@@ -206,6 +206,17 @@ func SyncFile(w http.ResponseWriter, r *http.Request) {
 		serverModTime = info.ModTime().Unix()
 	}
 
+	serverContent, err := ioutil.ReadFile(fullPath)
+	if err != nil {
+		log.Printf("Error reading one file '%s': %v", fullPath, err)
+	}
+
+	if string(serverContent) == file.Content {
+		logSync(fmt.Sprintf("File '%s' is already up to date", file.Path))
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+
 	var content string
 	if err != nil && !os.IsNotExist(err) {
 		log.Printf("Error reading one file '%s': %v", fullPath, err)
@@ -216,10 +227,7 @@ func SyncFile(w http.ResponseWriter, r *http.Request) {
 	} else {
 		fileWasModifiedOnServer := serverModTime > file.LastModified
 		if fileWasModifiedOnServer {
-			serverContent, err := ioutil.ReadFile(fullPath)
-			if err != nil {
-				log.Printf("Error reading one file '%s': %v", fullPath, err)
-			}
+			log.Printf("Server file '%s' was modified at %d, client timestamp is %d", fullPath, serverModTime, file.LastModified)
 			logSync(fmt.Sprintf("Merging and writing one file: '%s'", file.Path))
 			content = Merge(string(serverContent), file.Content)
 			logSync(fmt.Sprintf("Diff one file: %s", Diff(string(serverContent), file.Content)))
