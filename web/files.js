@@ -303,7 +303,10 @@ async function isContentEqual(path, content) {
                 diff.push(`Line ${i + 1}: "${clientLine}" vs "${serverLine}"`);
             }
         }
-        console.log("Content differs:", diff.join('\n'));
+        // Log from async without console.log
+        setTimeout(() => {
+            console.log("Content differs:", diff.join('\n'));
+        }, 0);
 
         return false;
     } else {
@@ -417,13 +420,10 @@ async function initFiles() {
     window.loader = setInterval(async function () {
         // Check if current file has been modified
         let path = `${editor.currentDir}/${editor.currentFile}`;
-        if (!hasUnsavedChanges || !await isContentEqual(path, getCurrentContent())) {
-            // What is this?
-            // newContent = newContent.replace(/\[\[(.+?)\|.*?\]\]/g, '[[$1]]');
-            // if (normNewLines(currentContent) !== normNewLines(newContent)) {
-                console.log('showing file');
-                await showFile(editor.currentDir, editor.currentFile, false);
-            // }
+        let contentWithNormalizedLinks = getCurrentContent().replace(/\[\[(.+?)\|.*?\]\]/g, '[[$1]]');
+        if (!hasUnsavedChanges && !await isContentEqual(path, contentWithNormalizedLinks)) {
+            console.log('showing file');
+            await showFile(editor.currentDir, editor.currentFile, false);
         }
     }, loaderInterval)
 }
