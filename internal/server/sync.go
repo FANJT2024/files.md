@@ -225,8 +225,8 @@ func SyncFile(w http.ResponseWriter, r *http.Request) {
 	if string(serverContent) == file.Content {
 		logSync(fmt.Sprintf("File '%s' is already up to date", file.Path))
 		response := map[string]interface{}{
-			"status":    StatusNotModified,
-			"timestamp": serverModTime,
+			"status":       StatusNotModified,
+			"lastModified": serverModTime,
 		}
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(response)
@@ -275,8 +275,8 @@ func SyncFile(w http.ResponseWriter, r *http.Request) {
 	if !fileWasModifiedOnServer {
 		logSync(fmt.Sprintf("File '%s' is already up to date", file.Path))
 		response := map[string]interface{}{
-			"status":    StatusUpdatedOnServer,
-			"timestamp": serverModTime,
+			"status":       StatusUpdatedOnServer,
+			"lastModified": serverModTime,
 		}
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(response)
