@@ -226,6 +226,7 @@ func SyncText(w http.ResponseWriter, r *http.Request) {
 			"lastModified": serverModTime,
 		}
 		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusNotModified)
 		json.NewEncoder(w).Encode(response)
 		return
 	}
