@@ -11,7 +11,7 @@
 })(function (require, exports, fold_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    var DEBUG = false;
+    var DEBUG = true;
     exports.ImageFolder = function (stream, token) {
         var cm = stream.cm;
         var imgRE = /\bimage-marker\b/;
@@ -23,8 +23,14 @@
             var url_end = stream.findNext(urlRE, url_begin.i_token + 1);
             var from = { line: lineNo, ch: token.start };
             var to = { line: lineNo, ch: url_end.token.end };
+
             var rngReq = stream.requestRange(from, to, from, from);
             if (rngReq === fold_1.RequestRangeResult.OK) {
+                // That fixes blinking on select, for some reason range CI is returned even though cursor is outside of our tokens
+                if (cm.somethingSelected()) {
+                    return null;
+                }
+
                 var url;
                 var title;
                 { // extract the URL
@@ -59,7 +65,7 @@
                 });
 
                 var marker = cm.markText(from, to, {
-                    clearOnEnter: true,
+                    clearOnEnter: false,
                     collapsed: true,
                     replacedWith: wrapper,
                 });
