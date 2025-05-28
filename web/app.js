@@ -97,7 +97,8 @@ function initEditor(el) {
     });
 
     editor.setOption("viewportMargin", Infinity);
-    editor.setOption("cursorScrollMargin", 50);
+    // editor.setOption("cursorScrollMargin", 50);
+    initAutoscroll(editor);
 
     // TODO Image uploading
     editor.on("paste", async (_, event) => {
