@@ -6837,7 +6837,7 @@
     "End": "goLineEnd", "Home": "goLineStartSmart", "PageUp": "goPageUp", "PageDown": "goPageDown",
     "Delete": "delCharAfter", "Backspace": "delCharBefore", "Shift-Backspace": "delCharBefore",
     "Tab": "defaultTab", "Shift-Tab": "indentAuto",
-    "Enter": "newlineAndIndent", "Insert": "toggleOverwrite",
+    "Enter": "newlineAndContinue", "Insert": "toggleOverwrite",
     "Esc": "singleSelection"
   };
   // Note that the save and find-related commands aren't defined by
@@ -7105,6 +7105,48 @@
     return null
   }
 
+  // CHANGED added regexps from keymap/hypermd.js
+  var LoQRE = /^(\s*)(>[> ]*|[*+-] \[[x ]\]\s|[*+-]\s|(\d+)([.)]))(\s*)/, emptyLoQRE = /^(\s*)(>[> ]*|[*+-] \[[x ]\]|[*+-]|(\d+)[.)])(\s*)$/, unorderedListRE = /[*+-]\s/;
+  var ListRE = /^(\s*)([*+-]\s|(\d+)([.)]))(\s*)/;
+  // CHANGED added this function from keymap/hypermd.js
+  // Auto-updating Markdown list numbers when a new item is added to the
+  // middle of a list
+  function incrementRemainingMarkdownListNumbers(cm, pos) {
+    var listRE = LoQRE;
+    var startLine = pos.line, lookAhead = 0, skipCount = 0;
+    var startItem = listRE.exec(cm.getLine(startLine)), startIndent = startItem[1];
+    do {
+      lookAhead += 1;
+      var nextLineNumber = startLine + lookAhead;
+      var nextLine = cm.getLine(nextLineNumber), nextItem = listRE.exec(nextLine);
+      if (nextItem) {
+        var nextIndent = nextItem[1];
+        var newNumber = (parseInt(startItem[3], 10) + lookAhead - skipCount);
+        var nextNumber = (parseInt(nextItem[3], 10)), itemNumber = nextNumber;
+        if (startIndent === nextIndent && !isNaN(nextNumber)) {
+          if (newNumber === nextNumber)
+            itemNumber = nextNumber + 1;
+          if (newNumber > nextNumber)
+            itemNumber = newNumber + 1;
+          cm.replaceRange(nextLine.replace(listRE, nextIndent + itemNumber + nextItem[4] + nextItem[5]), {
+            line: nextLineNumber, ch: 0
+          }, {
+            line: nextLineNumber, ch: nextLine.length
+          });
+        }
+        else {
+          if (startIndent.length > nextIndent.length)
+            return;
+          // This doesn't run if the next line immediatley indents, as it is
+          // not clear of the users intention (new indented item or same level)
+          if ((startIndent.length < nextIndent.length) && (lookAhead === 1))
+            return;
+          skipCount += 1;
+        }
+      }
+    } while (nextItem);
+  }
+
   // Commands are parameter-less actions that can be performed on an
   // editor, mostly used for keybindings.
   var commands = {
@@ -7244,7 +7286,108 @@
       ensureCursorVisible(cm);
     }); },
     openLine: function (cm) { return cm.replaceSelection("\n", "start"); },
-    toggleOverwrite: function (cm) { return cm.toggleOverwrite(); }
+    toggleOverwrite: function (cm) { return cm.toggleOverwrite(); },
+    // CHANGED, added this function from keymap/hypermd.js
+    newlineAndContinue: function(cm) {
+      if (cm.getOption("disableInput"))
+        return CodeMirror.Pass;
+      var selections = cm.listSelections();
+      var replacements = [];
+      for (var _i = 0, selections_1 = selections; _i < selections_1.length; _i++) {
+        var range = selections_1[_i];
+        var pos = range.head;
+        var rangeEmpty = range.empty();
+        var eolState = cm.getStateAfter(pos.line);
+        var line = cm.getLine(pos.line);
+        var handled = false;
+        if (!handled) {
+          var inList = eolState.list !== false;
+          var inQuote = eolState.quote;
+          var match = LoQRE.exec(line);
+          var cursorBeforeBullet = /^\s*$/.test(line.slice(0, pos.ch));
+          if (rangeEmpty && (inList || inQuote) && match && !cursorBeforeBullet) {
+            handled = true;
+            if (emptyLoQRE.test(line)) {
+              if (!/>\s*$/.test(line))
+                cm.replaceRange("", { line: pos.line, ch: 0 }, { line: pos.line, ch: pos.ch + 1 });
+              replacements.push("\n");
+            }
+            else {
+              var indent = match[1], after = match[5];
+              var numbered = !(unorderedListRE.test(match[2]) || match[2].indexOf(">") >= 0);
+              var bullet = numbered ? (parseInt(match[3], 10) + 1) + match[4] : match[2].replace("x", " ");
+              replacements.push("\n" + indent + bullet + after);
+              if (numbered)
+                incrementRemainingMarkdownListNumbers(cm, pos);
+            }
+          }
+        }
+        if (!handled) {
+          var table = rangeEmpty ? eolState.hmdTable : 0 /* NONE */;
+          if (table != 0 /* NONE */) {
+            if (/^[\s\|]+$/.test(line) && (pos.line === cm.lastLine() || (cm.getStateAfter(pos.line + 1).hmdTable !== table))) {
+              // if this is last row and is empty
+              // remove this row and insert a new line
+              cm.setCursor({ line: pos.line, ch: 0 });
+              cm.replaceRange("\n", { line: pos.line, ch: 0 }, { line: pos.line, ch: line.length });
+            }
+            else {
+              // insert a row below
+              var columns = eolState.hmdTableColumns;
+              var newline_1 = core_1.repeatStr("  |  ", columns.length - 1);
+              var leading = "\n";
+              if (table === 2 /* NORMAL */) {
+                leading += "| ";
+                newline_1 += " |";
+              }
+              // There are always nut users!
+              if (eolState.hmdTableRow == 0) {
+                cm.setCursor({ line: pos.line + 1, ch: cm.getLine(pos.line + 1).length });
+              }
+              else {
+                cm.setCursor({ line: pos.line, ch: line.length });
+              }
+              cm.replaceSelection(leading);
+              cm.replaceSelection(newline_1, "start");
+            }
+            handled = true;
+            return;
+          }
+          else if (rangeEmpty && pos.ch >= line.length && !eolState.code && !eolState.hmdInnerMode && /^\|.+\|.+\|$/.test(line)) {
+            // current line is   | this | format |
+            // let's make a table
+            var lineTokens = cm.getLineTokens(pos.line);
+            var ans = "|", ans2 = "|";
+            for (var i = 1; i < lineTokens.length; i++) { // first token must be "|"
+              var token = lineTokens[i];
+              if (token.string === "|" && (!token.type || !token.type.trim().length)) {
+                ans += " ------- |";
+                ans2 += "   |";
+              }
+            }
+            // multi-cursor is meanless for this
+            // replacements.push("\n" + ans + "\n" + ans2 + "\n")
+            cm.setCursor({ line: pos.line, ch: line.length });
+            cm.replaceSelection("\n" + ans + "\n| ");
+            cm.replaceSelection(ans2.slice(1) + "\n", "start");
+            handled = true;
+            return;
+          }
+        }
+        if (!handled) {
+          if (rangeEmpty && line.slice(pos.ch - 2, pos.ch) == "$$" && /math-end/.test(cm.getTokenTypeAt(pos))) {
+            // ignore indentations of MathBlock Tex lines
+            replacements.push("\n");
+            handled = true;
+          }
+        }
+        if (!handled) {
+          cm.execCommand("newlineAndIndent");
+          return;
+        }
+      }
+      cm.replaceSelections(replacements);
+    }
   };
 
 
