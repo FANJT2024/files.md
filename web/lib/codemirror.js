@@ -3236,7 +3236,8 @@
   function drawSelectionRange(cm, range, output) {
     var display = cm.display, doc = cm.doc;
     var fragment = document.createDocumentFragment();
-    var padding = paddingH(cm.display), leftSide = padding.left;
+    let padding = paddingH(cm.display);
+    let leftSide = padding.left;
     var rightSide = Math.max(display.sizerWidth, displayWidth(cm) - display.sizer.offsetLeft) - padding.right;
     var docLTR = doc.direction == "ltr";
 
@@ -3297,7 +3298,7 @@
           let firstVisualLine = getVisualLines(cm, firstLine)[0];
           let firstLineRight = wrapXObj(cm, lineObj, firstVisualLine.startChar, dir, "before");
           let firstLineLeft = wrapXObj(cm, lineObj, firstVisualLine.endChar, dir, "after");
-          drawRect(fromPos.left, fromPos.top, (firstLineRight - firstLineLeft) - topLeft, fromPos.bottom);
+          drawRect(fromPos.left, fromPos.top, (firstLineRight - firstLineLeft), fromPos.bottom);
 
           // Draw in-between lines
           let areThereInBetweenLines = fromPos.bottom < toPos.top
