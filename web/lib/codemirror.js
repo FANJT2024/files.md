@@ -3242,6 +3242,10 @@
     var docLTR = doc.direction == "ltr";
 
     function drawSelectionRect(left, top, width, bottom) {
+      // CHANGED, sometimes when we select "`code` text" hide/show tokens causes left to be negative.
+      // That all causes blinking, so we just ignore negative lefts.
+      if (left < 0) { return; }
+
       if (top < 0) { top = 0; }
       top = Math.round(top);
       bottom = Math.round(bottom);
