@@ -120,7 +120,6 @@ async function loadLocalFiles(rootDirHandle) {
 }
 
 async function syncAllWithServer() {
-    return;
     if (debug) {
         return;
     }
@@ -139,7 +138,6 @@ async function syncAllWithServer() {
             method: 'POST',
             headers: {'Content-Type': 'application/json', 'Authorization': localStorage.getItem('token')},
             body: JSON.stringify({
-                // TODO rem
                 files: filesToSend,
                 timestamps: filesMetadata['timestamps'] || [],
             })
@@ -156,7 +154,7 @@ async function syncAllWithServer() {
         return;
     }
 
-    // TODO more fine-graned try-catch?
+    // TODO more fine-grained try-catch?
     try {
         // Write files received from the server
         for (const fileInfo of server.files) {
