@@ -537,6 +537,11 @@ async function syncCurrentFile() {
 
     // Wait until not saving
     // TODO what if lots of saving calls are stuck?
+    // I decided to go from loop to insta return
+    // if (isSaving) {
+    //     return;
+    // }
+
     while (isSaving) {
         await new Promise(r => setTimeout(r, 50));
     }
@@ -551,6 +556,7 @@ async function syncCurrentFile() {
     // Sync with server.
 
     if (contentWasModifiedLocally && editor.isClean()) {
+        console.log("WAS MODIFIED LOCALLY");
         // Changes only from local system
         await showFile(editor.currentDir, editor.currentFile);
     } else if (!editor.isClean()) {
