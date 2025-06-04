@@ -12,8 +12,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/spf13/afero"
-
 	"zakirullin/stuffbot/internal/fs"
 )
 
@@ -27,11 +25,6 @@ const (
 var (
 	AuthToken string
 )
-
-var FS = func(userID int) *fs.FS {
-	userFS, _ := fs.NewFS(StorageDir, afero.NewOsFs())
-	return userFS
-}
 
 type file struct {
 	UserID       int64  `json:"userId"`
@@ -51,6 +44,7 @@ type syncResponse struct {
 	Status     string           `json:"status"`     // Status
 	Files      []file           `json:"files"`      // Files with content that need syncing
 	Timestamps map[string]int64 `json:"timestamps"` // Current server timestamps in Unix format
+	Deletions  []string         `json:"deletions"`
 }
 
 func SyncAllTextFiles(w http.ResponseWriter, r *http.Request) {
@@ -63,6 +57,13 @@ func SyncAllTextFiles(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 		log.Printf("Error parsing syncMediasRequest JSON: %v", err)
 		http.Error(w, "Invalid syncMediasRequest JSON", http.StatusBadRequest)
+		return
+	}
+
+	userFS, err := fs.NewUserFS(request.UserID)
+	if err != nil {
+		log.Printf("Error creating user FS: %v", err)
+		http.Error(w, "Error creating user FS", http.StatusInternalServerError)
 		return
 	}
 
@@ -124,7 +125,7 @@ func SyncAllTextFiles(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	serverTimestamps, err := timestamps(StorageDir)
+	serverTimestamps, err := userFS.Ctimes()
 	if err != nil {
 		log.Printf("Error getting server timestamps: %v", err)
 		http.Error(w, fmt.Sprintf("Failed to get timestamps: %v", err), http.StatusInternalServerError)
@@ -174,10 +175,20 @@ func SyncAllTextFiles(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	// Calculate deletions for client (files that exist on client but not on server)
+	deletions := make([]string, 0)
+	for clientPath := range request.Timestamps {
+		if _, existsOnServer := serverTimestamps[clientPath]; !existsOnServer {
+			deletions = append(deletions, clientPath)
+			logSync(fmt.Sprintf("Client should delete: '%s'", clientPath))
+		}
+	}
+
 	response := syncResponse{
 		Status:     StatusOK,
 		Files:      files,
 		Timestamps: dirTimestamps,
+		Deletions:  deletions,
 	}
 
 	w.Header().Set("Content-Type", "application/json")

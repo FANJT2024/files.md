@@ -9,6 +9,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"os"
 	"path"
 	"path/filepath"
 	"regexp"
@@ -162,6 +163,50 @@ func (fs FS) Ctime(dir, filename string) (int64, error) {
 	}
 
 	return Ctime(info), nil
+}
+
+// Ctimes recursively scans a directory and returns the ctime
+// for all .md files as Unix timestamps.
+func (fs FS) Ctimes() (map[string]int64, error) {
+	timestamps := make(map[string]int64)
+
+	err := afero.Walk(fs.backend, fs.RootPath, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return nil
+		}
+
+		base := filepath.Base(path)
+		if strings.HasPrefix(base, ".") && path != fs.RootPath {
+			if info.IsDir() {
+				return filepath.SkipDir
+			}
+			return nil
+		}
+
+		// Only process .md files
+		if !strings.HasSuffix(strings.ToLower(path), ".md") {
+			return nil
+		}
+
+		relPath, err := filepath.Rel(fs.RootPath, path)
+		if err != nil {
+			return nil
+		}
+
+		if relPath == "" {
+			relPath = "."
+		}
+
+		timestamps[relPath] = Ctime(info)
+
+		return nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return timestamps, nil
 }
 
 func (fs FS) Read(dir, filename string) (string, error) {
