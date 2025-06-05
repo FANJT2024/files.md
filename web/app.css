@@ -315,3 +315,12 @@ a:hover {
 .HyperMD-codeblock .hmd-hidden-token {
     display: none !important;
 }
+
+/*Hide (...) in links*/
+.CodeMirror span.hmd-hidden-token.cm-formatting-link-string, .CodeMirror span.hmd-hidden-token.cm-url {
+    display: inline;
+    font-size: 1px !important;
+    letter-spacing: -1ch;
+    font-family: monospace;
+    color: transparent;
+}

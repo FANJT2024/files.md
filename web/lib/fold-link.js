@@ -1,73 +1,115 @@
 // HyperMD, copyright (c) by laobubu
 // Distributed under an MIT license: http://laobubu.net/HyperMD/LICENSE
 //
-// DESCRIPTION: Fold URL of links `[text](url)`
+// DESCRIPTION: Fold and render links
 //
+// This file is actually for links folding, not emojis.
 
 (function (mod){ //[HyperMD] UMD patched!
-    /*plain env*/ mod(null,  {}, HyperMD.Fold, HyperMD);
-})(function (require, exports, fold_1, core_1) {
+    /*commonjs*/  ("object"==typeof exports&&"undefined"!=typeof module) ? mod(null, exports, require("codemirror"), require("../core"), require("./fold")) :
+        /*amd*/       ("function"==typeof define&&define.amd) ? define(["require","exports","codemirror","../core","./fold"], mod) :
+            /*plain env*/ mod(null, (this.HyperMD.FoldEmoji = this.HyperMD.FoldEmoji || {}), CodeMirror, HyperMD, HyperMD.Fold);
+})(function (require, exports, CodeMirror, core_1, fold_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    exports.LinkFolder = void 0;
-    var DEBUG = false;
-    var LinkFolder = function (stream, token) {
+    exports.defaultDict = { /* initialized later */};
+    exports.defaultChecker = function (text) { return text in exports.defaultDict; };
+    exports.defaultRenderer = function (text) {
+        var el = document.createElement("span");
+        el.textContent = exports.defaultDict[text];
+        el.title = text;
+        return el;
+    };
+    /********************************************************************************** */
+    //#region Folder
+    /**
+     * Detect if a token is emoji and fold it
+     *
+     * @see FolderFunc in ./fold.ts
+     */
+    exports.EmojiFolder = function (stream, token) {
+        if (!token.type || !/ formatting-emoji/.test(token.type))
+            return null;
         var cm = stream.cm;
-        // a valid beginning must be ...
-        if (!((token.string === "[" && // the leading [
-                token.state.linkText && // (double check) is link text
-                !token.state.linkTitle && // (double check) not image's title
-                !/\bimage\b/.test(token.type)) // and is not a image mark
-        ))
+        var from = { line: stream.lineNo, ch: token.start };
+        var to = { line: stream.lineNo, ch: token.end };
+        var name = token.string; // with ":"
+        var addon = exports.getAddon(cm);
+        if (!addon.isEmoji(name))
             return null;
-        var spanExtractor = core_1.getLineSpanExtractor(cm);
-        // first, find the link text span
-        var linkTextSpan = spanExtractor.findSpanWithTypeAt({ line: stream.lineNo, ch: token.start }, "linkText");
-        if (!linkTextSpan)
+        var reqAns = stream.requestRange(from, to);
+        if (reqAns !== fold_1.RequestRangeResult.OK)
             return null;
-        // then find the link href span
-        var linkHrefSpan = spanExtractor.findSpanWithTypeAt({ line: stream.lineNo, ch: linkTextSpan.end + 1 }, "linkHref");
-        if (!linkHrefSpan)
-            return null;
-        // now compose the ranges
-        var hrefFrom = { line: stream.lineNo, ch: linkHrefSpan.begin };
-        var hrefTo = { line: stream.lineNo, ch: linkHrefSpan.end };
-        var linkFrom = { line: stream.lineNo, ch: linkTextSpan.begin };
-        // const linkTo: Position = { line: stream.lineNo, ch: linkTextSpan.end };
-        // and check if the range is OK
-        var rngReq = stream.requestRange(hrefFrom, hrefTo, linkFrom, hrefFrom);
-        if (rngReq !== fold_1.RequestRangeResult.OK)
-            return null;
-        // everything is OK! make the widget
-        var text = cm.getRange(hrefFrom, hrefTo);
-        var _a = splitLink(text.substr(1, text.length - 2)), url = _a.url, title = _a.title;
-
-        // CHANGED, we don't need img with link
-        // var imgElem = document.createElement("span");
-        // imgElem.setAttribute("class", "hmd-link-icon");
-        // imgElem.setAttribute("title", url + "\n" + title);
-        // imgElem.setAttribute("data-url", url);
-        var imgElem = document.createElement("span");
-        var marker = cm.markText(hrefFrom, hrefTo, {
-            collapsed: true,
-            replacedWith: imgElem,
-        });
-        imgElem.addEventListener("click", function () { return fold_1.breakMark(cm, marker); }, false);
+        // now we are ready to fold and render!
+        var marker = addon.foldEmoji(name, from, to);
         return marker;
     };
-    function splitLink(content) {
-        // remove title part (if exists)
-        content = content.trim();
-        var url = content, title = "";
-        var mat = content.match(/^(\S+)\s+("(?:[^"\\]+|\\.)+"|[^"\s].*)/);
-        if (mat) {
-            url = mat[1];
-            title = mat[2];
-            if (title.charAt(0) === '"')
-                title = title.substr(1, title.length - 2).replace(/\\"/g, '"');
+    //#endregion
+    fold_1.registerFolder("emoji", exports.EmojiFolder, true);
+    exports.defaultOption = {
+        myEmoji: {},
+        emojiRenderer: exports.defaultRenderer,
+        emojiChecker: exports.defaultChecker,
+    };
+    exports.suggestedOption = {};
+    core_1.suggestedEditorConfig.hmdFoldEmoji = exports.suggestedOption;
+    CodeMirror.defineOption("hmdFoldEmoji", exports.defaultOption, function (cm, newVal) {
+        ///// convert newVal's type to `Partial<Options>`, if it is not.
+        if (!newVal) {
+            newVal = {};
         }
-        return { url: url, title: title };
-    }
-    exports.LinkFolder = LinkFolder;
-    fold_1.registerFolder("link", exports.LinkFolder, true);
+        ///// apply config and write new values into cm
+        var inst = exports.getAddon(cm);
+        for (var k in exports.defaultOption) {
+            inst[k] = (k in newVal) ? newVal[k] : exports.defaultOption[k];
+        }
+    });
+    //#endregion
+    /********************************************************************************** */
+        //#region Addon Class
+    var FoldEmoji = /** @class */ (function () {
+            function FoldEmoji(cm) {
+                this.cm = cm;
+                // options will be initialized to defaultOption when constructor is finished
+            }
+            FoldEmoji.prototype.isEmoji = function (text) {
+                return text in this.myEmoji || this.emojiChecker(text);
+            };
+            FoldEmoji.prototype.foldEmoji = function (text, from, to) {
+                var cm = this.cm;
+                var el = ((text in this.myEmoji) && this.myEmoji[text](text)) || this.emojiRenderer(text);
+                if (!el || !el.tagName)
+                    return null;
+                if (el.className.indexOf('hmd-emoji') === -1)
+                    el.className += " hmd-emoji";
+                var marker = cm.markText(from, to, {
+                    replacedWith: el,
+                });
+                el.addEventListener("click", fold_1.breakMark.bind(this, cm, marker, 1), false);
+                if (el.tagName.toLowerCase() === 'img') {
+                    el.addEventListener('load', function () { return marker.changed(); }, false);
+                    el.addEventListener('dragstart', function (ev) { return ev.preventDefault(); }, false);
+                }
+                return marker;
+            };
+            return FoldEmoji;
+        }());
+    exports.FoldEmoji = FoldEmoji;
+    //#endregion
+    /** ADDON GETTER (Singleton Pattern): a editor can have only one FoldEmoji instance */
+    exports.getAddon = core_1.Addon.Getter("FoldEmoji", FoldEmoji, exports.defaultOption /** if has options */);
+    /********************************************************************************** */
+    //#region initialize compact emoji dict
+    (function (dest) {
+        var parts = [];
+        var matRE = /([-\w]+:)([^;]+);/g;
+        var t;
+        for (var i = 0; i < parts.length; i++) {
+            matRE.lastIndex = 0;
+            while (t = matRE.exec(parts[i])) {
+                dest[':' + t[1]] = t[2];
+            }
+        }
+    })(exports.defaultDict);
 });
+//#endregion
