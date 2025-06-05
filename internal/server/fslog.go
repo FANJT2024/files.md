@@ -32,7 +32,8 @@ func LogRename(time int64, oldPath, newPath string) {
 	file.Sync()
 }
 
-// ReadLog reads the file system log and returns a map of old paths to new paths.
+// ReadLog reads the file system log and returns a map of:
+// newPath -> oldPath
 // AfterTimestamp is inclusive.
 func ReadLog(userID, afterTimestamp int64) map[string]string {
 	lock.RLock()
@@ -73,7 +74,7 @@ func ReadLog(userID, afterTimestamp int64) map[string]string {
 		oldPath = strings.TrimPrefix(oldPath, userPathPrefix)
 		newPath = strings.TrimPrefix(newPath, userPathPrefix)
 
-		logEntries[oldPath] = newPath
+		logEntries[newPath] = oldPath
 	}
 
 	return logEntries

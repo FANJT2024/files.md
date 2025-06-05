@@ -170,7 +170,13 @@ async function syncAllWithServer() {
             }
 
             // todo try-catch?
-            await saveTextFile(path, content)
+            // server.renames is map[string]string, old => new path
+            const shouldRename = path in server.renames;
+            if (shouldRename) {
+                await rename(server.renames[path], path);
+            } else {
+                await saveTextFile(path, content)
+            }
             setMetadata(path, content, lastModified);
             saveMetadata();
         }
@@ -494,6 +500,18 @@ async function saveTextFile(path, content) {
     } else {
         console.log("Hashes match, no need to write file.");
     }
+}
+
+async function rename(oldPath, newPath) {
+    let fileHandle = await getFileHandle(path);
+    if (fileHandle === null) {
+        // TODO fix once Chromium fixes the bug
+        console.log("Malformed name, skipping file...");
+        return;
+    }
+
+    await fileHandle.move(newPath);
+    console.log(`File renamed from ${oldPath} to ${newPath}`);
 }
 
 function getMetadata(path) {
