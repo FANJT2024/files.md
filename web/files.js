@@ -392,9 +392,12 @@ async function collectLocallyModifiedTextFiles() {
     // Find deleted files that are in files metadata but not in existing files
     for (const dir in filesMetadata.files) {
         for (const file in filesMetadata.files[dir]) {
-            const path = `${dir}/${file}`;
-            if (!existingFiles[path]) {
-                console.log("DELETED " + path);
+            if  (/[<>:"|?*\\/\x00-\x1F\x7F]/.test(file)) {
+                continue;
+            }
+            if (!existingFiles[toPath(dir, file)]) {
+                console.log(dir, file);
+                console.log("DELETED " + toPath(dir, file));
             }
         }
     }
@@ -402,12 +405,20 @@ async function collectLocallyModifiedTextFiles() {
     return filesToSend;
 }
 
+function toPath(dir, file) {
+    if (dir === "") {
+        return file;
+    }
+
+    return `${dir}/${file}`;
+}
+
 async function getFileStatus(dir, filename) {
     let content;
     try {
         const fileData = files[dir][filename];
         if (!fileData?.handle) {
-            return null;
+            return null; // what status?
         }
 
         const file = await fileData.handle.getFile();
