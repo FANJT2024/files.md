@@ -76,7 +76,29 @@ let defaultFiles = {
                 "[My amazing project](/My amazing project.md)"
         },
         "Hotkeys.md": {
-            "content": "",
+            "content": "## File Navigation\n" +
+                "\n" +
+                "| Hotkey | Action |\n" +
+                "| -------- |-------- |\n" +
+                "| `Cmd+K` / `Ctrl+K` | Open file search modal |\n" +
+                "| `Cmd+M` / `Ctrl+M` | Open move/directory modal |\n" +
+                "| `Cmd+Enter` / `Ctrl+Enter` | Toggle sidebar (focus mode) |\n" +
+                "| `Cmd+[` / `Ctrl+[`  | Go to previous file   |\n" +
+                "| `Cmd+]` / `Ctrl+]`  | Go to next file  |\n" +
+                "\n" +
+                "## Text Formatting\n" +
+                "\n" +
+                "| Hotkey | Action |\n" +
+                "| -------- | -------- |\n" +
+                "| `Cmd+B` / `Ctrl+B` | Toggle **bold** formatting |\n" +
+                "| `Cmd+I` / `Ctrl+I` | Toggle *italic* formatting |\n" +
+                "| `Cmd+Y` / `Ctrl+Y`| Insert ✅ checkbox at line start |\n" +
+                "\n" +
+                "## Editor Functions\n" +
+                "\n" +
+                "| Hotkey | Action |\n" +
+                "| -------- | -------- |\n" +
+                "| `[` | Trigger file link autocomplete |",
         },
         "My amazing project.md": {
             "content": "You can dump project related thoughts here"
