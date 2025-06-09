@@ -263,6 +263,8 @@
                     if (lineChanged && caretAtLines[line])
                         caretLineChanged = true;
                 }
+                // PATCHED, the following code causes all links to unfold after we add a new one
+                return;
                 // refresh cursor position if needed
                 if (caretLineChanged) {
                     if (DEBUG)
