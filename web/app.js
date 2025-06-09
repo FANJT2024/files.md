@@ -1,8 +1,8 @@
 // HyperMD/Codemirror editor
 let editor;
 let focusedItemIndex = -1;
-let debug = false;
-// let debug = {dir: "", file: "Sim.md", loaded: false};
+// let debug = false;
+let debug = {dir: "", file: "Sim.md", loaded: false};
 
 async function init(el) {
     initEditor(el);
@@ -318,6 +318,28 @@ async function openFile(dir, filename, saveToHistory = true) {
     }
 }
 
+async function newFile() {
+    const dir = editor.currentDir || '';
+    // TODO don't create on disk?
+    let filename = "New file.md";
+
+    let num = 1;
+    while (files[dir] && files[dir][filename]) {
+        filename = `New file (${num}).md`;
+        num++;
+    }
+
+    let handle = await getFileHandle(toPath(dir, filename));
+    files[dir][filename] = {
+        content: "",
+        lastModified: Date.now(),
+        handle: handle,
+        imageUrl: null
+    };
+
+    await openFile(dir, filename);
+}
+
 // Focus last line before the links.
 function focusLastLine() {
     let lastLine = editor.lastLine();
@@ -409,6 +431,8 @@ window.addEventListener('keydown', (event) => {
         openSearchModal();
     }
 });
+
+document.getElementById("new-file").addEventListener('click', newFile);
 
 window.addEventListener('focus', () => {
     console.log('got focus');
