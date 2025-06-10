@@ -66,8 +66,23 @@ func SyncTexts(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// log deleted
+	userFS, err := fs.NewUserFS(request.UserID)
+	if err != nil {
+		log.Printf("Error creating user FS: %v", err)
+		http.Error(w, "Error creating user FS", http.StatusInternalServerError)
+		return
+	}
+
+	// Delete files
 	for _, path := range request.Deleted {
+		err = userFS.Del("", path)
+		if err != nil {
+			if errors.Is(err, os.ErrNotExist) {
+				continue
+			}
+			log.Printf("Error deleting file '%s': %v", path, err)
+			continue
+		}
 		logDelete(fmt.Sprintf("Deleting file: '%s'", path))
 	}
 
@@ -82,13 +97,6 @@ func SyncTexts(w http.ResponseWriter, r *http.Request) {
 	}
 	// TODO if a file was changed on client on oldPath, merge it with the new path
 	renames := ReadLog(request.UserID, lastSync)
-
-	userFS, err := fs.NewUserFS(request.UserID)
-	if err != nil {
-		log.Printf("Error creating user FS: %v", err)
-		http.Error(w, "Error creating user FS", http.StatusInternalServerError)
-		return
-	}
 
 	// Save client-modified files to the server
 	for _, clientFile := range request.Modified {
