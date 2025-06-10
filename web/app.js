@@ -86,6 +86,13 @@ function initEditor(el) {
     editor.hmdReadLink = async function (path) {
         path = path.replace(/\|.*]$/, '');
         path = path.replace('[', '').replace(']', '');
+
+        // If it is a web link open window blank
+        if (/^(http|https):\/\//.test(path)) {
+            window.open(path, '_blank');
+            return;
+        }
+
         let parts = path.split('/');
         if (parts.length === 1) {
             await openFile("", path + '.md');
