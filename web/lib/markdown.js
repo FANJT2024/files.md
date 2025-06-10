@@ -513,16 +513,18 @@ CodeMirror.defineMode("markdown", function(cmCfg, modeCfg) {
     if (ch === '[' && stream.peek() === '[' && !state.image) {
       // Wiki-style link [[page]]
       stream.next(); // consume second [
-      state.wikiLink = true;
+      state.linkText = true;
+      state.linkHref = true;
       if (modeCfg.highlightFormatting) state.formatting = "link";
       return getType(state);
     }
 
-    if (ch === ']' && state.wikiLink && stream.peek() === ']') {
+    if (ch === ']' && state.linkText && state.linkHref && stream.peek() === ']') {
       stream.next(); // consume second ]
       if (modeCfg.highlightFormatting) state.formatting = "link";
       var type = getType(state);
-      state.wikiLink = false;
+      state.linkText = false;
+      state.linkHref = false;
       return type;
     }
 
