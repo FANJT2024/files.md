@@ -464,3 +464,11 @@ body.dragging * {
     margin-left: 4px;
     width: calc(100% - 4px);
 }
+
+.cm-s-hypermd-light .CodeMirror-line.HyperMD-codeblock {
+    padding-left: 10px;
+}
+
+.cm-s-hypermd-light .HyperMD-codeblock::before {
+    display: none;
+}
