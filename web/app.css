@@ -408,7 +408,7 @@ button svg {
 }
 
 .resize-handle:hover {
-    background: var(--color-bg-active);
+    background: color-mix(in srgb, var(--color-bg-active) 50%, transparent);
 }
 
 .resize-handle::after {
@@ -424,7 +424,6 @@ button svg {
 .resize-handle:hover::after {
     background: var(--color-border);
 }
-
 
 body.dragging {
     user-select: none;
