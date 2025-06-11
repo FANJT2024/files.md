@@ -384,8 +384,10 @@ button svg {
     padding: 8px;
 }
 
+#sidebar-container {
+    position: relative;
+}
 
-/* Resize handle */
 .resize-handle {
     position: absolute;
     right: 0;
@@ -412,7 +414,7 @@ button svg {
 }
 
 .resize-handle:hover::after {
-    /*background: #007bff;*/
+    background: var(--color-border);
 }
 
 
