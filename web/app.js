@@ -48,7 +48,7 @@ async function init(el) {
 function initEditor(el) {
     editor = HyperMD.fromTextArea(el, {
         dragDrop: false,
-        // viewportMargin: Infinity,
+        viewportMargin: Infinity,
         mode: {
             name: "hypermd",
             math: false, // disable $math syntax$
@@ -101,18 +101,6 @@ function initEditor(el) {
     editor.hmdReadLink = async function (path) {
         path = path.replace(/\|.*]$/, '');
         path = path.replace('[', '').replace(']', '');
-
-        // If starts with media/, open via native file opener.
-        // It is not possible to open files in OS via browser.
-        // console.log(path);
-        // if (path.startsWith('media/')) {
-        //     const fileName = path.slice(6);
-        //     const fileHandle = await getFileHandle(path);
-        //     const file = await fileHandle.getFile();
-        //     const url = URL.createObjectURL(file);
-        //     window.open(url);
-        //     return;
-        // }
 
         // If it is a web link open window blank
         if (/^(http|https):\/\//.test(path)) {
@@ -892,9 +880,11 @@ document.addEventListener('mousedown', (event) => {
 
 // Reload files once the app gains focus
 window.addEventListener("focus", async () => {
-    if (editor.currentFile !== undefined) {
-        editor.focus();
+    if (editor.currentFile === undefined) {
+        return;
     }
+
+    editor.focus();
 
     // Sync media first, so that new images for current file would be loaded
     await syncMediaFilesWithServer();
