@@ -7,14 +7,17 @@
     <link rel="canonical" href="https://app.files.md/">
     <link rel="icon" href="favicon.ico" sizes="32x32">
     <link rel="manifest" href="manifest.json">
-    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,300..900;1,300..900&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload"
+          href="https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,300..900;1,300..900&display=swap" as="style"
+          onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" as="style"
+          onload="this.onload=null;this.rel='stylesheet'">
     <link href="app.css" rel="stylesheet">
     <link href="lib/normalize.css" rel="stylesheet">
-    <link href="lib/tree.css" rel="stylesheet" >
-    <link href="lib/codemirror.css" rel="stylesheet" >
-    <link href="lib/hypermd.css" rel="stylesheet" >
-    <link href="lib/hypermd-light.css" rel="stylesheet" >
+    <link href="lib/tree.css" rel="stylesheet">
+    <link href="lib/codemirror.css" rel="stylesheet">
+    <link href="lib/hypermd.css" rel="stylesheet">
+    <link href="lib/hypermd-light.css" rel="stylesheet">
     <script src="lib/tree.js"></script>
     <script src="lib/codemirror.js"></script>
     <script src="lib/core.js"></script>
@@ -40,40 +43,50 @@
 
 <div id="sidebar">
     <div id="sidebar-toolbar">
-        <button id="new-file" title="New file" onclick="newFile()" >
+        <button id="new-file" title="New file" onclick="newFile()">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 32 32">
-                <path stroke="#535358" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 25V7M7 16h18"/>
+                <path stroke="#535358" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M16 25V7M7 16h18"/>
             </svg>
         </button>
-<!--        <button id="move-file" title="Move file" onclick="openMoveModal()">-->
-<!--            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" viewBox="0 0 32 32">-->
-<!--                <path stroke="#535358" stroke-linecap="round" stroke-width="2" d="M5 16h21"/>-->
-<!--                <path stroke="#535358" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 8l8 8-8 8"/>-->
-<!--            </svg>-->
-<!--        </button>-->
-<!--        <button id="remove-file" title="Delete file" onclick="removeFile(toPath(editor.currentDir, editor.currentFile))">-->
-<!--            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" viewBox="0 0 32 32">-->
-<!--                <ellipse cx="16" cy="8" stroke="#535358" stroke-linejoin="round" stroke-width="2" rx="11" ry="3"/>-->
-<!--                <path stroke="#535358" stroke-linejoin="round" stroke-width="2" d="M5 8l3 18s1 2 8 2 8-2 8-2l3-18"/>-->
-<!--                <path stroke="#535358" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.5 16.5l-5 5M13.5 16.5l5 5"/>-->
-<!--            </svg>-->
-<!--        </button>-->
-<!--        <button id="new-folder" title="New folder">-->
-<!--            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 32 32">-->
-<!--                <path stroke="#535358" stroke-linecap="round" stroke-width="2" d="M28 11v13a2 2 0 01-2 2H6a2 2 0 01-2-2V8a2 2 0 012-2h6c3 0 3 3 5 3h9.003C27.108 9 28 9.895 28 11z"/>-->
-<!--                <path stroke="#535358" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 21v-8M12 17h8"/>-->
-<!--            </svg>-->
-<!--        </button>-->
+        <!--        <button id="move-file" title="Move file" onclick="openMoveModal()">-->
+        <!--            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" viewBox="0 0 32 32">-->
+        <!--                <path stroke="#535358" stroke-linecap="round" stroke-width="2" d="M5 16h21"/>-->
+        <!--                <path stroke="#535358" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 8l8 8-8 8"/>-->
+        <!--            </svg>-->
+        <!--        </button>-->
+        <!--        <button id="remove-file" title="Delete file" onclick="removeFile(toPath(editor.currentDir, editor.currentFile))">-->
+        <!--            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" viewBox="0 0 32 32">-->
+        <!--                <ellipse cx="16" cy="8" stroke="#535358" stroke-linejoin="round" stroke-width="2" rx="11" ry="3"/>-->
+        <!--                <path stroke="#535358" stroke-linejoin="round" stroke-width="2" d="M5 8l3 18s1 2 8 2 8-2 8-2l3-18"/>-->
+        <!--                <path stroke="#535358" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.5 16.5l-5 5M13.5 16.5l5 5"/>-->
+        <!--            </svg>-->
+        <!--        </button>-->
+        <!--        <button id="new-folder" title="New folder">-->
+        <!--            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 32 32">-->
+        <!--                <path stroke="#535358" stroke-linecap="round" stroke-width="2" d="M28 11v13a2 2 0 01-2 2H6a2 2 0 01-2-2V8a2 2 0 012-2h6c3 0 3 3 5 3h9.003C27.108 9 28 9.895 28 11z"/>-->
+        <!--                <path stroke="#535358" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 21v-8M12 17h8"/>-->
+        <!--            </svg>-->
+        <!--        </button>-->
         <button id="open-folder" title="Select local folder" onClick="openDir()" style="padding: 5px">
             Open or create folder
         </button>
     </div>
-   <div id="sidebar-tree">
-   </div>
+    <div id="sidebar-tree">
+    </div>
+
+    <div class="resize-handle"
+         role="separator"
+         tabindex="0"
+         aria-label="Resize sidebar with mouse"
+         aria-orientation="vertical">
+    </div>
 </div>
+
 <div id="content">
     <textarea id="editor" style="display: none"></textarea>
 </div>
+
 <div id="search" style="display: none;">
     <form autocomplete="off">
         <input type="text" id="search-input" placeholder="Go to file..." oninput="search()">
@@ -86,7 +99,6 @@
     </form>
     <ul id="move-results"></ul>
 </div>
-<div id="welcome"><p>100% local, we don't process your files: <button onClick="openDir()" id="openDirectory">Open directory with *.md files</button></p></div>
 <script src="app.js"></script>
 <script>
     init(document.getElementById("editor"));

@@ -900,3 +900,35 @@ window.addEventListener("focus", async () => {
     await syncTextsWithServer()
     console.log("Sync completed");
 });
+
+
+// Sidebar resizing;
+const sidebar = document.getElementById('sidebar');
+const resizeHandle = document.querySelector('.resize-handle');
+let isResizing = false;
+resizeHandle.addEventListener('mousedown', initResize);
+document.addEventListener('mousemove', doResize);
+document.addEventListener('mouseup', stopResize);
+
+function initResize(e) {
+    isResizing = true;
+    document.body.classList.add('dragging');
+    e.preventDefault();
+}
+
+function doResize(e) {
+    if (!isResizing) return;
+
+    const width = e.clientX;
+    const minWidth = 200;
+    const maxWidth = 600;
+
+    const constrainedWidth = Math.min(Math.max(width, minWidth), maxWidth);
+    sidebar.style.width = constrainedWidth + 'px';
+}
+
+function stopResize() {
+    if (!isResizing) return;
+    isResizing = false;
+    document.body.classList.remove('dragging');
+}
