@@ -3308,7 +3308,7 @@
 
     function drawSelectionRect(left, top, width, bottom) {
       // PATCHED, There are some inequalities in the left position, so we align it.
-      if (left <= paddingH(cm.display).left) {
+      if (left <= paddingH(cm.display).left + 1) {
         left = 2;
       }
       // PATCHED, sometimes when we select "`code` text" hide/show tokens causes left to be negative.
