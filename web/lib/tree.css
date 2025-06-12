@@ -22,7 +22,7 @@
 	cursor: pointer;
 	display: flex;
 	align-items: center;
-	border-radius: 2px;
+	border-radius: 5px;
 
 	-webkit-touch-callout: none;
 	-webkit-user-select: none;

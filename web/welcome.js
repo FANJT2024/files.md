@@ -63,7 +63,7 @@ let defaultFiles = {
                 "#### Images\n" +
                 "![Why taking notes](https://app.files.md/lib/notes.jpg)\n" +
                 "\n" +
-                "*Caption: This is a sample image with alt text*\n\n" +
+                "*You can paste your own images via `Cmd/Ctrl + V`*\n\n" +
                 "#### Links\n" +
                 "You can insert your own links by typing `[`.\n\n" +
                 "[Why using links](/Links.md)\n" +
