@@ -148,6 +148,7 @@ func initBot() {
 		if err := bot.Reply(u); err != nil {
 			sendToJS("Bot error", "err", err)
 		}
+
 		sendDueResponsesToJS()
 	}
 }
