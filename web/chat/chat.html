@@ -1,187 +1,33 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>files.md</title>
+    <link href="chat.css" rel="stylesheet">
 </head>
 <body>
-<script>
-    function initDB() {
-        return new Promise((resolve, reject) => {
-            const request = indexedDB.open('chat', 1);
-            request.onerror = () => reject(request.error);
-            request.onsuccess = () => resolve(request.result);
-            request.onupgradeneeded = () => {
-                const db = request.result;
-                if (!db.objectStoreNames.contains('handles')) {
-                    db.createObjectStore('handles');
-                }
-            };
-        });
-    }
 
-    async function openDir() {
-        let dirHandle = await window.showDirectoryPicker();
-        await saveDirectoryHandle(dirHandle);
-        await dirHandle.getFileHandle('test.txt', {
-            create: true
-        });
-    }
+<div id="chat-container">
+    <div id="messages"></div>
+    <div id="input-container">
+        <textarea id="input-field" rows="1" placeholder="Write a message..."></textarea>
+        <button id="send-button" disabled>
+            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 330 330" fill="white"
+                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                 class="feather feather-send">
+                <path d="M250.606,154.389l-150-149.996c-5.857-5.858-15.355-5.858-21.213,0.001
+	c-5.857,5.858-5.857,15.355,0.001,21.213l139.393,139.39L79.393,304.394c-5.857,5.858-5.857,15.355,0.001,21.213
+	C82.322,328.536,86.161,330,90,330s7.678-1.464,10.607-4.394l149.999-150.004c2.814-2.813,4.394-6.628,4.394-10.606
+	C255,161.018,253.42,157.202,250.606,154.389z"/>
+            </svg>
+        </button>
+    </div>
+    <div id="command-popup" class="popup hidden"></div>
+</div>
 
-    async function getRootDirHandle() {
-        const db = await initDB();
-        return new Promise((resolve, reject) => {
-            const transaction = db.transaction('handles', 'readonly');
-            const store = transaction.objectStore('handles');
-            const request = store.get('savedDirectoryHandle');
-            request.onsuccess = () => resolve(request.result);
-            request.onerror = () => reject(request.error);
-        });
-    }
-
-    async function saveDirectoryHandle(directoryHandle) {
-        const db = await initDB();
-        const transaction = db.transaction('handles', 'readwrite');
-        const store = transaction.objectStore('handles');
-        await store.put(directoryHandle, 'savedDirectoryHandle');
-    }
-
-    async function getFileHandle(path, create=false) {
-        let dir, filename;
-        if (path.includes('/')) {
-            const parts = path.split('/');
-            filename = parts.pop();
-            dir = parts.join('/');
-        } else {
-            dir = '';
-            filename = path;
-        }
-
-        const dirs = dir.split('/');
-        let currentDirHandle = await getRootDirHandle();
-        if (currentDirHandle === undefined) {
-            console.error('PLS open dir')
-        }
-
-        for (const dirName of dirs) {
-            if (dirName) {
-                currentDirHandle = await currentDirHandle.getDirectoryHandle(dirName, {create: create});
-            }
-        }
-
-        let fileHandle;
-        fileHandle = await currentDirHandle.getFileHandle(filename, {create: create});
-
-        return fileHandle;
-    }
-
-    async function read(args) {
-        let path = args[0];
-        let fileHandle = await getFileHandle(path)
-        let file = await fileHandle.getFile();
-
-        return await file.text();
-    }
-
-    async function write(args) {
-        let path = args[0];
-        let content = args[1];
-
-        let fileHandle = await getFileHandle(path, true);
-        const writable = await fileHandle.createWritable();
-        await writable.write(content);
-        await writable.close();
-    }
-
-    async function exists(args) {
-        let path = args[0]
-        if (path === "") {
-            return true
-        }
-
-        try {
-            await getFileHandle(path);
-            return true;
-        } catch (error) {
-            if (error.name === 'NotFoundError') {
-                return false
-            }
-            // TODO better way to handle dirs
-            if (error.name === 'TypeMismatchError') {
-                return true;
-            }
-            console.log("EXISTS:", error, "PATH: ", path);
-            throw error
-        }
-    }
-
-    async function readDir(args) {
-        let path = args[0];
-        const dirs = path.split('/');
-        let currentDirHandle = await getRootDirHandle();
-        if (currentDirHandle === undefined) {
-            console.error('PLS open dir');
-            return [];
-        }
-
-        // Navigate to the target directory
-        for (const dirName of dirs) {
-            if (dirName) {
-                currentDirHandle = await currentDirHandle.getDirectoryHandle(dirName, {create: false});
-            }
-        }
-
-        const entries = [];
-
-        for await (const [name, handle] of currentDirHandle.entries()) {
-            if (handle.kind === 'directory') {
-                // For directories
-                entries.push({
-                    name: name,
-                    isDir: true,
-                    modTime: null // File System Access API doesn't provide modTime for directories
-                });
-            } else if (handle.kind === 'file') {
-                // For files
-                const file = await handle.getFile();
-                entries.push({
-                    name: name,
-                    isDir: false,
-                    modTime: file.lastModified // Returns timestamp in milliseconds
-                });
-            }
-        }
-
-        return entries;
-    }
-
-    async function mkdir(args) {
-        let path = args[0];
-        console.log(path);
-        try {
-            let currentDirHandle = await getRootDirHandle();
-            await currentDirHandle.getDirectoryHandle(path, {create: true});
-        } catch (error) {
-            console.log(error);
-            throw error;
-        }
-    }
-
-    async function mkdirAll(args) {
-        let path = args[0]
-        const dirs = path.split('/');
-        let currentDirHandle = await getRootDirHandle();
-        for (const dirName of dirs) {
-            if (dirName) {
-               await mkdir([path])
-            }
-        }
-    }
-
-    function receive(val) {
-        console.log(val);
-        document.getElementById('response').innerText = val;
-    }
-
-</script>
+<script src="chat.js"></script>
+<script src="wasm_exec.js"></script>
 <script type="module">
     const go = new Go();
     const wasmFile = await fetch("main.wasm");
@@ -189,9 +35,7 @@
     go.run(wasmModule.instance);
     console.log(reply('1718218800'));
 </script>
-<script src="wasm_exec.js"></script>
-<button onclick="openDir()">open</button>
-<div id="response"></div>
+<!--<button onclick="openDir()">open</button>-->
 </body>
 </html>
 

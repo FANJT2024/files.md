@@ -35,7 +35,7 @@ func (fs *JSFS) Mkdir(name string, perm os.FileMode) error {
 
 	select {
 	case result := <-resultChan:
-		sendToJS(fmt.Sprintf("%v", result))
+		fmt.Printf("%v", result)
 		return nil
 	case err := <-errorChan:
 		return err
@@ -56,7 +56,7 @@ func (fs *JSFS) MkdirAll(path string, perm os.FileMode) error {
 
 	select {
 	case result := <-resultChan:
-		sendToJS(fmt.Sprintf("%v", result))
+		fmt.Printf("%v", result)
 		return nil
 	case err := <-errorChan:
 		return err
@@ -117,7 +117,7 @@ func readFile(_ afero.Fs, path string) ([]byte, error) {
 
 	select {
 	case result := <-resultChan:
-		sendToJS(fmt.Sprintf("%v", result))
+		fmt.Printf("%v", result)
 		return []byte(result), nil
 	case err := <-errorChan:
 		return nil, err
@@ -138,7 +138,7 @@ func writeFile(_ afero.Fs, path string, data []byte, perm os.FileMode) error {
 
 	select {
 	case result := <-resultChan:
-		sendToJS(fmt.Sprintf("%v", result))
+		fmt.Printf("%v", result)
 		return nil
 	case err := <-errorChan:
 		return err
@@ -159,7 +159,7 @@ func exists(_ afero.Fs, path string) (bool, error) {
 
 	select {
 	case result := <-resultChan:
-		sendToJS(fmt.Sprintf("%v", result))
+		fmt.Printf("%v", result)
 		return result, nil
 	case err := <-errorChan:
 		return false, err
@@ -180,7 +180,7 @@ func readDir(backend afero.Fs, path string) ([]os.FileInfo, error) {
 
 	select {
 	case result := <-resultChan:
-		sendToJS(fmt.Sprintf("%v", result))
+		fmt.Printf("%v", result)
 		return jsArrayToFileInfo(result), nil
 	case err := <-errorChan:
 		return nil, err

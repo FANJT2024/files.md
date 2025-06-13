@@ -3,6 +3,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log/slog"
 	"runtime/debug"
@@ -88,7 +89,11 @@ func sendDueResponsesToJS() {
 	chat.Messages = nil
 	chat.EditedMessages = nil
 
-	sendToJS(fmt.Sprintf("%v", r))
+	response, err := json.Marshal(r)
+	if err != nil {
+		// TODO handle err
+	}
+	sendToJS(string(response))
 }
 
 func sendToJS(vals ...any) {
@@ -129,18 +134,18 @@ func initBot() {
 		userPath := ""
 		userFS, err := fs.NewFS(userPath, NewJSFS())
 		if err != nil {
-			sendToJS(fmt.Sprintf("Bot error: can't create fs: %v", err))
+			fmt.Printf("Bot error: can't create fs: %v", err)
 		}
 		err = userFS.CreateDirsIfNotExist()
 		if err != nil {
-			sendToJS(fmt.Sprintf("Bot error: can't create user dirs: %v", err))
+			fmt.Printf("Bot error: can't create user dirs: %v", err)
 		}
 
 		confFilename := "config.json"
 		userconf := userconfig.NewConfig(userFS, userID, confFilename)
 		err = userconf.CreateDefaultIfNotExists()
 		if err != nil {
-			sendToJS("Bot error: can't create default user config")
+			fmt.Printf("Bot error: can't create default user config")
 		}
 
 		if chat == nil {
@@ -148,7 +153,7 @@ func initBot() {
 		}
 		bot := internal.NewBot(userID, chat, userFS, db.NewDB(userID), userconf)
 		if err := bot.Reply(u); err != nil {
-			sendToJS("Bot error", "err", err)
+			fmt.Printf("Bot error: %v", err)
 		}
 
 		sendDueResponsesToJS()

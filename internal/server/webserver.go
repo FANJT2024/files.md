@@ -46,6 +46,10 @@ func newRouter(logger *log.Logger) *http.ServeMux {
 				http.ServeFile(w, r, "./web/app.html")
 				return
 			}
+			if r.URL.Path == "/chat" {
+				http.ServeFile(w, r, "./web/chat/chat.html")
+				return
+			}
 
 			http.FileServer(http.Dir("./web")).ServeHTTP(w, r)
 			return

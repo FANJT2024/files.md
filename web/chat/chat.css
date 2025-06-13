@@ -1,0 +1,169 @@
+html {
+    background-color: rgba(27, 38, 54, 1);
+    text-align: center;
+    color: white;
+}
+
+body {
+    margin: 0;
+    color: white;
+    font-family: "Nunito", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto",
+    "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
+    sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #f0f0f0;
+}
+
+#app {
+    height: 100vh;
+    text-align: center;
+}
+
+#chat-container {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100vh;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #fff;
+    overflow: hidden;
+}
+
+#messages {
+    flex: 1;
+    padding: 10px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    color: black;
+}
+
+.message {
+    padding: 10px;
+    border-radius: 10px;
+    text-align: left;
+}
+
+.message, pre, code {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    word-break: break-all;
+    overflow-wrap: anywhere;
+}
+
+.message.user {
+    max-width: 70%;
+    background-color: #dcf8c6;
+    align-self: flex-end;
+}
+
+.message.bot {
+    background-color: #f1f1f1;
+    align-self: flex-start;
+}
+
+#input-container {
+    display: flex;
+    position: relative;
+    padding: 5px 8px 8px 8px;
+    border-top: 1px solid #ccc;
+    gap: 5px;
+    align-items: flex-end;
+}
+
+#input-field {
+    resize: none;
+    outline: none;
+    border-radius: 5px;
+    border: 0;
+    flex: 1;
+    padding: 10px 5px 10px 5px;
+    border-radius: 5px;
+    max-height: 400px;
+    overflow-y: auto;
+    font-size: 15px;
+}
+
+#send-button {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 40px;
+    height: 40px;
+    border: none;
+    background-color: black;
+    color: white;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 20px;
+    transition: background-color 0.3s ease;
+}
+
+#send-button:disabled {
+    background-color: #aaa;
+}
+
+#send-button:hover:not(:disabled) {
+    background-color: #494949;
+}
+
+.button-container {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.button-row {
+    display: flex;
+    gap: 5px;
+    width: 100%;
+}
+
+.button-row button,
+.button-container > button {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    background-color: #e5e5ea;
+    color: #333;
+    cursor: pointer;
+    border-radius: 5px;
+    text-align: center;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    transition: background-color 0.3s;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 17px;
+}
+
+.button-row button:hover,
+.button-container > button:hover {
+    background-color: #d4d4d8;
+}
+
+.popup {
+    position: absolute;
+    background-color: white;
+    border: 1px solid #ccc;
+    color: #333;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    overflow-y: auto;
+    bottom: 54px;
+}
+
+.command-item {
+    padding: 8px 10px;
+    cursor: pointer;
+    text-align: left;
+}
+
+.command-item:hover, .command-item.focused {
+    background-color: #f1f1f1;
+}
