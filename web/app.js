@@ -13,6 +13,7 @@ async function init(el) {
     if (!hasSavedDir) {
         document.getElementById('open-folder').style.display = 'inline';
         document.getElementById('new-file').style.display = 'none';
+        document.getElementById('chat').style.display = 'none';
         files = defaultFiles;
         buildSidebar();
         await openFile("", "Welcome.md");
@@ -23,6 +24,7 @@ async function init(el) {
     if (permission !== 'granted') {
         document.getElementById('open-folder').style.display = 'inline';
         document.getElementById('new-file').style.display = 'none';
+        document.getElementById('chat').style.display = 'none';
     }
 
     const rootDirHandle = await getRootDirHandle();
@@ -715,16 +717,19 @@ document.addEventListener('keydown', (event) => {
     }
 });
 
+function openChat() {
+    window.location.href = '/chat';
+    window.resizeTo(500, 500);
+    const left = (screen.availWidth - 500) / 2;
+    const top = (screen.availHeight - 500) / 2;
+    window.moveTo(left, top);
+}
 // Toggle focus mode
 document.addEventListener('keydown', function (event) {
     if (isModifierKey(event) && event.key === 'Enter') {
         event.preventDefault();
+        openChat();
 
-        window.location.href = '/chat';
-        window.resizeTo(500, 500);
-        const left = (screen.availWidth - 500) / 2;
-        const top = (screen.availHeight - 500) / 2;
-        window.moveTo(left, top);
         // const sidebar = document.getElementById('sidebar');
         // if (sidebar.style.display === 'none') {
         //     sidebar.style.display = 'block';
@@ -803,6 +808,7 @@ async function openDir() {
     let dirHandle = await window.showDirectoryPicker();
     document.getElementById('open-folder').style.display = 'none';
     document.getElementById('new-file').style.display = 'inline';
+    document.getElementById('chat').style.display = 'inline';
     await saveDirectoryHandle(dirHandle);
     files = await loadLocalFiles(dirHandle)
     buildSidebar();

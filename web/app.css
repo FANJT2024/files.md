@@ -376,6 +376,10 @@ button svg {
     /*stroke: var(--color-tx-alt) !important;*/
 }
 
+button svg circle {
+    fill: #3A9AE5 !important;
+}
+
 #sidebar-toolbar button:hover {
     border-radius: 4px;
     background: var(--color-bg-active);
