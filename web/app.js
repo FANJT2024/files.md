@@ -41,7 +41,7 @@ async function init(el) {
 
     perf = performance.now();
     await syncTextsWithServer();
-    await syncMediaFilesWithServer();
+    await syncMedia();
     console.log(`Files initialized in: ${(performance.now() - perf).toFixed(3)} milliseconds`);
 }
 
@@ -894,7 +894,7 @@ window.addEventListener("focus", async () => {
     editor.focus();
 
     // Sync media first, so that new images for current file would be loaded
-    await syncMediaFilesWithServer();
+    await syncMedia();
     await syncCurrentFile();
 
     const savedDirectoryHandle = await getRootDirHandle();

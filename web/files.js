@@ -24,7 +24,7 @@ let isSyncingCurrent = false;
 //   ]
 // }
 let files = [];
-let serverFiles = {files: {}, medias: {}, timestamps: {}, mediaTimestamp: 0};
+let serverFiles = {files: {}, media: {}, timestamps: {}, mediaTimestamp: 0};
 const SERVER_FILES_STORAGE_KEY = 'files';
 const supportedFileTypes = ['md', 'txt', 'png', 'jpg', 'jpeg', 'webp', 'gif',];
 const systemDirs = ["media", "img", "archive", "_read_", "_watch_", "_shop_", "today", "later", "journal", "habits", "triggers", "places"];
@@ -251,7 +251,7 @@ async function syncFileWithServer(dir, filename) {
     console.log("File synced with server");
 }
 
-async function syncMediaFilesWithServer() {
+async function syncMedia() {
     if (localStorage.getItem('token') === null) {
         return;
     }
@@ -263,6 +263,10 @@ async function syncMediaFilesWithServer() {
 
     console.log(`Starting media sync from img folder...`);
     const startTime = performance.now();
+
+
+    // Send new files
+    let newMedias = await collectNewMediaFiles();
 
     const mediaTimestamp = serverFiles['mediaTimestamp'] || 0;
     try {
@@ -337,7 +341,10 @@ async function saveMediaFile(path, blob, lastModified) {
         const file = await fileHandle.getFile();
         const fileExists = file.size > 0;
         if (fileExists) {
-            serverFiles['medias'][file.name] = {
+            if (serverFiles['mediaTimestamp'] === undefined || lastModified > serverFiles['mediaTimestamp']) {
+                serverFiles['mediaTimestamp'] = lastModified;
+            }
+            serverFiles['media'][file.name] = {
                 lastModified: lastModified,
             }
             saveMetadata();
@@ -356,7 +363,10 @@ async function saveMediaFile(path, blob, lastModified) {
         await writable.write(blob);
         await writable.close();
         console.log(`Successfully wrote media file: ${path}`);
-        serverFiles['medias'][filename] = {
+        if (lastModified > serverFiles['mediaTimestamp']) {
+            serverFiles['mediaTimestamp'] = lastModified;
+        }
+        serverFiles['media'][filename] = {
             lastModified: lastModified,
         }
         saveMetadata();
@@ -424,6 +434,27 @@ async function collectModifiedAndDeletedFiles() {
     return {
         modified: modifiedFiles,
         deleted: deleted,
+    };
+}
+
+async function collectNewMediaFiles() {
+    if (!files['media']) {
+        return {
+            newMedia: [],
+        };
+    }
+
+    const newMediaFiles = [];
+    for (const filename in files['media']) {
+        if (serverFiles['media'] === undefined || !(filename in serverFiles['media'])) {
+            newMediaFiles.push(filename);
+        }
+    }
+
+    console.log("NEW FILENAMES", newMediaFiles);
+
+    return {
+        newMedia: newMediaFiles,
     };
 }
 
@@ -851,7 +882,7 @@ async function initFiles() {
     files = await loadLocalFiles(rootDirHandle);
     console.log(`Files loaded in ${performance.now() - startTime}ms`);
     await syncTextsWithServer();
-    await syncMediaFilesWithServer();
+    await syncMedia();
 }
 
 window.addEventListener('beforeunload', function () {
