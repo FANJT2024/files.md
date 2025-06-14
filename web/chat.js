@@ -122,10 +122,8 @@ function showCommandPopup() {
         cmdItem.setAttribute('data-index', index);
 
         cmdItem.onclick = () => {
-            // TODO lol make it easier
-            input.value = cmd.command;
-            input.focus();
-            sendMessage();
+            replyCmd(JSON.stringify({n: cmd.command.substring(1), t: "cmd"}))
+            clearInput();
             hideCommandPopup();
         };
 
@@ -169,19 +167,9 @@ document.addEventListener('scroll', () => {
 });
 
 input.addEventListener('input', () => {
-    return;
-    // When paste is happening, there could be more that one line (even not separated by \n)
-    while (input.scrollHeight > input.clientHeight && input.rows < 30) {
-        input.rows += 1;
-    }
-
-    input.style.height = 'auto';
     sendButton.disabled = toMarkdown() === '';
-    if (input.value.trim() === '') {
-        input.rows = 1
-    }
 
-    if (input.value.startsWith('/')) {
+    if (toMarkdown().startsWith('/')) {
         showCommandPopup();
     } else {
         hideCommandPopup();
@@ -229,10 +217,8 @@ document.addEventListener('keydown', function (event) {
         event.preventDefault();
 
         window.location.href = '/';
-        // setTimeout(() => {
         window.resizeTo(screen.availWidth, screen.availHeight);
         window.moveTo(0, 0);
-        // }, 100);
     }
 });
 

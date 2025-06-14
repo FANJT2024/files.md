@@ -19,16 +19,17 @@ import (
 // appear in the name of a file or directory,
 // and those are NUL '\0' and slash '/'.
 var ForbiddenChars = map[string]string{
+	"<":  "＜",
+	">":  "＞",
+	":":  "꞉",
+	"\"": "″",
+	"|":  "⼁",
+	"\\": "＼",
+	"?":  "？",
+	"*":  "﹡",
+	// Forbidden on Unix.
 	"\x00": "",
-	"<":    "＜",
-	">":    "＞",
-	":":    "꞉",
-	"\"":   "″",
-	"|":    "⼁",
 	"/":    "／",
-	"\\":   "＼",
-	"?":    "？",
-	"*":    "﹡",
 }
 
 func SanitizeFilename(filename string) string {
