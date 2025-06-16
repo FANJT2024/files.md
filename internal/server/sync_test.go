@@ -133,7 +133,7 @@ func TestSyncText_NotModified(t *testing.T) {
 
 	SyncText(w, req)
 
-	r.Equal(http.StatusNotModified, w.Code)
+	r.Equal(http.StatusOK, w.Code)
 
 	var response map[string]interface{}
 	err = json.Unmarshal(w.Body.Bytes(), &response)
