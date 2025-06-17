@@ -96,3 +96,6 @@ watch: # watch for changes and rebuild wasm
 		cp /usr/local/go/lib/wasm/wasm_exec.js web/ && \
 		echo "✅ WASM rebuilt at $$(date)"; \
 	done
+
+e2e:
+	cd tests && npm run test

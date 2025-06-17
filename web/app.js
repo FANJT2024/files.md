@@ -2,8 +2,8 @@
 let editor;
 let focusedSearchItemIndex = -1;
 let focusedMoveItemIndex = -1;
-// let debug = false;
-let debug = {dir: "", file: "Sim.md", loaded: false};
+let debug = false;
+// let debug = {dir: "", file: "Sim.md", loaded: false};
 let isChat = false;
 
 const sidebar = document.getElementById('sidebar');
