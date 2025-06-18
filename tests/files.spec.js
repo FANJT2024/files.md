@@ -37,8 +37,6 @@ test('should load files', async ({ page }) => {
     await page.evaluate(() => {
         init(document.getElementById("editor"));
     });
-
-    // await page.pause();
 });
 
 test('create new', async ({ page }) => {
@@ -135,8 +133,6 @@ test('create new lower case', async ({ page }) => {
         return cm.getValue();
     });
     expect(codeMirrorContent).toBe("# Another file\ncontent\n");
-
-    await page.pause();
 });
 
 test('move file between directories', async ({ page }) => {
