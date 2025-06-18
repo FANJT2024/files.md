@@ -485,3 +485,24 @@ body.dragging * {
 .cm-formatting.cm-formatting-code.cm-inline-code {
     background: none !important;
 }
+
+.cm-s-hypermd-light img.hmd-image {
+    /*PATCHED*/
+    max-width: 400px;
+    display: inline-block;
+
+    margin-left: 25%;
+}
+
+@media (max-width: 768px) {
+    .cm-s-hypermd-light img.hmd-image {
+        margin-left: 20%;
+    }
+}
+
+@media (max-width: 670px) {
+    .cm-s-hypermd-light img.hmd-image {
+        max-width: 300px;
+        margin-left: 15%;
+    }
+}

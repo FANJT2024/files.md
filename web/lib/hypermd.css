@@ -612,12 +612,6 @@
     vertical-align: middle;
     width: auto;
     height: auto;
-
-    /*PATCHED*/
-    max-width: 400px;
-    display: inline-block;
-
-    margin-left: 25%;
 }
 
 /*PATCHED, if z-index is 2, then our section block is below the image*/

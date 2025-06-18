@@ -702,6 +702,10 @@ function suggestMove() {
 function showSearchResults(results) {
     const list = document.getElementById('search-results');
     results.forEach(({dir, filename}, index) => {
+        if (filename === CONFIG_FILENAME) {
+            return;
+        }
+
         const listItem = document.createElement('li');
         let title = filename.replace(/\.md$/, "")
         if (dir !== '') {
