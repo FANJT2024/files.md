@@ -602,7 +602,12 @@ window.addEventListener('keydown', async (event) => {
         event.preventDefault();
         event.stopPropagation();
         event.stopImmediatePropagation();
-        await newFile();
+
+        if (event.shiftKey) {
+            await newFolder();
+        } else {
+            await newFile();
+        }
     }
 }, true);
 
