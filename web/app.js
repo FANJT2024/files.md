@@ -812,11 +812,11 @@ function openChat() {
     input.focus();
     isChat = true;
 
-    // let cmd = {
-    //     n: 'today',
-    //     t: "cmd"
-    // }
-    // replyCmd(JSON.stringify(cmd));
+    let cmd = {
+        n: 'today',
+        t: "cmd"
+    }
+    replyCmd(JSON.stringify(cmd));
 
     window.resizeTo(520, 530);
     const left = (screen.availWidth - 500) / 2;
