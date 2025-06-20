@@ -241,17 +241,14 @@ test('create dirs and move', async ({ page }) => {
     await page.keyboard.press('Meta+m');
     await page.waitForTimeout(100);
     await page.click('#move-results >> text=/');
-    await page.waitForTimeout(200);
+    await page.waitForTimeout(500);
 
 
-    // await page.click('#sidebar >> text=New file');
-    // await page.waitForTimeout(100);
-    // const codeMirrorContent = await page.evaluate(() => {
-    //     const cm = document.querySelector('.CodeMirror').CodeMirror;
-    //     return cm.getValue();
-    // });
-    // expect(codeMirrorContent).toBe("# New file\ncontent\n");
-    await page.pause();
+    await page.click('#sidebar-tree li:has-text("dir1")');
+    await page.click('#sidebar-tree li:has-text("dir1") ul li:has-text("File1")')
+
+    await page.click('#sidebar-tree li:has-text("File2")');
+
 });
 
 // test("create new in root with empty so that it won't remove previous file", async ({ page }) => {
