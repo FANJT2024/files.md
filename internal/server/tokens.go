@@ -5,11 +5,15 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"log"
+	"log/slog"
 	"net/http"
 	"strconv"
 	"sync"
 	"time"
 
+	"github.com/spf13/afero"
+
+	"zakirullin/stuffbot/config"
 	"zakirullin/stuffbot/internal/fs"
 )
 
@@ -21,7 +25,6 @@ const (
 var (
 	oneTimeTokens = make(map[string]oneTimeToken)
 	mu            sync.RWMutex
-	tokens        *fs.FS
 )
 
 type oneTimeToken struct {
@@ -43,6 +46,12 @@ func GenerateOneTimeToken(userID int64) string {
 }
 
 func UserID(token string) (int64, bool) {
+	tokens, err := fs.NewFS(config.BotCfg.TokensDir, afero.NewOsFs())
+	if err != nil {
+		slog.Error("Failed to create file system for tokens", "error", err)
+		return 0, false
+	}
+
 	data, err := tokens.Read(fs.DirRoot, token)
 	if err != nil {
 		return 0, false
@@ -114,7 +123,12 @@ func issueNewToken(oneTimeToken string) (string, bool) {
 	mu.Unlock()
 
 	token := generateToken()
-	err := tokens.Write(fs.DirRoot, token, strconv.FormatInt(data.userID, 10))
+	tokens, err := fs.NewFS(config.BotCfg.TokensDir, afero.NewOsFs())
+	if err != nil {
+		slog.Error("Failed to create file system for tokens", "error", err)
+		return "", false
+	}
+	err = tokens.Write(fs.DirRoot, token, strconv.FormatInt(data.userID, 10))
 	if err != nil {
 		return "", false
 	}
