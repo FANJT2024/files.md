@@ -294,6 +294,28 @@ function initEditor(el) {
             cm.focus();
         }
     });
+
+    editor.getWrapperElement().addEventListener('click', function(e) {
+        const code = e.target.closest('.cm-inline-code');
+        if (!code) return;
+
+        // Copy text (excluding hidden tokens)
+        const text = code.textContent.replace(/`/g, '');
+        navigator.clipboard.writeText(text);
+
+        // Show toast
+        const toast = document.createElement('div');
+        toast.textContent = 'Copied!';
+        toast.style.cssText = `
+       position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+       background: var(--color-bg-alt); color: var(--color-tx); padding: 8px 16px; border-radius: 4px;
+       z-index: 9999; font-size: 14px;
+   `;
+        document.body.appendChild(toast);
+        setTimeout(() => document.body.removeChild(toast), 1000);
+
+        e.preventDefault();
+    });
 }
 
 async function initChat() {
