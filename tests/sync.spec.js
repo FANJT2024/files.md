@@ -46,6 +46,8 @@ async function setup(page) {
                 }
             }
 
+            await root.getFileHandle('Saved.md', { create: true });
+
             return root;
         };
     })
@@ -64,12 +66,29 @@ test('sync new files from server', async ({ page }) => {
     await setup(page);
 
     // Check that existing files are not removed
-    await expectFileContent(page, 'subdir/Notes', '# Notes\nSome Text');
-    await expectFileContent(page, 'subdir/README', '# README\nHello world');
+    await clickAndExpectContent(page, 'subdir/Notes', '# Notes\nSome Text');
+    await clickAndExpectContent(page, 'subdir/README', '# README\nHello world');
 
     // Check that new files are added
-    await expectFileContent(page, 'file', '# File\ntest content');
-    await expectFileContent(page, 'another', '# Another\n*italic*');
+    await clickAndExpectContent(page, 'file', '# File\ntest content');
+    await clickAndExpectContent(page, 'another', '# Another\n*italic*');
+});
+
+test('sync new files from client', async ({ page }) => {
+    await setup(page);
+
+    await clickAndExpectContent(page, 'Saved', '# Saved\n');
+
+    await page.click('#new-file');
+    await page.waitForTimeout(100);
+    await page.keyboard.type('New file');
+    await page.waitForTimeout(100);
+    await page.keyboard.press('Enter');
+    await page.keyboard.type('content');
+    await page.waitForTimeout(3000);
+    await page.pause();
+
+    await expectFileOnServer(page, 'New file.md', 'content\n');
 });
 
 test('get changes for current file from server', async ({ page }) => {
@@ -80,7 +99,7 @@ test('get changes for current file from server', async ({ page }) => {
     await setup(page);
 
     // Check that existing files are not removed
-    await expectFileContent(page, 'file', '# File\ntest content');
+    await clickAndExpectContent(page, 'file', '# File\ntest content');
     await expectCurrentContent(page, '# File\ntest content');
 
     await createFileOnServer('file.md', 'test content\nadded');
@@ -97,7 +116,7 @@ test('send changes from current file to server', async ({ page }) => {
     await setup(page);
 
     // Check that existing files are not removed
-    await expectFileContent(page, 'file', '# File\ntest content');
+    await clickAndExpectContent(page, 'file', '# File\ntest content');
     await expectCurrentContent(page, '# File\ntest content');
 
     await createFileOnServer('file.md', 'test content\nadded');
@@ -118,7 +137,7 @@ test('changed on both client and serve, should merge', async ({ page }) => {
 
     await setup(page);
 
-    await expectFileContent(page, 'file', '# File\ntest content');
+    await clickAndExpectContent(page, 'file', '# File\ntest content');
 
     // Disable sync
     await page.addInitScript((workerIndex) => {
@@ -151,6 +170,7 @@ async function createFileOnServer(filepath, content) {
 
 async function expectFileOnServer(page, filepath, expectedContent) {
     const p = path.join(getServerDir(), filepath);
+    console.log(p);
     const actualContent = await fs.readFile(p, 'utf8');
 
     expect(actualContent).toBe(expectedContent);
@@ -162,7 +182,7 @@ function saltToken(token, salt = '') {
         .digest('hex');
 }
 
-async function expectFileContent(page, filePath, expectedContent) {
+async function clickAndExpectContent(page, filePath, expectedContent) {
     const parts = filePath.split('/');
     const dirs = parts.slice(0, -1);
     const file = parts[parts.length - 1];

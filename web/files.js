@@ -1,5 +1,6 @@
 // TODO Do sync not as often
 const API_HOST = window.API_HOST || 'https://api.files.md';
+// TODO that's quite often. Maybe on edit + focus?
 const SAVE_INTERVAL = 1000; // ms, how often to save currently open file
 const LOAD_INTERVAL = 3000; // ms, how often to load current file from local file system
 
