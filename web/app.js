@@ -13,7 +13,6 @@ const sidebarContainer = document.getElementById('sidebar-container');
 const content = document.getElementById('content')
 
 async function init(el) {
-    console.log(API_HOST);
     // Authorize if we have one-time token in URL.
     const urlParams = new URLSearchParams(window.location.search);
     const oneTimeToken = urlParams.get('token');
@@ -816,8 +815,9 @@ function search() {
         ? search.split('/')[1].toLowerCase()
         : search;
 
-    // Similarity matching, check for direct file matches across all directories.
-    for (const dir in searchDirs) {
+    // Similarity matching, check for direct file matches across directories.
+    for (const dir of searchDirs) {
+        if (!files[dir] || dir === 'media') continue;
         for (const filename in files[dir]) {
             const potentialMatch = filename.replace(/\.md$/, '');
             let similarityScore = similarity(search, potentialMatch);
@@ -836,9 +836,10 @@ function search() {
     // Substring matching
     for (const dir in files) {
         // If dir is not in search dirs, skip
-        if (!searchDirs.includes(dir) && !searchDirs.includes('')) {
+        if (dir === 'media') {
             continue;
         }
+
 
         for (const filename in files[dir]) {
             const potentialMatch = filename.replace(/\.md$/, '');
