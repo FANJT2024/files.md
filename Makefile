@@ -42,7 +42,7 @@ format:
 	gofumpt -w .
 
 wasm:
-	GOOS=js GOARCH=wasm go build -o web/chat/main.wasm web/chat/main.go && cp /usr/local/go/misc/wasm/wasm_exec.js web/chat/
+	GOOS=js GOARCH=wasm go build -o web/chat/chat.wasm web/chat/main.go && cp /usr/local/go/misc/wasm/wasm_exec.js web/chat/
 
 watch: # watch for changes and rebuild wasm
 	@echo "👀 Watching for changes in ./*.(js|go)..."
