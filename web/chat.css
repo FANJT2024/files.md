@@ -29,6 +29,7 @@ body {
 }
 
 .message {
+    margin: 10px 0;
     background: #1a1a2e;
     border-radius: 12px;
     padding: 16px;

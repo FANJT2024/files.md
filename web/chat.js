@@ -116,25 +116,29 @@ function initChat() {
     });
 }
 
-function handleSend() {
+async function handleSend() {
     const text = messageInput.value.trim();
     if (!text) return;
 
-    const now = new Date();
-    const note = {
-        id: Date.now(),
-        text: text,
-        timestamp: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        date: now.toLocaleDateString('en-GB', {
-            day: 'numeric',
-            month: 'long',
-            weekday: 'long'
-        })
-    };
+    // const now = new Date();
+    // const note = {
+    //     id: Date.now(),
+    //     text: text,
+    //     timestamp: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    //     date: now.toLocaleDateString('en-GB', {
+    //         day: 'numeric',
+    //         month: 'long',
+    //         weekday: 'long'
+    //     })
+    // };
+    //
+    // sidebarFiles[currentFile].push(note);
 
-    sidebarFiles[currentFile].push(note);
     messageInput.value = '';
-    saveData();
+    // saveData();
+
+    reply(text);
+    await loadData();
     renderMessages();
     scrollToBottom();
 

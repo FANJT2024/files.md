@@ -26,7 +26,7 @@ function sendMessage() {
     clearInput();
     input.rows = 1;
     sendButton.disabled = true;
-    document.querySelector('#messages').scrollTop = messagesContainer.scrollHeight;
+    // document.querySelector('#messages').scrollTop = messagesContainer.scrollHeight;
 }
 
 function processResponse(response) {
@@ -123,28 +123,28 @@ document.addEventListener('scroll', () => {
     input.focus();
 });
 
-input.addEventListener('input', () => {
-    sendButton.disabled = toMarkdown() === '';
+// input.addEventListener('input', () => {
+//     sendButton.disabled = toMarkdown() === '';
+//
+//     if (toMarkdown().startsWith('/')) {
+//         showCommandPopup();
+//     } else {
+//         hideCommandPopup();
+//     }
+// });
+//
+// input.addEventListener('keydown', (event) => {
+//     if (event.key === 'Enter' && !event.shiftKey) {
+//         event.preventDefault();
+//         if (toMarkdown().startsWith('/')) {
+//             insertFocusedCommand();
+//         } else {
+//             sendMessage();
+//         }
+//     }
+// });
 
-    if (toMarkdown().startsWith('/')) {
-        showCommandPopup();
-    } else {
-        hideCommandPopup();
-    }
-});
-
-input.addEventListener('keydown', (event) => {
-    if (event.key === 'Enter' && !event.shiftKey) {
-        event.preventDefault();
-        if (toMarkdown().startsWith('/')) {
-            insertFocusedCommand();
-        } else {
-            sendMessage();
-        }
-    }
-});
-
-sendButton.addEventListener('click', sendMessage);
+// sendButton.addEventListener('click', sendMessage);
 
 document.body.addEventListener('click', function (e) {
     if (e.target && e.target.nodeName == 'A' && e.target.href) {
@@ -161,9 +161,9 @@ document.body.addEventListener('click', function (e) {
     }
 });
 
-window.addEventListener("focus", async () => {
-    input.focus();
-});
+// window.addEventListener("focus", async () => {
+//     input.focus();
+// });
 
 async function read(args) {
     let path = args[0];
@@ -283,7 +283,7 @@ async function mkdirAll(args) {
 }
 
 function receive(val) {
-    processResponse(val)
+    // processResponse(val)
 }
 
 function createFileElement(fileName, isImage, markdownText, file = null) {
@@ -411,92 +411,92 @@ function generateSafeFileName(originalName) {
 }
 
 // Handle image/file pasting
-input.addEventListener('paste', async (event) => {
-    event.preventDefault();
-    const items = event.clipboardData.items;
-    let hasFile = false;
-    for (const item of items) {
-        if (item.kind === 'file') {
-            hasFile = true;
-
-            const file = item.getAsFile();
-            const fileName = generateSafeFileName(file.name);
-            const isImage = file.type.startsWith('image/');
-
-
-            const saved = await saveFile(fileName, file);
-            if (saved) {
-                const markdownText = isImage
-                    ? `![${fileName}](media/${fileName})`
-                    : `[${fileName}](media/${fileName})`;
-
-                const fileElement = createFileElement(fileName, isImage, markdownText, file);
-
-                if (input.children.length === 1 && input.children[0].tagName === 'BR') {
-                    input.children[0].remove();
-                }
-
-                input.appendChild(fileElement);
-
-                if (isImage) {
-                    const br1 = document.createElement('br');
-                    const br2 = document.createElement('br');
-
-                    input.appendChild(br1);
-                    input.appendChild(br2);
-
-                    const range = document.createRange();
-                    range.setStartAfter(br2);
-                    range.collapse(true);
-                    const selection = window.getSelection();
-                    selection.removeAllRanges();
-                    selection.addRange(range);
-                }
-            } else {
-                loadingSpan.textContent = '❌';
-                loadingSpan.style.color = 'red';
-            }
-        }
-    }
-    if (!hasFile) {
-        const plainText = event.clipboardData.getData('text/plain');
-        if (plainText) {
-            const selection = window.getSelection();
-            if (selection.rangeCount > 0) {
-                const range = selection.getRangeAt(0);
-                range.deleteContents();
-
-                const lines = plainText.split('\n');
-                for (let i = 0; i < lines.length; i++) {
-                    if (lines[i]) {
-                        range.insertNode(document.createTextNode(lines[i]));
-                        range.collapse(false);
-                    }
-                    if (i < lines.length - 1) {
-                        const br = document.createElement('br');
-                        range.insertNode(br);
-                        range.collapse(false);
-                    }
-                }
-            }
-        }
-    }
-});
-
-input.addEventListener('keydown', (e) => {
-    if (e.ctrlKey || e.metaKey) {
-        switch (e.key) {
-            case 'b':
-                e.preventDefault();
-                wrapSelection('strong');
-                break;
-            case 'i':
-                e.preventDefault();
-                wrapSelection('em');
-                break;
-        }
-    }
-});
+// input.addEventListener('paste', async (event) => {
+//     event.preventDefault();
+//     const items = event.clipboardData.items;
+//     let hasFile = false;
+//     for (const item of items) {
+//         if (item.kind === 'file') {
+//             hasFile = true;
+//
+//             const file = item.getAsFile();
+//             const fileName = generateSafeFileName(file.name);
+//             const isImage = file.type.startsWith('image/');
+//
+//
+//             const saved = await saveFile(fileName, file);
+//             if (saved) {
+//                 const markdownText = isImage
+//                     ? `![${fileName}](media/${fileName})`
+//                     : `[${fileName}](media/${fileName})`;
+//
+//                 const fileElement = createFileElement(fileName, isImage, markdownText, file);
+//
+//                 if (input.children.length === 1 && input.children[0].tagName === 'BR') {
+//                     input.children[0].remove();
+//                 }
+//
+//                 input.appendChild(fileElement);
+//
+//                 if (isImage) {
+//                     const br1 = document.createElement('br');
+//                     const br2 = document.createElement('br');
+//
+//                     input.appendChild(br1);
+//                     input.appendChild(br2);
+//
+//                     const range = document.createRange();
+//                     range.setStartAfter(br2);
+//                     range.collapse(true);
+//                     const selection = window.getSelection();
+//                     selection.removeAllRanges();
+//                     selection.addRange(range);
+//                 }
+//             } else {
+//                 loadingSpan.textContent = '❌';
+//                 loadingSpan.style.color = 'red';
+//             }
+//         }
+//     }
+//     if (!hasFile) {
+//         const plainText = event.clipboardData.getData('text/plain');
+//         if (plainText) {
+//             const selection = window.getSelection();
+//             if (selection.rangeCount > 0) {
+//                 const range = selection.getRangeAt(0);
+//                 range.deleteContents();
+//
+//                 const lines = plainText.split('\n');
+//                 for (let i = 0; i < lines.length; i++) {
+//                     if (lines[i]) {
+//                         range.insertNode(document.createTextNode(lines[i]));
+//                         range.collapse(false);
+//                     }
+//                     if (i < lines.length - 1) {
+//                         const br = document.createElement('br');
+//                         range.insertNode(br);
+//                         range.collapse(false);
+//                     }
+//                 }
+//             }
+//         }
+//     }
+// });
+//
+// input.addEventListener('keydown', (e) => {
+//     if (e.ctrlKey || e.metaKey) {
+//         switch (e.key) {
+//             case 'b':
+//                 e.preventDefault();
+//                 wrapSelection('strong');
+//                 break;
+//             case 'i':
+//                 e.preventDefault();
+//                 wrapSelection('em');
+//                 break;
+//         }
+//     }
+// });
 
 function showCommandPopup() {
     const inputText = toMarkdown();
@@ -569,32 +569,32 @@ function insertFocusedCommand() {
     }
 }
 
-input.addEventListener('keydown', (event) => {
-    const isCommandMode = toMarkdown().startsWith('/');
-    const popupVisible = !commandPopup.classList.contains('hidden');
-
-    if (event.key === 'Enter' && !event.shiftKey) {
-        event.preventDefault();
-        if (isCommandMode && popupVisible) {
-            insertFocusedCommand();
-        } else if (isCommandMode) {
-            sendMessage();
-        } else {
-            sendMessage();
-        }
-    } else if (isCommandMode && popupVisible) {
-        if (event.key === 'ArrowUp') {
-            event.preventDefault();
-            navigateCommands('up');
-        } else if (event.key === 'ArrowDown') {
-            event.preventDefault();
-            navigateCommands('down');
-        } else if (event.key === 'Escape') {
-            event.preventDefault();
-            hideCommandPopup();
-        }
-    }
-});
+// input.addEventListener('keydown', (event) => {
+//     const isCommandMode = toMarkdown().startsWith('/');
+//     const popupVisible = !commandPopup.classList.contains('hidden');
+//
+//     if (event.key === 'Enter' && !event.shiftKey) {
+//         event.preventDefault();
+//         if (isCommandMode && popupVisible) {
+//             insertFocusedCommand();
+//         } else if (isCommandMode) {
+//             sendMessage();
+//         } else {
+//             sendMessage();
+//         }
+//     } else if (isCommandMode && popupVisible) {
+//         if (event.key === 'ArrowUp') {
+//             event.preventDefault();
+//             navigateCommands('up');
+//         } else if (event.key === 'ArrowDown') {
+//             event.preventDefault();
+//             navigateCommands('down');
+//         } else if (event.key === 'Escape') {
+//             event.preventDefault();
+//             hideCommandPopup();
+//         }
+//     }
+// });
 
 function hideCommandPopup() {
     commandPopup.classList.add('hidden');

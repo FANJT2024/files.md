@@ -111,6 +111,7 @@ func sendDueResponsesToJS() {
 }
 
 func sendToJS(vals ...any) {
+
 	js.Global().Call("receive", vals...)
 }
 
