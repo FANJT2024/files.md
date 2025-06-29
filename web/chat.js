@@ -202,7 +202,7 @@ function renderMessages() {
             <div class="message-footer">
                 <span class="message-time">${message.timestamp}</span>
                 <div class="message-actions">
-                    <button class="action-btn submenu-btn to-file-btn" data-index="${message.index}">
+                    <button class="action-btn to-file-btn" data-index="${message.index}">
                         📄
                         <span class="btn-label">To File</span>
                     </button>
@@ -266,7 +266,13 @@ function attachEventListeners() {
         });
     });
 
-    // Add delete button listeners
+    chatContainer.querySelectorAll('.to-file-btn').forEach(btn => {
+        btn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            searchModal.open('', btn.dataset.index)
+        });
+    });
+
     chatContainer.querySelectorAll('.journal-btn').forEach(btn => {
         btn.addEventListener('click', function (e) {
             e.stopPropagation();
@@ -289,7 +295,6 @@ function attachEventListeners() {
     document.querySelectorAll('.submenu-btn').forEach(btn => {
         // Add appropriate submenu based on button type
         if (btn.classList.contains('to-file-btn')) {
-            // Get root files from files var
             addSubmenuToButton(btn, Object.keys(files['']), 'data-target-file');
         } else if (btn.classList.contains('to-dir-btn')) {
             addSubmenuToButton(btn, getDirs(), 'data-target-dir');
@@ -360,7 +365,7 @@ function attachEventListeners() {
             console.log(targetFile, targetDir);
             if (targetFile !== undefined) {
                 let cmd = {
-                    n: 'mf",
+                    n: 'mf',
                     t: "cmd",
                     p: [targetFile, index.toString()]
                 }
@@ -369,8 +374,6 @@ function attachEventListeners() {
             } else if (targetDir !== undefined) {
 
             }
-
-
 
             // Close submenu after selection
             item.closest('.btn-submenu').classList.remove('show');

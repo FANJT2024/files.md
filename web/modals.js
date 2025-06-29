@@ -1,6 +1,5 @@
 class SearchModal {
     constructor() {
-        this.mode = 'default';
         this.messageIndex = null;
         this.focusedIndex = 0;
         this.init();
@@ -24,11 +23,15 @@ class SearchModal {
                 this.focusedIndex = (this.focusedIndex - 1 + resultsList.length) % resultsList.length;
                 this.updateFocusedItem();
             }
+
+            if (event.key === 'Escape') {
+                this.close();
+                closeMove();
+            }
         });
     }
 
-    open(text = '', mode = 'default', messageIndex = null) {
-        this.mode = mode;
+    open(text = '', messageIndex = null) {
         this.messageIndex = messageIndex;
 
         document.getElementById('search').style.display = 'block';
@@ -41,7 +44,7 @@ class SearchModal {
         goToFileResults.innerHTML = '';
 
         if (text === '') {
-            loadRecentFiles();
+            this.loadRecentFiles();
         } else {
             search();
         }
@@ -49,7 +52,6 @@ class SearchModal {
 
     close() {
         document.getElementById('search').style.display = 'none';
-        this.mode = 'default';
         this.messageIndex = null;
     }
 
@@ -87,13 +89,9 @@ class SearchModal {
     }
 
     handleItemClick(dir, filename) {
-        if (this.mode === 'move-file') {
-            let cmd = {
-                n: "mf",
-                t: "cmd",
-                p: [filename, this.messageIndex.toString()]
-            }
-            replyCmd(JSON.stringify(cmd));
+        console.log('handling');
+        if (this.messageIndex !== null) {
+            sendCmd('mf', [filename, this.messageIndex.toString()]);
             this.close();
         } else {
             // Default behavior
@@ -122,6 +120,23 @@ class SearchModal {
                 item.classList.remove('focused');
             }
         });
+    }
+
+    loadRecentFiles() {
+        let results = [];
+        for (const dir of Object.keys(excludeDirs(SYSTEM_DIRS))) {
+            for (const filename of Object.keys(files[dir])) {
+                results.push({
+                    dir, filename, lastModified: files[dir][filename].lastModified,
+                });
+            }
+        }
+
+        results = results
+            .sort((a, b) => b.lastModified - a.lastModified)
+            .slice(0, 8);
+
+        this.showResults(results);
     }
 }
 

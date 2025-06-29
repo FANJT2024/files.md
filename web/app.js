@@ -640,17 +640,6 @@ function focusLastLine() {
     editor.focus();
 }
 
-function updateSearchFocusedItem(resultsList) {
-    document.querySelectorAll('#search-results li').forEach(li => li.classList.remove('focused'));
-    resultsList.forEach((item, index) => {
-        if (index === focusedSearchItemIndex) {
-            item.classList.add('focused');
-            item.scrollIntoView({block: 'nearest'});
-        } else {
-            item.classList.remove('focused');
-        }
-    });
-}
 
 function updateMoveFocusedItem(resultsList) {
     document.querySelectorAll('#move-results li').forEach(li => li.classList.remove('focused'));
@@ -662,26 +651,6 @@ function updateMoveFocusedItem(resultsList) {
             item.classList.remove('focused');
         }
     });
-}
-
-function openSearchModal(text = '') {
-    document.getElementById('search').style.display = 'block';
-    const inputField = document.getElementById('search-input');
-    inputField.value = text;
-    inputField.focus();
-
-    focusedSearchItemIndex = -1;
-    const goToFileResults = document.getElementById('search-results');
-    goToFileResults.innerHTML = '';
-    if (text === '') {
-        loadRecentFiles();
-    } else {
-        search();
-    }
-}
-
-function closeSearchModal() {
-    document.getElementById('search').style.display = 'none';
 }
 
 function openMoveModal() {
@@ -753,23 +722,6 @@ window.addEventListener('keydown', async (event) => {
 
 function closeMoveModal() {
     document.getElementById('move').style.display = 'none';
-}
-
-function loadRecentFiles() {
-    let results = [];
-    for (const dir of Object.keys(excludeDirs(SYSTEM_DIRS))) {
-        for (const filename of Object.keys(files[dir])) {
-            results.push({
-                dir, filename, lastModified: files[dir][filename].lastModified,
-            });
-        }
-    }
-
-    results = results
-        .sort((a, b) => b.lastModified - a.lastModified)
-        .slice(0, 8);
-
-    showSearchResults(results);
 }
 
 function getMoveDestinations() {
@@ -933,39 +885,6 @@ function suggestMove() {
     showMoveResults(dirs);
 }
 
-function showSearchResults(results) {
-    const list = document.getElementById('search-results');
-    results.forEach(({dir, filename}, index) => {
-        if (filename === CONFIG_FILENAME) {
-            return;
-        }
-
-        const listItem = document.createElement('li');
-        let title = filename.replace(/\.md$/, '')
-        if (dir !== '') {
-            listItem.textContent = `${dir}/${title}`;
-        } else {
-            listItem.textContent = title;
-        }
-        listItem.setAttribute('data-path', `${dir}/${filename}`);
-        listItem.setAttribute('data-index', index);
-        listItem.onclick = async () => {
-            openEditor(!isChat);
-            await openFile(dir, filename);
-            closeSearchModal();
-        };
-        listItem.onmouseenter = () => {
-            document.querySelectorAll('#search-results li').forEach(li => li.classList.remove('focused'));
-            listItem.classList.add('focused');
-            focusedSearchItemIndex = index;
-        };
-        list.appendChild(listItem);
-    });
-
-    focusedSearchItemIndex = 0;
-    updateSearchFocusedItem(list.querySelectorAll('li'));
-}
-
 function showMoveResults(dirs) {
     const list = document.getElementById('move-results');
     list.innerHTML = '';
@@ -995,20 +914,16 @@ function showMoveResults(dirs) {
     updateMoveFocusedItem(list.querySelectorAll('li'));
 }
 
-function closeSearch() {
-    document.getElementById('search').style.display = 'none';
-}
-
 function closeMove() {
     document.getElementById('move').style.display = 'none';
 }
 
-document.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape') {
-        closeSearch();
-        closeMove();
-    }
-});
+// document.addEventListener('keydown', (event) => {
+//     if (event.key === 'Escape') {
+//         closeSearch();
+//         closeMove();
+//     }
+// });
 
 async function openEditor(withSidebar = true) {
     if (!isChat) {
