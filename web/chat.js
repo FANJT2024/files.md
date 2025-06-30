@@ -211,7 +211,7 @@ function renderMessages() {
                         🗂
                         <span class="btn-label">To Dir</span>
                     </button>
-                    <button class="action-btn to-todo-btn" data-index="${message.index}">
+                    <button class="action-btn to-today-btn" data-index="${message.index}">
                         ✅   
                     <span class="btn-label">To Do</span>
                     </button>
@@ -231,9 +231,9 @@ function renderMessages() {
                         💚
                         <span class="btn-label">To Journal</span>
                     </button>
-                    <button class="action-btn delete-btn" data-index="${message.index}">
+                    <button class="action-btn to-archive-btn" data-index="${message.index}">
                         🗑️
-                        <span class="btn-label">Delete</span>
+                        <span class="btn-label">To Archive</span>
                     </button>
                 </div>
             </div>
@@ -388,6 +388,33 @@ function attachEventListeners() {
                 }, 300);
             });
             chatInput.focus();
+            updateSidebar();
+        });
+    });
+
+    chatContainer.querySelectorAll('.to-today-btn').forEach(btn => {
+        btn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            const selectedMessages = document.querySelectorAll('.message.selected');
+            let indices = [];
+            let messagesToRemove = [];
+            if (selectedMessages.length > 0) {
+                indices = Array.from(selectedMessages).map(msg => msg.dataset.index);
+                messagesToRemove = selectedMessages;
+            } else {
+                indices = [btn.dataset.index];
+                messagesToRemove = [btn.closest('.message')];
+            }
+
+            sendCmd('mv', ['today', indices.join(',')]);
+            messagesToRemove.forEach(message => {
+                message.classList.add('removing');
+                setTimeout(() => {
+                    message.remove();
+                }, 300);
+            });
+            chatInput.focus();
+            updateSidebar();
         });
     });
 
@@ -413,13 +440,39 @@ function attachEventListeners() {
                 }, 300);
             });
             chatInput.focus();
+            updateSidebar();
+        });
+
+        chatContainer.querySelectorAll('.to-archive-btn').forEach(btn => {
+            btn.addEventListener('click', function (e) {
+                e.stopPropagation();
+                const selectedMessages = document.querySelectorAll('.message.selected');
+                let indices = [];
+                let messagesToRemove = [];
+                if (selectedMessages.length > 0) {
+                    indices = Array.from(selectedMessages).map(msg => msg.dataset.index);
+                    messagesToRemove = selectedMessages;
+                } else {
+                    indices = [btn.dataset.index];
+                    messagesToRemove = [btn.closest('.message')];
+                }
+
+                sendCmd('mv', ['archive', indices.join(',')]);
+                messagesToRemove.forEach(message => {
+                    message.classList.add('removing');
+                    setTimeout(() => {
+                        message.remove();
+                    }, 300);
+                });
+                chatInput.focus();
+                updateSidebar();
+            });
         });
     });
 
     chatContainer.querySelectorAll('.delete-btn').forEach(btn => {
         btn.addEventListener('click', function (e) {
             e.stopPropagation();
-            deleteNote(btn.dataset.noteId);
         });
     });
 

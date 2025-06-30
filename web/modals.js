@@ -271,6 +271,7 @@ class SearchModal {
                 }, 300);
             });
             chatInput.focus();
+            updateSidebar();
             this.close();
         } else {
             openFile(dir, filename);

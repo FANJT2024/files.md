@@ -1589,14 +1589,26 @@ func (b *Bot) moveToDirFromToday(params []string) error {
 func (b *Bot) moveToDirFromChat(params []string) error {
 	// TODO Remove input expectations if dir is not today
 	toDirHash := params[0]
-	msgIndex, err := strconv.Atoi(params[1])
-	if err != nil {
-		return fmt.Errorf("move to dir: can't parse msgIndex from params: %w", err)
+
+	msgIndicesStr := strings.Split(params[1], ",")
+	var msgIndices []int
+	for _, msgIndexStr := range msgIndicesStr {
+		msgIndex, err := strconv.Atoi(msgIndexStr)
+		if err != nil {
+			return fmt.Errorf("move to file: can't parse msgIndex from params: %w", err)
+		}
+		msgIndices = append(msgIndices, msgIndex)
 	}
 
 	toDir, err := b.fs.Unhash(fs.DirRoot, toDirHash)
+	canCreateMissingDir := slices.Contains([]string{fs.DirArchive, fs.DirToday, fs.DirLater, fs.DirHabits}, toDirHash)
 	if err != nil {
-		return fmt.Errorf("move: can't unhash new dir %s: %w", toDir, err)
+		if canCreateMissingDir {
+			// It will be created later in createOrAdd.
+			toDir = toDirHash
+		} else {
+			return fmt.Errorf("move: can't unhash new dir %s: %w", toDir, err)
+		}
 	}
 
 	err = b.moveFromChat(func(content string, timestamp time.Time) error {
@@ -1615,7 +1627,7 @@ func (b *Bot) moveToDirFromChat(params []string) error {
 		}
 
 		return b.createOrAdd(toDir, filename, content)
-	}, msgIndex)
+	}, msgIndices...)
 
 	if toDir != fs.DirLater {
 		//b.db.SetRecentCommand(consts.CmdMoveToExistingNote)
