@@ -183,7 +183,7 @@ func (b *Bot) Reply(u Update) error {
 
 		if callbackQueryID, ok := u.CallbackQueryID(); ok {
 			// We can tolerate an error here, that won't affect UX
-			if cmd.Name == consts.CmdComplete || cmd.Name == consts.CmdCompleteHabit {
+			if cmd.Name == consts.CmdComplete || cmd.Name == consts.CmdCompleteHabit || cmd.Name == consts.CmdCompleteFromChat {
 				_ = b.tg.AnswerCallbackQuery(callbackQueryID, completedMsg())
 			} else if cmd.Name == consts.CmdShare {
 				_ = b.tg.AnswerCallbackQuery(callbackQueryID, "Shared 💚!")
@@ -257,6 +257,7 @@ func (b *Bot) handlers() map[string]func([]string) error {
 		consts.CmdSchedule:                    b.schedule,
 		consts.CmdScheduleForTmrw:             b.scheduleForTmrw,
 		consts.CmdComplete:                    b.complete,
+		consts.CmdCompleteFromChat:            b.completeFromChat,
 		consts.CmdPostpone:                    b.postpone,
 		consts.CmdPomodoro:                    b.togglePomodoro,
 		consts.CmdShowScheduleForDayRecurring: b.showToADayRecurring,
@@ -972,6 +973,30 @@ func (b *Bot) ShowToday(_ []string) error {
 		kb.AddRow(btn)
 	}
 
+	// Adding items from chat
+	content, err := b.fs.Read(fs.DirRoot, fs.ChatFilename)
+	if err != nil {
+		return err
+	}
+	messages := readMessages(content)
+	msgIndex := 0
+	for _, msg := range messages {
+		if !strings.HasPrefix(msg, "`") {
+			continue
+		}
+		// Trim `xx:yy` timestamp from begging (not `)
+		// TODO make it not as dirty
+		if len(msg) > 8 {
+			msg = strings.TrimSpace(msg[8:])
+		}
+
+		cmd := tg.NewCmd(consts.CmdCompleteFromChat, []string{strconv.Itoa(msgIndex)})
+		btn := tg.NewBtn(txt.Emoji(i18n.Emoji(msg), msg), cmd)
+		kb.AddRow(btn)
+
+		msgIndex++
+	}
+
 	// Adding habits
 	habitsRow := tg.NewRow()
 	userHabits := make(map[string]habits.Year)
@@ -1004,7 +1029,7 @@ func (b *Bot) ShowToday(_ []string) error {
 		}
 	}
 
-	msg := b.todayLabel()
+	msg := b.todayLabel(msgIndex)
 	err = b.showHTML(msg, &kb)
 	if err != nil {
 		return fmt.Errorf("show list: %w", err)
@@ -1044,7 +1069,8 @@ func (b *Bot) showLaterTasks(_ []string) error {
 	return nil
 }
 
-func (b *Bot) todayLabel() string {
+// TODO improve a bit
+func (b *Bot) todayLabel(msgsCount ...int) string {
 	var statusBar string
 
 	hasPomodoroInToday, _ := b.fs.Exists(fs.DirToday, fs.PomodoroFilename)
@@ -1054,7 +1080,13 @@ func (b *Bot) todayLabel() string {
 
 	filesAndDirs, _ := b.fs.FilesAndDirs(fs.DirToday)
 	todayTasks := fs.ExcludePomodoro(fs.OnlyMDFiles(filesAndDirs))
-	if len(todayTasks) == 0 {
+	tasksCount := len(todayTasks)
+
+	if len(msgsCount) > 0 && msgsCount[0] > 0 {
+		tasksCount += msgsCount[0]
+	}
+
+	if tasksCount == 0 {
 		statusBar += i18n.Emoji("palm")
 	}
 
@@ -1062,11 +1094,11 @@ func (b *Bot) todayLabel() string {
 		statusBar += " "
 	}
 
-	if len(todayTasks) == 0 {
+	if tasksCount == 0 {
 		return statusBar + i18n.Tr("You don't have any tasks!")
 	}
 
-	return statusBar + fmt.Sprintf(i18n.Tr("<b>%d</b> left%s"), len(todayTasks), wideSpacer)
+	return statusBar + fmt.Sprintf(i18n.Tr("<b>%d</b> left%s"), tasksCount, wideSpacer)
 }
 
 func (b *Bot) showFiles(_ []string) error {
@@ -2035,6 +2067,43 @@ func (b *Bot) complete(params []string) error {
 	if dir == fs.DirLater {
 		return b.showLaterTasks(nil)
 	}
+
+	return b.ShowToday(nil)
+}
+
+func (b *Bot) completeFromChat(params []string) error {
+	msgIndex, err := strconv.Atoi(params[0])
+	if err != nil {
+		return fmt.Errorf("complete: can't parse msgIndex from params: %w", err)
+	}
+
+	err = b.moveFromChat(func(content string, timestamp time.Time) error {
+		sanitizedTitle, _, err := b.extractTitleAndContent(content)
+		if err != nil {
+			return fmt.Errorf("complete: %w", err)
+		}
+		filename := fs.Filename(sanitizedTitle)
+
+		// Write to archive, no rename
+		return b.fs.Write(fs.DirArchive, filename, content)
+	}, msgIndex)
+	if err != nil {
+		return fmt.Errorf("complete: can't read content from chat: %w", err)
+	}
+
+	//if dir == fs.DirToday && filename == fs.PomodoroFilename {
+	//	err = b.cfg.AddToSchedule(filename, time.Now().Unix()+int64(b.cfg.PomodoroDuration().Seconds()), "")
+	//	if err != nil {
+	//		return fmt.Errorf("complete: can't add to schedule: %w", err)
+	//	}
+	//} else {
+	//	// We can tolerate failure of writing to journal, since that's not single source of truth
+	//	_ = journal.AddRecord(b.fs, fmt.Sprintf("✅ %s", fs.Title(filename)), b.cfg.Timezone())
+	//}
+
+	//if dir == fs.DirLater {
+	//	return b.showLaterTasks(nil)
+	//}
 
 	return b.ShowToday(nil)
 }

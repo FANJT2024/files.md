@@ -20,6 +20,7 @@ const (
 	CmdOpenInApp                   = "app"
 	CmdShowHelp                    = "help"
 	CmdComplete                    = "c"
+	CmdCompleteFromChat            = "c_ch"
 	CmdPostpone                    = "post"
 	CmdShowMultilineTask           = "task"
 	CmdShowFile                    = "file"
