@@ -751,7 +751,11 @@ document.addEventListener('keydown', function (event) {
     // and shift
     if (event.shiftKey && isMetaKey(event) && event.key === 'Enter') {
         event.preventDefault();
-        openChat();
+        if (isChat) {
+            history.back();
+        } else {
+            openChat();
+        }
         return;
 
         // const sidebar = document.getElementById('sidebar');
