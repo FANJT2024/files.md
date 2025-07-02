@@ -554,7 +554,7 @@ function attachEventListeners() {
                 }, 300);
             });
             chatInput.focus();
-            updateSidebar();
+            renderSidebar();
         });
     });
 
@@ -580,7 +580,7 @@ function attachEventListeners() {
                 }, 300);
             });
             chatInput.focus();
-            updateSidebar();
+            renderSidebar();
         });
     });
 
@@ -606,7 +606,7 @@ function attachEventListeners() {
                 }, 300);
             });
             chatInput.focus();
-            updateSidebar();
+            renderSidebar();
         });
     });
 
@@ -633,7 +633,7 @@ function attachEventListeners() {
                 }, 300);
             });
             chatInput.focus();
-            updateSidebar();
+            renderSidebar();
         });
     });
 
@@ -660,7 +660,7 @@ function attachEventListeners() {
                 }, 300);
             });
             chatInput.focus();
-            updateSidebar();
+            renderSidebar();
         });
     });
 

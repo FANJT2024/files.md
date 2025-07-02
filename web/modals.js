@@ -293,7 +293,7 @@ class SearchModal {
                 }, 300);
             });
             chatInput.focus();
-            updateSidebar();
+            renderSidebar();
             this.close();
         } else {
             openFile(dir, filename);
@@ -564,7 +564,7 @@ class MoveModal {
                 }, 300);
             });
             chatInput.focus();
-            updateSidebar();
+            renderSidebar();
             this.close();
         } else {
             console.log('CLICKED ON folder to move', toDir);

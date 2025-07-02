@@ -846,8 +846,8 @@ window.handleDroppedFile = async function(fileName, content) {
         await createFileFromContent(fileName + '.md', content);
     }
 
-    if (typeof updateSidebar === 'function') {
-        updateSidebar();
+    if (typeof renderSidebar === 'function') {
+        renderSidebar();
     }
 };
 

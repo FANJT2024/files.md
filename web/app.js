@@ -53,7 +53,7 @@ async function init(el) {
         document.getElementById('new-folder').style.display = 'none';
         document.getElementById('open-chat').style.display = 'none';
         files = DEFAULT_FILES;
-        updateSidebar();
+        renderSidebar();
         await openFile('', 'Welcome.md');
         isWelcome = true;
         return;
@@ -85,7 +85,7 @@ async function init(el) {
     initWasm();
 
     perf = performance.now();
-    updateSidebar();
+    renderSidebar();
     console.log(`Sidebar built in: ${(performance.now() - perf).toFixed(3)} milliseconds`);
 
     // perf = performance.now();
@@ -94,7 +94,7 @@ async function init(el) {
 
     perf = performance.now();
     await syncTextsWithServer();
-    await updateSidebar();
+    await renderSidebar();
     await syncMedia();
     console.log(`Files initialized in: ${(performance.now() - perf).toFixed(3)} milliseconds`);
 }
@@ -364,7 +364,7 @@ function createAutocompleteDict() {
     return dict;
 }
 
-function updateSidebar(focusDir = '') {
+function renderSidebar(focusDir = '') {
     let expandedDirs = new Set();
     let selectedNodes = new Set();
 
@@ -425,6 +425,30 @@ function updateSidebar(focusDir = '') {
             if (expandedDirs.has(dir)) dirNode.setExpanded(true);
             if (selectedNodes.has(dir)) dirNode.setSelected(true);
         }
+    }
+
+
+    const groups = [
+        ['_read_', '_watch_', '_shop_'],
+        ['journal', 'habits', 'insights', 'archive'],
+        ['today', 'later']
+    ];
+
+    for (let i = 0; i < groups.length; i++) {
+        const dirList = groups[i];
+        const existingDirs = dirList.filter(dir => files[dir]);
+        if (existingDirs.length === 0) continue;
+
+        existingDirs.forEach((dir, index) => {
+            const dirNode = root.getChildren().find(child => child.toString() === dir);
+            if (dirNode) {
+                root.removeChild(dirNode);
+                if (index === existingDirs.length - 1 && i < groups.length - 1) {
+                    dirNode.isGroupEnd = true;
+                }
+                root.addChild(dirNode);
+            }
+        });
     }
 
     if (files[''] && files[''][CHAT_FILENAME]) {
@@ -592,7 +616,7 @@ async function newFile() {
     editor.setCursor({line: 1, ch: 0});
     editor.focus();
 
-    await updateSidebar();
+    await renderSidebar();
 }
 
 async function newFolder() {
@@ -620,7 +644,7 @@ async function newFolder() {
 
     console.log('CREATED folder', finalFolderName);
 
-    await updateSidebar(finalFolderName);
+    await renderSidebar(finalFolderName);
 }
 
 // Focus last line before the links.
@@ -697,7 +721,7 @@ window.addEventListener('keydown', async (event) => {
         // Remove from files object
         delete files[dir][filename];
         openChat();
-        await updateSidebar();
+        await renderSidebar();
     }
 
     if (isMetaKey(event) && event.key === 'n') {
@@ -838,12 +862,12 @@ async function openDir() {
         }
         await openFile('', welcomeFilename);
         isWelcome = false;
-        updateSidebar();
+        renderSidebar();
         return;
     }
 
     isWelcome = false;
-    updateSidebar();
+    renderSidebar();
     await openChat();
 }
 
@@ -954,7 +978,7 @@ window.addEventListener('focus', async () => {
     const end = performance.now();
     console.log(`Files loaded in: ${(end - start).toFixed(3)} milliseconds`);
     await syncTextsWithServer()
-    await updateSidebar();
+    await renderSidebar();
     console.log('Sync completed');
 });
 
@@ -977,7 +1001,7 @@ window.addEventListener('blur', async function () {
     const end = performance.now();
     console.log(`Files loaded in: ${(end - start).toFixed(3)} milliseconds`);
     await syncTextsWithServer()
-    await updateSidebar();
+    await renderSidebar();
     console.log('Sync completed');
 });
 
