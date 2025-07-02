@@ -75,7 +75,7 @@ func TestSaveFromLongTextMsg(t *testing.T) {
 	}()
 
 	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), fakeConfig())
-	err = bot.Reply(tg.NewUpd(-1, strings.Repeat("a", 101)))
+	err = bot.Reply(tg.NewUpd(-1, strings.Repeat("a", 34)))
 	r.NoError(err)
 
 	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("mv", []string{"c5e7dfaf771", "0"})))
@@ -84,13 +84,13 @@ func TestSaveFromLongTextMsg(t *testing.T) {
 	tasks, err := bot.fs.FilesAndDirs("today")
 	r.NoError(err)
 
-	filename := fmt.Sprintf("A%s....md", strings.Repeat("a", 99))
+	filename := fmt.Sprintf("A%s....md", strings.Repeat("a", 32))
 	r.Len(tasks, 1)
 	r.Equal(filename, tasks[0].Name)
 
 	content, err := bot.fs.Read("today", filename)
 	r.NoError(err)
-	r.Equal("A"+strings.Repeat("a", 100), content)
+	r.Equal("A"+strings.Repeat("a", 33), content)
 }
 
 func TestSaveFromTextMsgWithSanitize(t *testing.T) {
@@ -449,20 +449,20 @@ func TestSaveFromPhotoWithLongCaption(t *testing.T) {
 	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), fakeConfig())
 	upd := tg.NewUpd(-1, "")
 	upd.PhotoID = "PHOTO_ID"
-	upd.PhotoCaption = strings.Repeat("a", 101)
+	upd.PhotoCaption = strings.Repeat("a", 34)
 	err = bot.Reply(upd)
 	r.NoError(err)
 
 	content, err := userFS.Read("/", "Chat.txt")
 	r.NoError(err)
-	r.Equal("#### 11 August, Sunday\n`09:54` ![center|400](media/tg_PHOTO_ID)\nAaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n", content)
+	r.Equal("#### 11 August, Sunday\n`09:54` ![center|400](media/tg_PHOTO_ID)\nAaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n", content)
 
 	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("mv", []string{"c5e7dfaf771", "0"})))
 	r.NoError(err)
 
-	content, err = bot.fs.Read("today", fmt.Sprintf("A%s....md", strings.Repeat("a", 99)))
+	content, err = bot.fs.Read("today", fmt.Sprintf("A%s....md", strings.Repeat("a", 32)))
 	r.NoError(err)
-	r.Equal(fmt.Sprintf("![center|400](media/tg_PHOTO_ID)\nA%s", strings.Repeat("a", 100)), content)
+	r.Equal(fmt.Sprintf("![center|400](media/tg_PHOTO_ID)\nA%s", strings.Repeat("a", 33)), content)
 }
 
 func TestSaveFromPhotoWithSanitizedCaption(t *testing.T) {
@@ -3576,7 +3576,7 @@ func TestSaveFromImage_LongCaption(t *testing.T) {
 
 	upd := tg.NewUpd(-1, "")
 	upd.PhotoID = "PHOTO_ID"
-	upd.PhotoCaption = strings.Repeat("a", 101)
+	upd.PhotoCaption = strings.Repeat("a", 34)
 
 	err = bot.saveFromImage(upd)
 	r.NoError(err)
@@ -3584,10 +3584,10 @@ func TestSaveFromImage_LongCaption(t *testing.T) {
 	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("mv", []string{"c5e7dfaf771", "0"})))
 	r.NoError(err)
 
-	filename := fmt.Sprintf("A%s....md", strings.Repeat("a", 99))
+	filename := fmt.Sprintf("A%s....md", strings.Repeat("a", 32))
 	content, err := bot.fs.Read("today", filename)
 	r.NoError(err)
-	r.Equal(fmt.Sprintf("![center|400](media/tg_PHOTO_ID)\nA%s", strings.Repeat("a", 100)), content)
+	r.Equal(fmt.Sprintf("![center|400](media/tg_PHOTO_ID)\nA%s", strings.Repeat("a", 33)), content)
 }
 
 func TestSaveFromImage_MultilineCaption(t *testing.T) {
@@ -3822,14 +3822,14 @@ func TestExtractTitleAndContent_TitleExceedsMaxLength(t *testing.T) {
 
 	bot := NewBot(-1, nil, nil, nil, nil)
 
-	longTitle := strings.Repeat("a", 100+1)
+	longTitle := strings.Repeat("a", 33+1)
 	msg := longTitle + "\nContent below"
-	expectedTitle := txt.Substr(txt.Ucfirst(longTitle), 0, 100) + "..."
+	expectedTitle := txt.Substr(txt.Ucfirst(longTitle), 0, 33) + "..."
 
 	title, content, err := bot.extractTitleAndContent(msg)
 	r.NoError(err)
 	r.Equal(expectedTitle, title)
-	r.Equal("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nContent below", content)
+	r.Equal("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nContent below", content)
 }
 
 func TestExtractTitleAndContent_TitleSameAsContent(t *testing.T) {
@@ -4052,8 +4052,8 @@ func FuzzSaveFromTextMsg(f *testing.F) {
 		r.Len(tasks, 1, "No tasks created for input %q", input)
 		filename := strings.SplitN(strings.TrimSpace(input), "\n", 2)[0]
 		filename = strings.TrimSpace(filename)
-		if utf8.RuneCountInString(filename) > 100 {
-			filename = txt.Substr(filename, 0, 100) + "..."
+		if utf8.RuneCountInString(filename) > 33 {
+			filename = txt.Substr(filename, 0, 33) + "..."
 		}
 
 		filename = fs.Filename(fs.SanitizeFilename(filename))

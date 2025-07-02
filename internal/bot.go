@@ -45,7 +45,7 @@ var (
 )
 
 const (
-	maxTitleLength         = 100
+	maxTitleLength         = 33 // Fits regular mobile screen
 	inlineResultsCacheTime = 15 // Seconds
 	btnsPerRow             = 3
 	quickBtnsPerRow        = 4
