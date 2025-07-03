@@ -286,7 +286,8 @@ func SyncText(w http.ResponseWriter, r *http.Request) {
 		logSync(fmt.Sprintf("Creating one clientFile: '%s'", clientFile.Path), r)
 		content = clientFile.Content
 	} else {
-		wasNotModifiedOnClient := clientFile.ClientLastSynced != 0 && clientFile.ClientLastModified == clientFile.ClientLastSynced
+		//clientFile.ClientLastSynced != 0 &&
+		wasNotModifiedOnClient := clientFile.ClientLastModified == clientFile.ClientLastSynced
 		fileWasModifiedOnServer = serverLastModified > clientFile.LastModified
 		if fileWasModifiedOnServer && wasNotModifiedOnClient {
 			logSync(fmt.Sprintf("Modified only on server, sending server copy to client: '%s'", clientFile.Path), r)
