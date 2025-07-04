@@ -146,6 +146,12 @@ body {
     flex: 1;
 }
 
+#editor2-container {
+    border-left: 2px solid var(--color-border);
+    box-shadow: -2px 0 4px rgba(0, 0, 0, 0.1);
+}
+
+
 #content table, th, td {
     border-collapse: collapse;
     border: 1px solid #878787;
