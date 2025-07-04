@@ -830,12 +830,14 @@ window.addEventListener('keydown', async (event) => {
 
 document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') {
-        console.log('Escape pressed');
-        searchModal.close();
-        moveModal.close();
-        closeChatModal();
-        editor.focus();
+        if (chatContainer.style.display !== 'none') {
+            closeChatModal();
+            editor.focus();
+            return;
+        }
+
         hideEditor2();
+        editor.focus();
 
         const allMessages = chat.querySelectorAll('.message');
         allMessages.forEach(message => message.classList.remove('selected'));

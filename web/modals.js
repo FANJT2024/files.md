@@ -28,6 +28,8 @@ class SearchModal {
 
             if (event.key === 'Escape') {
                 this.close();
+                event.preventDefault();
+                event.stopPropagation();
             }
         });
 
@@ -386,6 +388,8 @@ class MoveModal {
 
             if (event.key === 'Escape') {
                 this.close();
+                event.preventDefault();
+                event.stopPropagation();
             }
         });
 
