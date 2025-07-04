@@ -121,7 +121,6 @@ body {
     background: var(--color-bg);
     transform: translateX(100%);
     transition: transform 0.3s ease;
-    z-index: 100;
 }
 
 #editor2-container.show {
