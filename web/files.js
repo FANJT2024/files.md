@@ -159,33 +159,20 @@ async function syncTextsWithServer() {
     console.log('Starting sync with server...');
 
     // Send locally modified files and timestamps of last seen dirs from the server
-    let server = {};
     const {modified, deleted} = await collectModifiedAndDeletedFiles();
-    try {
-        let response = await fetch(`${API_HOST}/syncTexts`, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json', 'Authorization': localStorage.getItem('token'), 'Version': getCurrentVersion()},
-            body: JSON.stringify({
-                modified: modified,
-                deleted: deleted,
-                timestamps: serverFiles['timestamps'] || [],
-            })
-        });
-        if (!response.ok) {
-            console.log(`Server responded with ${response.status}`);
-            return;
-        }
-
-        // Remove info about server files on client
-        for (const path of deleted) {
-            removeInfoAboutServerFile(path);
-        }
-
-        server = await response.json();
-    } catch (error) {
-        console.error('Network error occurred:', error.message);
+    const server = await post('syncTexts', {
+        modified: modified,
+        deleted: deleted,
+        timestamps: serverFiles['timestamps'] || [],
+    });
+    if (server === null) {
         isSyncing = false;
         return;
+    }
+
+    // Remove info about server files on client
+    for (const path of deleted) {
+        removeInfoAboutServerFile(path);
     }
 
     try {
@@ -1090,6 +1077,40 @@ function getDirs() {
     dirs = dirs.map(dir => dir === '' ? '/' : dir);
 
     return dirs;
+}
+
+// Returns json response or null on error.
+async function post(endpoint, data) {
+    try {
+        let response = await fetch(`${API_HOST}/${endpoint}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': localStorage.getItem('token'),
+                'Version': getCurrentVersion()
+            },
+            body: JSON.stringify(data)
+        });
+        if (!response.ok) {
+            return null;
+        }
+
+        const json = await response.json();
+
+        // Handle special commands from server;
+        if (json.status === 'reload') {
+            const url = new URL(window.location);
+            url.searchParams.set('t', Date.now());
+            window.location.href = url.toString();
+        } else if (json.status === 'close') {
+            window.location.href = "about:blank"
+        }
+
+        return json;
+    } catch (error) {
+        console.error('Network error occurred:', error.message);
+        return null;
+    }
 }
 
 window.addEventListener('beforeunload', function () {
