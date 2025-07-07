@@ -131,14 +131,15 @@
 <script src="chat.js?v="></script>
 <script src="modals.js?v="></script>
 <script>
+    window.COMMIT_HASH = '?v=';
+
     // Allow offline mode.
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('lib/serviceworker.js')
+        navigator.serviceWorker.register('lib/serviceworker.js?v=')
             .then(reg => console.log('Service Worker registered'))
             .catch(err => console.log('Serrvice Worker registration failed'));
     }
 
-    window.COMMIT_HASH = '?v=';
 
     window.currentEditor = null; // Expose to global scope
     editor = initEditor(document.getElementById("editor-textarea"));
