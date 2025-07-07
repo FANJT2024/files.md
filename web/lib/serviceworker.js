@@ -47,10 +47,11 @@ self.addEventListener('install', event => {
     event.waitUntil(
         caches.open(CACHE_NAME)
             .then(cache => {
-                // Cache each file individually to find the problem
                 const cachePromises = urlsToCache.map(url => {
-                    console.log('Trying to cache:', url);
-                    return cache.add(url + COMMIT_HASH)
+                    if (url !== "/") {
+                        url += COMMIT_HASH;
+                    }
+                    return cache.add(url)
                         .then(() => console.log('✓ Cached:', url))
                         .catch(err => console.error('✗ Failed to cache:', url, err));
                 });
