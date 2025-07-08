@@ -84,8 +84,7 @@ self.addEventListener("fetch", (event) => {
     event.respondWith(
         fetch(event.request)
             .then(response => {
-                // Update cache with fresh content
-                if (response.ok) {
+                if (response.ok && event.request.method === 'GET') {
                     const responseClone = response.clone();
                     caches.open(cacheName).then(cache => {
                         cache.put(event.request, responseClone);
@@ -94,15 +93,19 @@ self.addEventListener("fetch", (event) => {
                 return response;
             })
             .catch(() => {
-                // Network failed, try cache
-                return caches.match(event.request)
-                    .then(cached => {
-                        if (cached) return cached;
-                        return new Response('Offline and not cached', {
-                            status: 503,
-                            statusText: 'Service Unavailable'
+                // Network failed, try cache (only works for GET anyway)
+                if (event.request.method === 'GET') {
+                    return caches.match(event.request)
+                        .then(cached => {
+                            if (cached) return cached;
+                            return new Response('Offline and not cached', {
+                                status: 503,
+                                statusText: 'Service Unavailable'
+                            });
                         });
-                    });
+                }
+                // For non-GET requests, just fail
+                throw new Error('Network unavailable');
             })
     );
 });
