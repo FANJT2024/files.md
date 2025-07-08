@@ -517,6 +517,20 @@ function createAutocompleteDict() {
     return dict;
 }
 
+function walk(obj, callback, path = '') {
+    for (const key in obj) {
+        const item = obj[key];
+        const fullPath = path + key;
+
+        if (item.isFile) {
+            callback(fullPath, item, true);
+        } else {
+            callback(fullPath, item, false);
+            walk(item, callback, fullPath + '/');
+        }
+    }
+}
+
 function renderSidebar(focusDir = '') {
     let expandedDirs = new Set();
     let selectedNodes = new Set();
@@ -547,38 +561,76 @@ function renderSidebar(focusDir = '') {
     root = new TreeNode('');
 
     // Process directories
-    for (const dir in files) {
-        if (dir === 'media') {
-            continue;
+    // for (const dir in files) {
+    //     if (dir === 'media') {
+    //         continue;
+    //     }
+    //
+    //     let dirNode = new TreeNode(dir, {expanded: false, dir: true});
+    //
+    //     // Process files in directory
+    //     for (let file in files[dir]) {
+    //         let fileNode = new TreeNode(file.replace(/\.md$/, ''), {expanded: false});
+    //         fileNode.on('click', async function (n, node) {
+    //             await openFile(node.parent.toString(), node.toString() + '.md');
+    //         });
+    //         dirNode.addChild(fileNode);
+    //
+    //         // Restore selected state for file nodes
+    //         if (selectedNodes.has(file.replace(/\.md$/, ''))) {
+    //             fileNode.setSelected(true);
+    //         }
+    //     }
+    //
+    //     root.addChild(dirNode);
+    //
+    //     // Handle focus directory or restore previous state
+    //     if (dir === focusDir) {
+    //         dirNode.setExpanded(true);
+    //         dirNode.setSelected(true);
+    //     } else {
+    //         if (expandedDirs.has(dir)) dirNode.setExpanded(true);
+    //         if (selectedNodes.has(dir)) dirNode.setSelected(true);
+    //     }
+    // }
+    let dirNodes = {};
+    dirNodes[''] = root; // Root is empty path
+
+    walk(files, (path, item, isFile) => {
+        if (path === 'media' || path.startsWith('media/')) {
+            return; // Skip media files
         }
 
-        let dirNode = new TreeNode(dir, {expanded: false, dir: true});
+        if (path === CONFIG_FILENAME || path === CHAT_FILENAME) {
+            return;
+        }
 
-        // Process files in directory
-        for (let file in files[dir]) {
-            let fileNode = new TreeNode(file.replace(/\.md$/, ''), {expanded: false});
+        if (isFile) {
+            const pathParts = path.split('/');
+            const filename = pathParts.pop();
+            const dirPath = pathParts.join('/');
+
+            let fileNode = new TreeNode(filename.replace(/\.md$/, '').replace(/\.txt$/, ''), {expanded: false});
             fileNode.on('click', async function (n, node) {
-                await openFile(node.parent.toString(), node.toString() + '.md');
+                await openFile(dirPath, filename);
             });
-            dirNode.addChild(fileNode);
 
-            // Restore selected state for file nodes
-            if (selectedNodes.has(file.replace(/\.md$/, ''))) {
-                fileNode.setSelected(true);
-            }
-        }
+            // Find parent node and add file
+            const parentNode = dirNodes[dirPath] || root;
+            parentNode.addChild(fileNode);
 
-        root.addChild(dirNode);
-
-        // Handle focus directory or restore previous state
-        if (dir === focusDir) {
-            dirNode.setExpanded(true);
-            dirNode.setSelected(true);
         } else {
-            if (expandedDirs.has(dir)) dirNode.setExpanded(true);
-            if (selectedNodes.has(dir)) dirNode.setSelected(true);
+            let dirNode = new TreeNode(path, {expanded: false, dir: true});
+            dirNodes[path] = dirNode;
+
+            // Find parent directory
+            const pathParts = path.split('/');
+            pathParts.pop(); // Remove current directory name
+            const parentPath = pathParts.join('/');
+            const parentNode = dirNodes[parentPath] || root;
+            parentNode.addChild(dirNode);
         }
-    }
+    });
 
     const groups = [
         ['_read_', '_watch_', '_shop_'],
