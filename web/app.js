@@ -447,8 +447,9 @@ async function initWasm() {
 
 // Logic for click-handling is in click.js => isWikiLink
 function createAutocompleteDict() {
-    const dict = {};
+    const entries = [];
 
+    // Collect all files with their metadata
     Object.keys(excludeDirs(SYSTEM_DIRS)).forEach(dir => {
         Object.keys(files[dir]).forEach(filename => {
             if (filename === CONFIG_FILENAME || filename === CHAT_FILENAME) {
@@ -457,8 +458,22 @@ function createAutocompleteDict() {
             const key = `${filename.replace(/\.md$/, '')}`;
             const url = `${dir}/${filename}`.replace(/ /g, '%20');
             const filePath = `${filename.replace(/\.md$/, '')}](${url})`;
-            dict[key] = filePath;
+
+            entries.push({
+                key,
+                filePath,
+                lastModified: files[dir][filename].lastModified
+            });
         });
+    });
+
+    // Sort by last modified (most recent first)
+    entries.sort((a, b) => b.lastModified - a.lastModified);
+
+    // Convert back to dictionary
+    const dict = {};
+    entries.forEach(entry => {
+        dict[entry.key] = entry.filePath;
     });
 
     return dict;
