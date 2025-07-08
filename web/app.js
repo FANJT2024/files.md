@@ -531,6 +531,13 @@ function walk(obj, callback, path = '') {
     }
 }
 
+function toDirAndFilename(path) {
+    const pathParts = path.split('/');
+    const filename = pathParts.pop();
+    const dirPath = pathParts.join('/');
+    return { dirPath, filename };
+}
+
 function renderSidebar(focusDir = '') {
     let expandedDirs = new Set();
     let selectedNodes = new Set();
@@ -597,8 +604,8 @@ function renderSidebar(focusDir = '') {
     dirNodes[''] = root; // Root is empty path
 
     walk(files, (path, item, isFile) => {
-        if (path === 'media' || path.startsWith('media/')) {
-            return; // Skip media files
+        if (path === 'media') {
+            return;
         }
 
         if (path === CONFIG_FILENAME || path === CHAT_FILENAME) {
@@ -606,16 +613,13 @@ function renderSidebar(focusDir = '') {
         }
 
         if (isFile) {
-            const pathParts = path.split('/');
-            const filename = pathParts.pop();
-            const dirPath = pathParts.join('/');
+            const {dirPath, filename} = toDirAndFilename(path);
 
             let fileNode = new TreeNode(filename.replace(/\.md$/, '').replace(/\.txt$/, ''), {expanded: false});
             fileNode.on('click', async function (n, node) {
                 await openFile(dirPath, filename);
             });
 
-            // Find parent node and add file
             const parentNode = dirNodes[dirPath] || root;
             parentNode.addChild(fileNode);
 
