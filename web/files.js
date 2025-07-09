@@ -42,17 +42,6 @@ const SUPPORTED_EXTENSIONS = ['md', 'txt', 'png', 'jpg', 'jpeg', 'webp', 'gif',]
 const SYSTEM_DIRS = ['media', 'archive', '_read_', '_watch_', '_shop_', 'today', 'later', 'journal', 'habits', 'triggers', 'places', 'insights'];
 const CONFIG_PATH = '/config.json';
 
-// Returns files in flattened structure:
-// {
-//   'dir': {
-//      ...
-//   },
-//   'dir/dir2': {
-//      ...
-//   },
-// }
-// The code is quite messy. We have to make lots of optimizations,
-// otherwise it's going to be slow even with 5K files.
 async function loadLocalFiles(rootDirHandle) {
     if (isLoadingLocalFiles) {
         return;
@@ -156,10 +145,10 @@ async function loadLocalFiles(rootDirHandle) {
     //     }
     // }
 
-    // Load metadata
-    const savedMetadata = localStorage.getItem(SERVER_STORAGE_KEY);
-    if (savedMetadata) {
-        serverFiles = JSON.parse(savedMetadata);
+    // Load server files
+    const savedServerFiles = localStorage.getItem(SERVER_STORAGE_KEY);
+    if (savedServerFiles) {
+        serverFiles = JSON.parse(savedServerFiles);
     }
 
     isLoadingLocalFiles = false;
@@ -200,7 +189,7 @@ async function syncTextsWithServer() {
 
     // Remove info about server files on client
     for (const path of deleted) {
-        removeInfoAboutServerFile(path);
+        removeServerFile(path);
     }
 
     try {
@@ -264,16 +253,16 @@ async function syncTextsWithServer() {
     isSyncing = false;
 }
 
-async function syncLocalFileWithServer(dir, filename) {
+// TODO multidir all callers
+async function syncLocalFileWithServer(path) {
     if (localStorage.getItem('token') === null) {
         return;
     }
 
-    const path = toPath(dir, filename);
     let file = await (await getFileHandle(path)).getFile();
     // TODO we might only need to send content when modifying
     let content = await file.text();
-    let serverTimestamp = getMetadata(path)?.lastModified || 0;
+    let serverTimestamp = getServerFile(path)?.lastModified || 0;
 
     let serverFile = {};
     try {
@@ -281,9 +270,10 @@ async function syncLocalFileWithServer(dir, filename) {
             method: 'POST',
             headers: {'Content-Type': 'application/json', 'Authorization': localStorage.getItem('token'), 'Version': getCurrentVersion()},
             body: JSON.stringify({
-                path: toPath(dir, filename),
+                path: path,
                 lastModified: serverTimestamp,
                 clientLastModified: file.lastModified,
+                // TODO multidir
                 clientLastSynced: serverFiles?.files?.[dir]?.[filename]?.lastSynced || 0,
                 content: content,
             })
@@ -873,35 +863,56 @@ async function moveFile(oldPath, newPath) {
     }
 }
 
-function getMetadata(path) {
-    const parts = path.split('/');
-    const filename = parts.pop();
-    const dir = parts.join('/');
+function getServerFile(path) {
+    let dirs = path.split('/');
+    dirs = dirs.filter(d => d !== '');
+    const filename = dirs.pop();
 
-    if (serverFiles['files']?.[dir]?.[filename]) {
-        return serverFiles['files'][dir][filename];
-    } else {
-        return null;
+    let currentDir = serverFiles;
+    for (const dir of dirs) {
+        if (!currentDir[dir]) {
+            return null;
+        }
+        currentDir = currentDir[dir];
     }
+
+    return currentDir[filename] || null;
 }
 
 function addServerFile(path, content, lastModifiedAt, clientLastSynced = null) {
-    const parts = path.split('/');
-    const filename = parts.pop();
-    const dir = parts.join('/');
+    // const parts = path.split('/');
+    // const filename = parts.pop();
+    // const dir = parts.join('/');
+    //
+    // serverFiles['files'] = serverFiles['files'] ?? {};
+    // serverFiles['files'][dir] = serverFiles['files'][dir] ?? {};
+    // serverFiles['files'][dir][filename] = {
+    //     hash: hash(content),
+    //     lastModified: lastModifiedAt,
+    //     lastSynced: clientLastSynced,
+    //     path: path,
+    // };
+    let dirs = path.split('/');
+    dirs = dirs.filter(d => d !== '');
+    const filename = dirs.pop();
 
-    serverFiles['files'] = serverFiles['files'] ?? {};
-    serverFiles['files'][dir] = serverFiles['files'][dir] ?? {};
-    serverFiles['files'][dir][filename] = {
+    let currentDir = serverFiles;
+    for (const dir of dirs) {
+        if (!currentDir[dir]) {
+            return null;
+        }
+        currentDir = currentDir[dir];
+    }
+
+    currentDir[filename] = {
         hash: hash(content),
         lastModified: lastModifiedAt,
         lastSynced: clientLastSynced,
         path: path,
-    };
+    }
 }
 
-
-function removeInfoAboutServerFile(path) {
+function removeServerFile(path) {
     console.log('removing info about server file', path);
     const parts = path.split('/');
     const filename = parts.pop();
@@ -1148,7 +1159,7 @@ async function syncCurrentFile(syncWithServer = true) {
 
         if (syncWithServer) {
             try {
-                await syncLocalFileWithServer(dir, filename);
+                await syncLocalFileWithServer(CHAT_PATH);
             } catch (error) {
                 console.error('Error during sync with server:', error);
             }
