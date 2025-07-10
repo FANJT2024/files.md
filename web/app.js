@@ -558,26 +558,27 @@ async function showRandomFile() {
 
 async function newFile() {
     console.log('New file clicked');
-    let dir = toDirPath(currentEditor.path);
+    let dirPath = toDirPath(currentEditor.path);
     let selectedDirs = tree.getSelectedNodes();
     if (selectedDirs.length > 0 &&
         selectedDirs[0].getOptions &&
         typeof selectedDirs[0].getOptions === 'function' &&
         selectedDirs[0].getOptions()['dir'] === true) {
-        dir = selectedDirs[0].toString();
+        dirPath = '/' + selectedDirs[0].toString();
     }
     // TODO don't create on disk?
     let filename = 'New file.md';
 
     // TODO check tests
     let num = 1;
-    while (getMemFile(dir + '/' + filename) !== null) {
-        console.log('file eixts', dir + '/' + filename);
+    while (getMemFile(joinPath(dirPath, filename)) !== null) {
+        console.log('file exists', joinPath(dirPath, filename));
         filename = `New file (${num}).md`;
         num++;
     }
 
-    const path = joinPath(dir, filename);
+    const path = joinPath(dirPath, filename);
+    console.log('PATH', path);
     let handle = await getFileHandle(path, true);
     // TODO multidir all mem files should add path key ? Search
     addMemFile(path, {
@@ -1083,11 +1084,6 @@ function trimPrefix(str, prefix) {
         return str.slice(prefix.length);
     }
     return str;
-}
-
-function joinPath(...parts) {
-    const joined = parts.join('/');
-    return joined.replace(/\/+/g, '/');  // Replace multiple slashes
 }
 
 function getCurrentVersion() {

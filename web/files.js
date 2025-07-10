@@ -277,7 +277,6 @@ async function syncLocalFileWithServer(path) {
                 path: path,
                 lastModified: serverTimestamp,
                 clientLastModified: file.lastModified,
-                // TODO multidir
                 clientLastSynced: getServerFile(path)?.lastSynced || 0,
                 content: content,
             })
@@ -494,11 +493,9 @@ async function collectModifiedAndDeletedFiles() {
     const modifiedFiles = [];
     const existingFiles = {};
     const promises = [];
-    // TODO multidir walk
     // for (const dir in files) {
     //     if (dir === 'media') continue; // Skip image directory
     //
-    //     // TODO multidir walk
     //     for (const filename in files[dir]) {
     //         // TODO write tests for that?
     //         if ((dir === editor.currentDir && filename === editor.currentFile)
@@ -507,7 +504,6 @@ async function collectModifiedAndDeletedFiles() {
     //             continue;
     //         }
     //
-    //         // TODO multidir path
     //         const promise = getFileStatus(path)
     //             .then(result => {
     //                 if (result.status === 'modified' || result.status === 'new') {
@@ -1488,6 +1484,11 @@ function removeTrailingSlash(path) {
         return path.slice(0, -1);
     }
     return path;
+}
+
+function joinPath(...parts) {
+    const joined = parts.join('/');
+    return joined.replace(/\/+/g, '/');  // Replace multiple slashes
 }
 
 // Dir with no slash at the end.
