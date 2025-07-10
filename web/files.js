@@ -796,7 +796,6 @@ function getImageExtension(mimeType) {
 }
 
 
-// TODO del from memory?
 async function removeFile(path) {
     let fileHandle = await getFileHandle(path);
     if (fileHandle === null) {
@@ -807,13 +806,7 @@ async function removeFile(path) {
     await fileHandle.remove()
     console.log(`File ${path} removed successfully.`);
 
-    // TODO multidir
-    // const parts = path.split('/');
-    // const filename = parts.pop();
-    // const dir = parts.join('/');
-    // if (files[dir] && files[dir][filename]) {
-    //     delete files[dir][filename];
-    // }
+    removeMemFile(path);
 }
 
 // TODO can we reuse moveFile?
@@ -918,7 +911,6 @@ async function moveFile(oldPath, newPath) {
 
         // Server file will be removed here.
         await removeFile(oldPath);
-        removeMemFile(oldPath);
         // delete files[oldDir][oldFilename];
         await renderSidebar();
 
@@ -1182,7 +1174,6 @@ async function syncCurrentFile(syncWithServer = true) {
                 let content = getCurrentContent();
                 // TODO every await means we can can have RC due to editor content change
                 await removeFile(path);
-                removeMemFile(path);
                 console.log('Removed', path);
 
                 // Get fresher content after await.
