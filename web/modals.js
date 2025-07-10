@@ -81,17 +81,18 @@ class SearchModal {
         }
 
         // Similarity matching, check for direct file matches across directories.
-        walk(searchDirs, (path, isFile) => {
+        walk(files, (path, isFile) => {
             if (!isFile) {
                 return;
             }
 
-            if (path.startsWith('/media')) {
+            const dirName = trimPostfix(dirPath(path), '/');
+            if (!SYSTEM_DIRS.includes(dirName) || dirName !== '/') {
                 return;
             }
 
             // Ignore if not in searched dirs
-            let dirPath = toDirPath(path);
+            let dirPath = dirPath(path);
             for (const dir of searchDirs) {
                 if (dirPath.startsWith('/' + dir)) {
                     return;
@@ -100,8 +101,6 @@ class SearchModal {
 
             const potentialMatch = toFilename(path).replace(/\.md$/, '');
             let similarityScore = similarity(search, potentialMatch);
-
-            const dirName = trimPrefix(dirPath, '/');
             if (similarityScore >= 70) {
                 if (lowPriorityDirs.includes(dirName)) {
                     similarityScore -= 60;
@@ -110,8 +109,6 @@ class SearchModal {
                     path: path, score: similarityScore
                 });
             }
-
-
         });
         // for (let dir of searchDirs) {
         //     dir += '/';
@@ -178,7 +175,7 @@ class SearchModal {
                 return;
             }
 
-            const dirName = trimPostfix(toDirPath(path), '/');
+            const dirName = trimPostfix(dirPath(path), '/');
             if (dirName === 'media') {
                 return;
             }
@@ -294,12 +291,12 @@ class SearchModal {
             }
 
             const listItem = document.createElement('li');
-            let title = toFilename(path).replace(/\.md$/, '').replace(/\.txt$/, '')
-            let dirName = toDirPath(path);
+            let title = trimPostfix(trimPostfix(toFilename(path), '.md'), '.txt');
+            let dirName = dirPath(path);
             if (dirName === '/') {
                 listItem.textContent = title;
             } else {
-                listItem.textContent = `${dirName}${title}`;
+                listItem.textContent = `${dirName}/${title}`;
             }
             listItem.setAttribute('data-path', path);
             listItem.setAttribute('data-index', index);
@@ -372,29 +369,12 @@ class SearchModal {
 
     showRecentFiles() {
         let results = [];
-        walk(files, (path, isFile) => {
-            if (!isFile) {
-                return;
-            }
-
-            const dirName = trimPostfix(toDirPath(path), '/');
-            // if in system_dirs
-            if (SYSTEM_DIRS.includes(dirName)) {
-                return;
-            }
-
+        walkFilesExcludingSystemDirs((path, isFile) => {
             results.push({
                 path: path,
                 lastModified: getMemFile(path).lastModified,
             })
         });
-        // for (const dir of Object.keys(excludeDirs(SYSTEM_DIRS))) {
-        //     for (const filename of Object.keys(files[dir])) {
-        //         results.push({
-        //             dir, filename, lastModified: files[dir][filename].lastModified,
-        //         });
-        //     }
-        // }
 
         results = results
             .sort((a, b) => b.lastModified - a.lastModified)

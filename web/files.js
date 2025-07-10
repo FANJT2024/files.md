@@ -1175,7 +1175,7 @@ async function syncCurrentFile(syncWithServer = true) {
             if (hasFilenameChanged) {
                 console.log('Filename has changed from ', filename, 'to', newFilename);
                 // Change the file immediately, because on further await calls it can be synced by syncTexts.
-                currentEditor.path = joinPath(toDirPath(path), newFilename);
+                currentEditor.path = joinPath(dirPath(path), newFilename);
 
                 // 1. Remove file with old filename
                 // 2. Create file with new filename
@@ -1195,7 +1195,7 @@ async function syncCurrentFile(syncWithServer = true) {
                 //     content = getCurrentContent();
                 //     // Change current file if the editor is unchanged.
                 // }
-                const newPath = joinPath(toDirPath(path), newFilename);
+                const newPath = joinPath(dirPath(path), newFilename);
                 addMemFile(newPath, {
                     isFile: true,
                     content: content,
@@ -1434,7 +1434,6 @@ function walk(obj, callback, path = '/') {
 
     // Process files first, so that the order would be preserved
     for (const key of files) {
-        const item = obj[key];
         const fullPath = path + key;
         callback(fullPath, true);
     }
@@ -1448,28 +1447,72 @@ function walk(obj, callback, path = '/') {
     }
 }
 
+function walkFilesExcludingSystemDirs(callback) {
+    walk(files, (path, isFile) => {
+        if (!isFile) {
+            return;
+        }
+
+        const rootDir = rootDirName(path);
+        console.log("ROOT", rootDir);
+        if (SYSTEM_DIRS.includes(rootDir) && rootDirName !== '/') {
+            return;
+        }
+
+        callback(path, isFile);
+    });
+}
+
 function toFilename(path) {
-    const {filename} = toDirAndFilename(path);
+    const {filename} = dirAndFilename(path);
 
     return filename;
 }
 
 // Dir with no slash at the end.
 // For '/' it returns '/'.
-function toDirPath(path) {
-    const {dirPath} = toDirAndFilename(path);
+function dirPath(path) {
+    const {dirPath} = dirAndFilename(path);
 
     return dirPath;
 }
 
+function rootDirName(path) {
+    const root = rootPath(path);
+    if (root === '/') {
+        return root;
+    }
+
+    return trimPrefix(root, '/');
+}
+
 // Dir with no slash at the end.
-function toDirAndFilename(path) {
+function dirAndFilename(path) {
     let parts = path.split('/');
     parts = parts.filter(p => p !== '');
 
     const filename = parts.pop();
     let dirPath = '/' + parts.join('/');
     return {dirPath, filename};
+}
+
+// Removes / at the end if not '/'
+function normPath(str) {
+    if (str === '/') {
+        return '/';
+    }
+
+    return trimPostfix(str, '/');
+}
+
+function rootPath(path) {
+    const parts = path.split('/').filter(p => p !== '');
+
+    if (parts.length <= 1) {
+        return '/';
+    }
+
+    return '/' + parts[0];
 }
 
 // Gets a file from memory by its path.
