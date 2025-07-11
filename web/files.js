@@ -170,6 +170,7 @@ async function syncTextsWithServer() {
     console.log('Starting sync with server...');
 
     // Send locally modified files and timestamps of last seen dirs from the server
+    // TODO check if we fully synced at least once (timestamps exists)
     const {modified, deleted} = await collectModifiedAndDeletedFiles();
     const server = await post('syncTexts', {
         modified: modified,
@@ -191,6 +192,10 @@ async function syncTextsWithServer() {
         let failedAtLeastOnce = false;
         for (const fileInfo of server.files) {
             let {path, content, lastModified} = fileInfo;
+            // We get relative paths from server, and in our app we use absolute paths
+            const relPath = path;
+            path = joinPath('/', relPath);
+
             // If it is current file, skip, because we sync it separately
             // TODO if we skip current, don't take it's timestamp? We had a bug when sync was broken for 1 file
             // TODO fix missing / for root files
@@ -200,8 +205,6 @@ async function syncTextsWithServer() {
                 continue;
             }
 
-            // We get relative paths from server, and in our app we use absolute paths
-            path = joinPath('/', path);
 
             try {
                 await saveTextFile(path, content)
@@ -216,10 +219,12 @@ async function syncTextsWithServer() {
                 console.log('SYNC texts: write file: ', path);
                 addServerFile(path, content, lastModified);
                 // Unfortunately rename is not working, so we have to delete the old file
-                const shouldRemoveOldFile = path in server.renames;
+                const shouldRemoveOldFile = relPath in server.renames;
+                // TODO write e2e for renames
                 if (shouldRemoveOldFile) {
-                    const oldPath = server.renames[path];
+                    const oldPath = joinPath('/', server.renames[relPath]);
                     try {
+                        console.log('REMOVING due to renaming');
                         await removeFile(oldPath);
                     } catch (err) {
                         console.log('RENAME: cant remove file: ', err, path);
@@ -236,6 +241,10 @@ async function syncTextsWithServer() {
             }
         }
         // Only move timestamp pointers when we were able to sync all the files.
+        // Otherwise we can have situation when we synced files only partially,
+        // let's say serverFiles is having only half files from server, then they
+        // will be sent by subsequent syncTexts call, because collectLocalFiles
+        // would report them as new.
         if (!failedAtLeastOnce) {
             console.log('BATCH sync ok, moving timestamps');
             serverFiles['timestamps'] = server.timestamps;
