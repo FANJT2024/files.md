@@ -1424,7 +1424,15 @@ function walk(obj, callback, path = '/') {
     // Chromium's callstack limit is 11K, so we iterate.
     const stack = [{obj, path}];
 
+    const maxAllowedIterations = 100000;
+    let iterations = 0;
     while (stack.length > 0) {
+        iterations++;
+        if (iterations > maxAllowedIterations) {
+            alert("An infinite loop during files walk");
+            return;
+        }
+
         const {obj: currentObj, path: currentPath} = stack.pop();
 
         if (currentObj.isFile) {
