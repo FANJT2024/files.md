@@ -11,7 +11,6 @@ test('should load the Files.md editor', async ({page}) => {
     await expect(page).toHaveTitle('Files.md (Beta version)');
 
     await expect(page.locator('#sidebar')).toBeVisible();
-    await expect(page.locator('.CodeMirror')).toBeVisible();
     await expect(page.locator('#open-folder')).toBeVisible();
 });
 
@@ -25,7 +24,6 @@ test('should open markdown file via quick panel and see bold text formatting', a
     await page.keyboard.press('Enter');
 
     await page.waitForTimeout(1000);
-    await page.waitForSelector('.CodeMirror', {timeout: 5000});
 
     const codeMirrorContent = await page.locator('.CodeMirror').textContent();
 
@@ -43,7 +41,7 @@ test('insert link', async ({page}) => {
     const isMac = process.platform === 'darwin';
     const modifier = isMac ? 'Meta' : 'Control';
 
-    await page.waitForSelector('.CodeMirror', {timeout: 5000});
+    await page.click('#sidebar >> text=Welcome');
 
     await page.click('.CodeMirror');
     await page.keyboard.press('Meta+a');
@@ -60,7 +58,7 @@ test('insert link', async ({page}) => {
 
 test('should handle text selection correctly', async ({page}) => {
     // Add some test content with various markdown elements
-    await page.click('.CodeMirror');
+    await page.click('#sidebar >> text=Welcome');
     await page.waitForTimeout(500);
     await page.keyboard.press('Control+a');
     await page.keyboard.press('Delete');
@@ -111,7 +109,7 @@ test('should handle text selection correctly', async ({page}) => {
 
 test('should handle text selection for word-wrap content', async ({page}) => {
     // Add some test content with various markdown elements
-    await page.click('.CodeMirror');
+    await page.click('#sidebar >> text=Welcome');
     await page.keyboard.press('Control+a');
     await page.keyboard.press('Delete');
 
@@ -163,7 +161,7 @@ test('should handle text selection for word-wrap content', async ({page}) => {
 });
 
 test('should handle partical text selection for word-wrap content', async ({page}) => {
-    await page.click('.CodeMirror');
+    await page.click('#sidebar >> text=Welcome');
     await page.keyboard.press('Control+a');
     await page.keyboard.press('Delete');
 
