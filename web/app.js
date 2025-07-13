@@ -789,7 +789,7 @@ document.addEventListener('keyup', (e) => {
 window.addEventListener('popstate', (event) => {
     const state = event.state;
     if (state) {
-        openFile(state['dir'], state['file'], false);
+        openFile(state.path, false);
     }
 });
 
