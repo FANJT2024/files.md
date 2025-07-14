@@ -15,11 +15,11 @@ import (
 )
 
 const (
-	ModeOneFile = "file"
+	ModeChat    = "chat"
+	ModeFull    = "full"
 	ModeTasks   = "tasks"
 	ModeNotes   = "notes"
 	ModeJournal = "journal"
-	ModeFull    = "full"
 )
 
 var DefaultConfig = config{
@@ -102,16 +102,16 @@ func (c *Config) Timezone() *time.Location {
 	return location
 }
 
+func (c *Config) ChatOnlyMode() bool {
+	cfg, _ := c.read(c.filename)
+
+	return cfg.Mode == ModeChat
+}
+
 func (c *Config) TasksOnlyMode() bool {
 	cfg, _ := c.read(c.filename)
 
 	return cfg.Mode == ModeTasks
-}
-
-func (c *Config) OneFileOnlyMode() bool {
-	cfg, _ := c.read(c.filename)
-
-	return cfg.Mode == ModeOneFile
 }
 
 // TODO release test everything in this mode

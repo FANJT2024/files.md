@@ -379,6 +379,10 @@ func (b *Bot) saveFromTextMsg(u Update) error {
 		}
 	}
 
+	if b.cfg.ChatOnlyMode() {
+		return b.createOrAdd(fs.DirRoot, fs.ChatFilename, msg)
+	}
+
 	//if b.cfg.OneFileOnlyMode() {
 	//	return b.createOrAdd(fs.DirRoot, fs.ChatFilename, msg)
 	//}
@@ -936,7 +940,7 @@ func (b *Bot) ShowToday(_ []string) error {
 		return b.showDirs(nil)
 	}
 
-	if b.cfg.JournalOnlyMode() || b.cfg.OneFileOnlyMode() {
+	if b.cfg.JournalOnlyMode() {
 		_, err := b.tg.Send(b.userID, i18n.Tr("What's on your mind?"), nil, tg.MarkupHTML)
 		if err != nil {
 			return fmt.Errorf("show today: can't send journal message: %w", err)
