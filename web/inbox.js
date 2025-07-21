@@ -12,12 +12,12 @@ async function openChat() {
     chatContainer.style.display = 'flex';
     chatButton.classList.add('hidden');
 
-    if (editor.path !== INBOX_PATH) {
+    if (currentEditor.path !== INBOX_PATH) {
         const state = {path: editor.path};
         history.pushState(state, '');
     }
 
-    editor.path = INBOX_PATH;
+    currentEditor.path = INBOX_PATH;
 
     const codemirror = document.querySelector('.CodeMirror-wrap');
     codemirror.style.display = 'none';
@@ -253,8 +253,10 @@ async function logWasm(val) {
 
 async function receive(modifiedPaths) {
     console.log('Wasm: receiving:', modifiedPaths);
-    let isChatModal = document.getElementById('chat-container').classList.contains('modal');
-    if (!isChatModal && currentEditor.path !== INBOX_PATH) {
+    // We only update sidebar if we're in either chat mode
+    let noChatModal = !document.getElementById('chat-container').classList.contains('modal');
+    let noFullScreenChat = currentEditor.path !== INBOX_PATH
+    if (noChatModal && noFullScreenChat) {
         return;
     }
 
