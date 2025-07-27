@@ -921,7 +921,6 @@ function TreeView(root, container, options) {
             node.shouldBlink = false;
         }
 
-        console.log(node.toString(), node);
         if (node.isGroupEnd) {
             span_desc.classList.add("group-end");
         }

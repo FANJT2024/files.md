@@ -230,7 +230,14 @@ function initEditor(el) {
         const coords = newEditor.coordsChar({left: e.clientX, top: e.clientY});
 
         if (coords.line === 0) {
-            // Small delay to let CodeMirror handle the click first
+            // Check if cursor is already on line 0
+            const currentCursor = newEditor.getCursor();
+            if (currentCursor.line === 0) {
+                // Cursor already on line 0, don't select
+                return;
+            }
+
+            // Cursor not on line 0, select the title
             setTimeout(() => {
                 const lineLength = newEditor.getLine(0).length;
                 newEditor.setSelection(
@@ -239,7 +246,7 @@ function initEditor(el) {
                 );
             }, 0);
         }
-    });
+    }, true);
 
     // Force '# ' to remain at first line.
     newEditor.on('change', function (cm, change) {

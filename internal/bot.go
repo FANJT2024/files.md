@@ -993,7 +993,7 @@ func (b *Bot) ShowToday(_ []string) error {
 			if isCompleted {
 				continue
 			}
-		
+
 			if len(task) >= maxTitleLengthForMobile {
 				cmd := tg.NewCmd(consts.CmdShowLongItem, []string{fs.Hash(fs.TodayFilename), fs.Hash(task)})
 				btn := tg.NewBtn(i18n.AddEmoji("eyes"), cmd)
@@ -1527,27 +1527,12 @@ func (b *Bot) showLongItem(params []string) error {
 
 	item := txt.ChecklistItem(checklistMD, itemHash)
 
-	//var moveToLaterBtn tg.Btn
-	//btnLabel := i18n.StrMoveToLaterLong
-	//toDir := fs.DirLater
-	//if dir == fs.DirLater {
-	//	btnLabel = i18n.StrToToday
-	//	toDir = fs.DirToday
-	//}
-	//moveToLaterBtn = tg.NewBtn(btnLabel, tg.NewCmd(consts.CmdMoveToExistingDirFromToday, []string{toDir, dir, filenameHash}))
-
-	//moveBtn := tg.NewBtn(
-	//	txt.Emoji(i18n.Emoji("right arrow"), b.tr("Move to")),
-	//	tg.NewCmd(consts.CmdShowMoveToFromToday, []string{filenameHash}),
-	//)
-
 	cmd := consts.CmdShowToday
 	if checklist == fs.LaterFilename {
 		cmd = consts.CmdShowLater
 	}
 
 	kb := tg.NewKeyboard([]tg.Row{
-		//tg.NewRow(moveToLaterBtn, moveBtn),
 		tg.NewRow(
 			tg.NewBtn(i18n.StrBack, tg.NewCmd(cmd, []string{})),
 			tg.NewBtn(i18n.StrComplete, tg.NewCmd(consts.CmdCompleteChecklistItem, []string{checklistHash, itemHash})),
@@ -1558,12 +1543,6 @@ func (b *Bot) showLongItem(params []string) error {
 	if err != nil {
 		return fmt.Errorf("show task: %w", err)
 	}
-
-	//msgID, hasLastKeyboard := b.db.LastKeyboardMsgID()
-	//if hasLastKeyboard {
-	//	b.db.SetRecentFilenameByMsgID(msgID, filename)
-	//	b.db.SetRecentDirByMsgID(msgID, dir)
-	//}
 
 	return nil
 }
