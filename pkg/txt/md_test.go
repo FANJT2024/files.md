@@ -256,49 +256,53 @@ func TestChecklistItems(t *testing.T) {
 	r := require.New(t)
 
 	md := "- [ ] unchecked item\n- [x] checked item\n- [ ] another unchecked"
-	items := ChecklistItems(md)
+	items, isChecked := ChecklistItems(md)
+
+	r.Equal([]string{"unchecked item", "checked item", "another unchecked"}, items)
 
 	expected := map[string]bool{
 		"unchecked item":    false,
 		"checked item":      true,
 		"another unchecked": false,
 	}
-	r.Equal(expected, items)
+	r.Equal(expected, isChecked)
 }
 
 func TestChecklistItemsEmpty(t *testing.T) {
 	r := require.New(t)
 
 	md := ""
-	items := ChecklistItems(md)
+	items, isChecked := ChecklistItems(md)
 
-	r.Equal(map[string]bool{}, items)
+	r.Len(items, 0)
+	r.Equal(map[string]bool{}, isChecked)
 }
 
 func TestChecklistItemsWithRegularText(t *testing.T) {
 	r := require.New(t)
 
 	md := "# Header\n- [ ] task one\nregular text\n- [x] task two"
-	items := ChecklistItems(md)
-
+	items, isChecked := ChecklistItems(md)
+	r.Equal([]string{"task one", "task two"}, items)
 	expected := map[string]bool{
 		"task one": false,
 		"task two": true,
 	}
-	r.Equal(expected, items)
+	r.Equal(expected, isChecked)
 }
 
 func TestChecklistItemsWithWhitespace(t *testing.T) {
 	r := require.New(t)
 
 	md := "   - [ ] spaced task   \n\t- [x] tabbed task\t"
-	items := ChecklistItems(md)
+	items, isChecked := ChecklistItems(md)
+	r.Equal([]string{"spaced task", "tabbed task"}, items)
 
 	expected := map[string]bool{
 		"spaced task": false,
 		"tabbed task": true,
 	}
-	r.Equal(expected, items)
+	r.Equal(expected, isChecked)
 }
 
 func TestAddChecklistItemUnchecked(t *testing.T) {

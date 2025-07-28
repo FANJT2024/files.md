@@ -2142,7 +2142,7 @@ func TestSchedule(t *testing.T) {
 	laterMD, err := userFS.Read(fs.DirRoot, fs.LaterFilename)
 	r.NoError(err)
 
-	items := txt.ChecklistItems(laterMD)
+	items, _ := txt.ChecklistItems(laterMD)
 	r.Contains(items, "Task")
 
 	sc, err := cfg.Schedules()
@@ -2185,7 +2185,7 @@ func TestScheduleNoRepeat(t *testing.T) {
 	laterMD, err := userFS.Read(fs.DirRoot, fs.LaterFilename)
 	r.NoError(err)
 
-	items := txt.ChecklistItems(laterMD)
+	items, _ := txt.ChecklistItems(laterMD)
 	r.Contains(items, "Task")
 
 	sc, err := cfg.Schedules()
@@ -4395,7 +4395,7 @@ func TestScheduleForTmrw(t *testing.T) {
 	laterMD, err := userFS.Read(fs.DirRoot, fs.LaterFilename)
 	r.NoError(err)
 
-	items := txt.ChecklistItems(laterMD)
+	items, _ := txt.ChecklistItems(laterMD)
 	r.Contains(items, "Task for tomorrow")
 
 	sc, err := cfg.Schedules()

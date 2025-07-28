@@ -129,17 +129,19 @@ func OnlyNoteDirs(dirs []File) []File {
 }
 
 func OnlyChecklists(dirs []File) []File {
-	entries := OnlyDirs(ExcludeSystemDirs(ExcludeTaskDirs(dirs)))
+	entries := OnlyFiles(dirs)
 
-	var dirsWithChecklists []File
+	var checklists []File
 	for _, entry := range entries {
-		isChecklist := strings.HasPrefix(entry.Name, "_") && strings.HasSuffix(entry.Name, "_")
+		// get filename without extension
+		filename := strings.TrimSuffix(entry.Name, filepath.Ext(entry.Name))
+		isChecklist := strings.HasPrefix(filename, "_") && strings.HasSuffix(filename, "_")
 		if isChecklist {
-			dirsWithChecklists = append(dirsWithChecklists, entry)
+			checklists = append(checklists, entry)
 		}
 	}
 
-	return dirsWithChecklists
+	return checklists
 }
 
 func OnlyMDFiles(entries []File) []File {
@@ -150,6 +152,19 @@ func OnlyMDFiles(entries []File) []File {
 		}
 
 		if filepath.Ext(file.Name) != MDExt {
+			continue
+		}
+
+		files = append(files, file)
+	}
+
+	return files
+}
+
+func OnlyFiles(entries []File) []File {
+	var files []File
+	for _, file := range entries {
+		if file.IsDir {
 			continue
 		}
 

@@ -11,6 +11,7 @@ import (
 	"io"
 	"math/rand"
 	"os"
+	"path/filepath"
 	"regexp"
 	"slices"
 	"sort"
@@ -980,17 +981,9 @@ func (b *Bot) ShowToday(_ []string) error {
 		return fmt.Errorf("show today: can't read today file: %w", err)
 	}
 	if len(todayChecklistMD) != 0 {
-		tasks := txt.ChecklistItems(todayChecklistMD)
-		// Sort keys
-		keys := make([]string, 0, len(tasks))
-		for key := range tasks {
-			keys = append(keys, key)
-		}
-		sort.Strings(keys)
-
-		for _, task := range keys {
-			isCompleted := tasks[task]
-			if isCompleted {
+		tasks, isCompleted := txt.ChecklistItems(todayChecklistMD)
+		for _, task := range tasks {
+			if isCompleted[task] {
 				continue
 			}
 
@@ -1098,14 +1091,14 @@ func (b *Bot) showLaterTasks(_ []string) error {
 		return fmt.Errorf("show later: can't read later file: %w", err)
 	}
 	if len(laterChecklistMD) != 0 {
-		items := txt.ChecklistItems(laterChecklistMD)
-		for item, isCompleted := range items {
-			if isCompleted {
+		tasks, isCompleted := txt.ChecklistItems(laterChecklistMD)
+		for _, task := range tasks {
+			if isCompleted[task] {
 				continue
 			}
 
-			cmd := tg.NewCmd(consts.CmdCompleteChecklistItem, []string{fs.Hash(fs.LaterFilename), fs.Hash(item)})
-			btn := tg.NewBtn(i18n.AddEmoji(item), cmd)
+			cmd := tg.NewCmd(consts.CmdCompleteChecklistItem, []string{fs.Hash(fs.LaterFilename), fs.Hash(task)})
+			btn := tg.NewBtn(i18n.AddEmoji(task), cmd)
 			kb.AddRow(btn)
 		}
 	}
@@ -1127,18 +1120,18 @@ func (b *Bot) todayLabel(msgsCount ...int) string {
 	hasPomodoroInToday := false
 	todayMD, err := b.fs.Read(fs.DirRoot, fs.TodayFilename)
 	if err == nil {
-		items := txt.ChecklistItems(todayMD)
-		checked, exists := items[fs.PomodoroTask]
+		_, isCompleted := txt.ChecklistItems(todayMD)
+		checked, exists := isCompleted[fs.PomodoroTask]
 		hasPomodoroInToday = exists && !checked
 	}
 	if hasPomodoroInToday {
 		statusBar = i18n.Emoji(fs.Title(fs.PomodoroTask))
 	}
 
-	items := txt.ChecklistItems(todayMD)
+	tasks, isCompleted := txt.ChecklistItems(todayMD)
 	tasksCount := 0
-	for task, completed := range items {
-		if completed {
+	for _, task := range tasks {
+		if isCompleted[task] {
 			continue
 		}
 		if task == fs.PomodoroTask {
@@ -1262,10 +1255,10 @@ func (b *Bot) showChecklists(_ []string) error {
 
 func (b *Bot) showPostpone(_ []string) error {
 	todayMD, err := b.fs.Read(fs.DirRoot, fs.TodayFilename)
-	tasks := txt.ChecklistItems(todayMD)
+	tasks, _ := txt.ChecklistItems(todayMD)
 
 	var kb tg.Keyboard
-	for task := range tasks {
+	for _, task := range tasks {
 		cmd := tg.NewCmd(consts.CmdPostpone, []string{fs.Hash(task)})
 		kb.AddRow(tg.NewBtn(task, cmd))
 	}
@@ -1344,9 +1337,9 @@ func (b *Bot) showRename(_ []string) error {
 		return fmt.Errorf("rename: can't read today file: %w", err)
 	}
 
-	tasks := txt.ChecklistItems(todayMD)
+	tasks, _ := txt.ChecklistItems(todayMD)
 	var kb tg.Keyboard
-	for task := range tasks {
+	for _, task := range tasks {
 		var btn tg.Btn
 		cmd := tg.NewCmd(consts.CmdShowRenameFile, []string{fs.TodayFilename, fs.Hash(task)})
 		btn = tg.NewBtn(txt.Emoji(i18n.Emoji("eyes"), task), cmd)
@@ -1587,35 +1580,36 @@ func (b *Bot) showFile(params []string) error {
 }
 
 func (b *Bot) showChecklist(params []string) error {
-	dirHash := params[0]
+	checklistHash := params[0]
 
-	checklist, err := b.fs.Unhash(fs.DirRoot, dirHash)
+	checklist, err := b.fs.Unhash(fs.DirRoot, checklistHash)
 	if err != nil {
 		return fmt.Errorf("show checklist: %w", err)
 	}
 
-	items, err := b.fs.FilesAndDirs(checklist)
+	md, err := b.fs.Read(fs.DirRoot, checklist)
 	if err != nil {
 		return fmt.Errorf("show checklist: %w", err)
 	}
-	items = fs.SortByCtimeDesc(items)
-	slices.Reverse(items)
 
+	tasks, _ := txt.ChecklistItems(md)
 	// TODO check that we're showing last buttons
 	maxButtons := maxBtns
 	if checklist == fs.DirRead || checklist == fs.DirWatch {
 		maxButtons = maxBtnsInChecklist
 	}
-	items = items[max(0, len(items)-maxButtons):]
+	md = md[max(0, len(md)-maxButtons):]
 
 	kb := tg.NewKeyboard(nil)
-	for _, item := range items {
-		if item.IsMultiline {
-			title := txt.Emoji(i18n.Emoji("eyes"), fs.UnsanitizeFilename(item.Title))
-			kb.AddRow(tg.NewBtn(title, tg.NewCmd(consts.CmdShowChecklistItem, []string{dirHash, item.Hash})))
+	for _, task := range tasks {
+		if len(task) >= maxTitleLengthForMobile {
+			cmd := tg.NewCmd(consts.CmdShowLongItem, []string{fs.Hash(checklist), fs.Hash(task)})
+			btn := tg.NewBtn(txt.Emoji(i18n.Emoji("eyes"), task), cmd)
+			kb.AddRow(btn)
 		} else {
-			title := i18n.AddEmoji(fs.UnsanitizeFilename(item.Title))
-			kb.AddRow(tg.NewBtn(title, tg.NewCmd(consts.CmdCompleteListItem, []string{dirHash, item.Hash})))
+			cmd := tg.NewCmd(consts.CmdCompleteChecklistItem, []string{fs.Hash(checklist), fs.Hash(task)})
+			btn := tg.NewBtn(i18n.AddEmoji(task), cmd)
+			kb.AddRow(btn)
 		}
 	}
 	kb.AddRow(tg.NewBtn(i18n.StrToday, tg.NewCmd(consts.CmdShowToday, nil)))
@@ -2656,13 +2650,15 @@ func (b *Bot) togglePomodoro(_ []string) error {
 	hasPomodoroInToday := false
 	todayMD, err := b.fs.Read(fs.DirRoot, fs.TodayFilename)
 	if err == nil {
-		_, hasPomodoroInToday = txt.ChecklistItems(todayMD)[fs.PomodoroTask]
+		_, isCompleted := txt.ChecklistItems(todayMD)
+		_, hasPomodoroInToday = isCompleted[fs.PomodoroTask]
 	}
 
 	hasPomodoroInArchive := false
 	doneMD, err := b.fs.Read(fs.DirArchive, fs.DoneFilename)
 	if err == nil {
-		_, hasPomodoroInArchive = txt.ChecklistItems(doneMD)[fs.PomodoroTask]
+		_, isCompleted := txt.ChecklistItems(doneMD)
+		_, hasPomodoroInToday = isCompleted[fs.PomodoroTask]
 	}
 
 	if hasPomodoroInToday {
@@ -2968,8 +2964,7 @@ func extractMarkdown(u Update) string {
 }
 
 func checklistTitle(checklist string) string {
-	// Once we move our items from checklists to archive,
-	// they got named like -checklist-itemName
+	checklist = strings.TrimSuffix(checklist, filepath.Ext(checklist))
 	stripChecklistChars := regexp.MustCompile(`^_.*?_(.+)`)
 	title := stripChecklistChars.ReplaceAllString(checklist, "$1")
 	title = strings.TrimPrefix(strings.TrimSuffix(title, "_"), "_")

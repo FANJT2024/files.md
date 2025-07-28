@@ -29,19 +29,24 @@ var closeTags = map[string]string{
 	"__": "</b>",
 }
 
-func ChecklistItems(md string) map[string]bool {
-	items := make(map[string]bool)
+func ChecklistItems(md string) ([]string, map[string]bool) {
+	var items []string
+	isCompleted := make(map[string]bool)
 	lines := strings.Split(md, "\n")
 	for _, line := range lines {
 		line = strings.TrimSpace(line)
 		if strings.HasPrefix(line, "- [ ] ") {
-			items[strings.TrimPrefix(line, "- [ ] ")] = false
+			item := strings.TrimPrefix(line, "- [ ] ")
+			items = append(items, item)
+			isCompleted[item] = false
 		} else if strings.HasPrefix(line, "- [x] ") {
-			items[strings.TrimPrefix(line, "- [x] ")] = true
+			item := strings.TrimPrefix(line, "- [x] ")
+			items = append(items, item)
+			isCompleted[item] = true
 		}
 	}
 
-	return items
+	return items, isCompleted
 }
 
 func AddChecklistItem(md, item string, checked bool) string {
