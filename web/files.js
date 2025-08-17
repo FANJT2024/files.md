@@ -615,9 +615,7 @@ async function collectModifiedAndDeletedFiles() {
             return;
         }
 
-        const notExisting = existingFiles[path] === undefined;
-        const notModified = modifiedFiles.find(f => f.path === path) === undefined;
-        if (notExisting && notModified) {
+        if (existingFiles[path] === undefined) {
             console.log('DELETED because not in existing or modified files:', path);
             deleted.push(path);
         }
