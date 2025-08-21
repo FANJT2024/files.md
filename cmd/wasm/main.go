@@ -71,7 +71,7 @@ func main() {
 	fs.WriteFile = writeFile
 	fs.ReadDir = readDir
 	initBot()
-	js.Global().Call("dispatchEvent", js.Global().Get("CustomEvent").New("wasmReady"))
+	js.Global().Call("wasmReady")
 
 	select {}
 }

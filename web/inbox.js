@@ -228,13 +228,16 @@ async function sendMsg() {
 }
 
 async function initWasm() {
-    console.log('Init wasm chat');
+    window.wasmReady = () => {
+        console.log('WASM ready, wasmReplyCmd is available');
+        window.wasmReplyCmd = wasmReplyCmd;
+    };
+
+    console.log('Init wasm inbox');
     const go = new Go();
     const wasmFile = await fetch(`chat.wasm${window.COMMIT_HASH}`);
     const wasmModule = await WebAssembly.instantiateStreaming(wasmFile, go.importObject);
     go.run(wasmModule.instance);
-
-    window.wasmReplyCmd = wasmReplyCmd
 }
 
 async function logWasm(val) {
