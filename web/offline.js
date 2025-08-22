@@ -97,10 +97,10 @@ self.addEventListener("fetch", (event) => {
                 const actualData = await responseClone.arrayBuffer();
                 // In South America I had poor internet connection, and some js files
                 // were partly loaded/cached :(
-                console.log(`File: ${event.request.url}`);
-                console.log(`Expected size: ${contentLength}`);
-                console.log(`Actual size: ${actualData.byteLength}`);
                 if (contentLength && actualData.byteLength !== parseInt(contentLength)) {
+                    console.log(`File: ${event.request.url}`);
+                    console.log(`Expected size: ${contentLength}`);
+                    console.log(`Actual size: ${actualData.byteLength}`);
                     console.error('❌ SIZE MISMATCH!', event.request.url);
                     return response;
                 }
