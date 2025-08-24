@@ -24,7 +24,7 @@ func ssl(logger *log.Logger, certDir string, hosts ...string) *http.Server {
 		srv := &http.Server{
 			Addr:         ":80",
 			Handler:      autocertManager.HTTPHandler(nil),
-			IdleTimeout:  time.Minute,
+			IdleTimeout:  30 * time.Second,
 			ReadTimeout:  5 * time.Second,
 			WriteTimeout: 10 * time.Second,
 			ErrorLog:     logger,
