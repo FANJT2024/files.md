@@ -32,19 +32,19 @@ func Serve(apiHost, appHost, certDir, logFilename, token, tokensDir string) {
 
 	// Logger is used for ssl/connection errors.
 	// For regular errors we still use slog.
-	logger := newLogger(logFilename)
-	srv := ssl(logger, certDir, apiHost, appHost)
-	srv.Handler = newRouter(logger)
+	serverLogger := newLogger(logFilename)
+	srv := ssl(serverLogger, certDir, apiHost, appHost)
+	srv.Handler = newRouter(serverLogger)
 
 	// For local environment.
 	// TODO make it more explicit
 	if certDir == "" {
 		srv := &http.Server{
 			Addr:    ":8080",
-			Handler: newRouter(logger),
+			Handler: newRouter(serverLogger),
 		}
 
-		logger.Printf("Starting HTTP server on %s", srv.Addr)
+		serverLogger.Printf("Starting HTTP server on %s", srv.Addr)
 		err := srv.ListenAndServe()
 		if err != nil {
 			panic(err)
@@ -58,7 +58,7 @@ func Serve(apiHost, appHost, certDir, logFilename, token, tokensDir string) {
 	}
 }
 
-func newRouter(logger *log.Logger) *http.ServeMux {
+func newRouter(serverLogger *log.Logger) *http.ServeMux {
 	r := http.NewServeMux()
 
 	// TODO add hashing or secrets
@@ -66,8 +66,8 @@ func newRouter(logger *log.Logger) *http.ServeMux {
 	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		// Log Range requests
 		if rangeHeader := r.Header.Get("Range"); rangeHeader != "" {
-			log.Printf("🔍 Range request: %s %s - Range: %s", r.Method, r.URL.Path, rangeHeader)
-			log.Printf("📱 User-Agent: %s", r.Header.Get("User-Agent"))
+			serverLogger.Printf("🔍 Range request: %s %s - Range: %s", r.Method, r.URL.Path, rangeHeader)
+			serverLogger.Printf("📱 User-Agent: %s", r.Header.Get("User-Agent"))
 		}
 
 		// Serving the PWA app
@@ -96,43 +96,43 @@ func newRouter(logger *log.Logger) *http.ServeMux {
 	r.HandleFunc("GET /habits_v2/{userID}", func(w http.ResponseWriter, r *http.Request) {
 		userID, err := strconv.ParseInt(r.PathValue("userID"), 10, 64)
 		if err != nil {
-			logger.Printf("failed to parse userID for habits: %v", err)
+			serverLogger.Printf("failed to parse userID for habits: %v", err)
 			_, _ = w.Write([]byte("can't parse userID"))
 		}
 
 		userFS, err := fs.NewUserFS(userID)
 		if err != nil {
-			logger.Printf("failed to init userFS: %v", err)
+			serverLogger.Printf("failed to init userFS: %v", err)
 			_, _ = w.Write([]byte("can't init userFS"))
 		}
 
 		str, err := habits.Render(userID, userFS)
 		if err != nil {
-			logger.Printf("failed to render habits: %v", err)
+			serverLogger.Printf("failed to render habits: %v", err)
 			_, _ = w.Write([]byte(err.Error()))
 		}
 		_, err = w.Write(str)
 		if err != nil {
-			logger.Printf("failed to write habits response: %v", err)
+			serverLogger.Printf("failed to write habits response: %v", err)
 		}
 	})
 
 	r.HandleFunc("POST /habits_v2/{userID}/{habitName}/{yearDay}/{status}", func(w http.ResponseWriter, r *http.Request) {
 		userID, err := strconv.ParseInt(r.PathValue("userID"), 10, 64)
 		if err != nil {
-			logger.Printf("failed to parse userID: %v", err)
+			serverLogger.Printf("failed to parse userID: %v", err)
 			_, _ = w.Write([]byte("can't parse userID"))
 		}
 
 		yearDay, err := strconv.ParseInt(r.PathValue("yearDay"), 10, 32)
 		if err != nil {
-			logger.Printf("failed to parse yearDay: %v", err)
+			serverLogger.Printf("failed to parse yearDay: %v", err)
 			_, _ = w.Write([]byte("can't parse yearDay"))
 		}
 
 		status, err := strconv.ParseInt(r.PathValue("status"), 10, 32)
 		if err != nil {
-			logger.Printf("failed to parse status: %v", err)
+			serverLogger.Printf("failed to parse status: %v", err)
 			_, _ = w.Write([]byte("can't parse status"))
 		}
 
@@ -140,13 +140,13 @@ func newRouter(logger *log.Logger) *http.ServeMux {
 
 		userFS, err := fs.NewUserFS(userID)
 		if err != nil {
-			logger.Printf("failed to init user fs: %v", err)
+			serverLogger.Printf("failed to init user fs: %v", err)
 			_, _ = w.Write([]byte("can't init user fs"))
 		}
 
 		userHabits, err := habits.Habits(userFS, time.Now().Year())
 		if err != nil {
-			logger.Printf("failed to read habits: %v", err)
+			serverLogger.Printf("failed to read habits: %v", err)
 			_, _ = w.Write([]byte("can't read habits"))
 		}
 
@@ -156,7 +156,7 @@ func newRouter(logger *log.Logger) *http.ServeMux {
 		userHabits[habitName][int(yearDay)] = int(status)
 		err = habits.Write(userFS, time.Now().Year(), userHabits)
 		if err != nil {
-			logger.Printf("failed to write habits: %v", err)
+			serverLogger.Printf("failed to write habits: %v", err)
 			_, _ = w.Write([]byte("can't write habits"))
 		}
 
@@ -170,14 +170,14 @@ func newRouter(logger *log.Logger) *http.ServeMux {
 		userConf := userconfig.NewConfig(userFS, userID, config.BotCfg.ConfigFilename)
 		err = journal.AddEmoji(userFS, emoji, userConf.Timezone())
 		if err != nil {
-			logger.Printf("failed to write habit emoji to journal: %v", err)
+			serverLogger.Printf("failed to write habit emoji to journal: %v", err)
 			_, _ = w.Write([]byte("can't write habit emoji to journal"))
 		}
 
 		record := fmt.Sprintf("%s %s", emoji, habitName)
 		err = journal.AddRecord(userFS, record, userConf.Timezone())
 		if err != nil {
-			logger.Printf("failed to write habit to journal: %v", err)
+			serverLogger.Printf("failed to write habit to journal: %v", err)
 			_, _ = w.Write([]byte("can't write habit to journal"))
 		}
 	})
