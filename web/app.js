@@ -223,7 +223,7 @@ function initEditor(el) {
         }
     })
 
-    // Auto-select title when clicking on first line
+    // Auto-select/highlight title when clicking on the first line
     // TODO clear on second click
     newEditor.getWrapperElement().addEventListener('mousedown', function(e) {
         // Get the position where the mouse was clicked
@@ -244,7 +244,7 @@ function initEditor(el) {
                     {line: 0, ch: 2},  // Start from character 2 (skip "# ")
                     {line: 0, ch: lineLength}
                 );
-            }, 0);
+            }, 150);
         }
     }, true);
 
