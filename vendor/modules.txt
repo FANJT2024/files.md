@@ -155,6 +155,8 @@ github.com/wailsapp/wails/v2/pkg/runtime
 ## explicit; go 1.18
 golang.org/x/crypto/acme
 golang.org/x/crypto/acme/autocert
+golang.org/x/crypto/bcrypt
+golang.org/x/crypto/blowfish
 # golang.org/x/exp v0.0.0-20230522175609-2e198f4a06a1
 ## explicit; go 1.20
 golang.org/x/exp/constraints

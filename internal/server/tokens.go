@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"log"
 	"log/slog"
+	"net"
 	"net/http"
 	"strconv"
 	"strings"
@@ -58,7 +59,7 @@ func findUserID(token string) (int64, bool) {
 		return 0, false
 	}
 
-	data, err := tokens.Read(fs.DirRoot, saltToken(token))
+	data, err := tokens.Read(fs.DirRoot, hashToken(token))
 	if err != nil {
 		return 0, false
 	}
@@ -103,8 +104,7 @@ func IssueToken(w http.ResponseWriter, r *http.Request) {
 // TODO too harsh blocking, we may need to take into account proxies
 func tokenMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		ipAndPort := strings.Split(r.RemoteAddr, ":")
-		ip := ipAndPort[0]
+		ip := getIPFromRemoteAddr(r.RemoteAddr)
 
 		blockedIPsMutex.RLock()
 		blockedUntil, isBlocked := blockedIPs[ip]
@@ -170,7 +170,7 @@ func issueNewPermanentToken(r *http.Request) (string, bool) {
 		slog.Error("Failed to create file system for tokens", "error", err)
 		return "", false
 	}
-	err = tokens.Write(fs.DirRoot, saltToken(token), strconv.FormatInt(data.userID, 10))
+	err = tokens.Write(fs.DirRoot, hashToken(token), strconv.FormatInt(data.userID, 10))
 	if err != nil {
 		return "", false
 	}
@@ -184,8 +184,22 @@ func genToken() string {
 	return hex.EncodeToString(bytes)
 }
 
-func saltToken(token string) string {
+func hashToken(token string) string {
+	// A token is a server-generated 32 bytes of entropy, so SHA-256 is fine here.
+	// At 1 billion SHA256 hashes per second it would take ~10^60 years to brute force.
 	h := sha256.New()
 	h.Write([]byte(token + config.BotCfg.TokensSalt))
 	return hex.EncodeToString(h.Sum(nil))
+}
+
+func getIPFromRemoteAddr(remoteAddr string) string {
+	host, _, err := net.SplitHostPort(remoteAddr)
+	if err != nil {
+		// If SplitHostPort fails, might be just an IP without port
+		if ip := net.ParseIP(remoteAddr); ip != nil {
+			return remoteAddr
+		}
+		return "unknown"
+	}
+	return host
 }
