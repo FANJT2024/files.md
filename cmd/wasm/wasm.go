@@ -34,9 +34,24 @@ type Response struct {
 	Messages []tg.Message
 }
 
+func main() {
+	js.Global().Set("wasmReply", js.FuncOf(Reply))
+	js.Global().Set("wasmReplyCmd", js.FuncOf(ReplyCmd))
+	fs.Exists = exists
+	fs.ReadFile = readFile
+	fs.WriteFile = writeFile
+	fs.ReadDir = readDir
+	initBot()
+	js.Global().Call("wasmReady")
+
+	select {}
+}
+
 func Reply(_ js.Value, args []js.Value) any {
 	logToJS("Wasm: called reply")
 	upd := tg.NewUpd(-1, args[0].String())
+	// GO and JS share one thread, so we need to run a separate goroutine not to block JS.
+	// We don't want our JS loop to be blocked, because we do async JS calls from Go.
 	go reply(upd)
 
 	return nil
@@ -53,19 +68,6 @@ func ReplyCmd(_ js.Value, args []js.Value) any {
 	go reply(upd)
 
 	return nil
-}
-
-func main() {
-	js.Global().Set("wasmReply", js.FuncOf(Reply))
-	js.Global().Set("wasmReplyCmd", js.FuncOf(ReplyCmd))
-	fs.Exists = exists
-	fs.ReadFile = readFile
-	fs.WriteFile = writeFile
-	fs.ReadDir = readDir
-	initBot()
-	js.Global().Call("wasmReady")
-
-	select {}
 }
 
 func callAsync(funcName string, callback func(js.Value, error), args ...any) {
@@ -116,8 +118,9 @@ func sendDueResponsesToJS() {
 	response, err := json.Marshal(r)
 	if err != nil {
 		// TODO handle err
+		logToJS("Wasm marshal error:", err)
 	}
-	logToJS("Sending from WASM to JS:", string(response))
+	logToJS("Sending from WASM to JS", string(response))
 	sendToJS(string(response))
 }
 
@@ -135,25 +138,6 @@ func logToJS(vals ...any) {
 }
 
 func initBot() {
-	//opts := &tint.Options{
-	//	Level: slog.LevelDebug,
-	//}
-	//logger := slog.New(tint.NewHandler(os.Stderr, opts))
-	//slog.SetDefault(logger)
-
-	// For GUI app we don't have required .env params
-	//_ = godotenv.Load()
-	//err := config.LoadGUIConfig()
-	//if err != nil {
-	//	panic(fmt.Sprintf("Error loading cfg: %s\n", err))
-	//}
-
-	// TODO move to embed
-	//err = i18n.LoadLangFile("i18n/ru.json")
-	//if err != nil {
-	//	panic(fmt.Sprintf("Error loading i18n: %s\n", err))
-	//}
-
 	reply = func(u internal.Update) {
 		defer func() {
 			err := recover()
@@ -191,25 +175,6 @@ func initBot() {
 		sendDueResponsesToJS()
 	}
 }
-
-//func send(update Update) Response {
-//	if update.Command != nil {
-//		_ = reply(tg.NewUpdCmd(1, *update.Command))
-//	} else {
-//		_ = reply(tg.NewUpd(1, update.Message))
-//	}
-//
-//	var r Response
-//	r.Messages = chat.Messages
-//	if chat.EditedMessages != nil {
-//		r.Messages = append(r.Messages, chat.EditedMessages...)
-//	}
-//
-//	chat.Messages = nil
-//	chat.EditedMessages = nil
-//
-//	return r
-//}
 
 func newUpdate(message string, cmd *tg.Cmd) Update {
 	return Update{
