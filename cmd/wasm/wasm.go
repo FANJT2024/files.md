@@ -122,7 +122,7 @@ func sendDueResponsesToJS() {
 	response, err := json.Marshal(r)
 	if err != nil {
 		// TODO handle err
-		logToJS("Wasm marshal error:", err)
+		logToJS("Wasm marshal error:", err.Error())
 	}
 	logToJS("Sending from WASM to JS", string(response))
 	sendToJS(string(response))
@@ -146,9 +146,10 @@ func initBot() {
 		defer func() {
 			err := recover()
 			if err != nil {
+				fmt.Println(err)
 				debug.PrintStack()
 				slog.Error("Bot panic", "err", err)
-				logToJS("Wasm panic:", err)
+				logToJS("Wasm panic:", err.Error())
 			}
 		}()
 
@@ -175,7 +176,7 @@ func initBot() {
 		}
 		bot := internal.NewBot(userID, chat, userFS, db.NewDB(userID), userconf)
 		if err := bot.Reply(u); err != nil {
-			logToJS("Wasm error:", err)
+			logToJS("Wasm error:", err.Error())
 			fmt.Printf("Bot error: %v", err)
 		}
 

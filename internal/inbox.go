@@ -184,6 +184,7 @@ func (b *Bot) moveFromInbox(
 		})
 	}
 
+	// First we save all the messages to files, only then we remove them from the inbox.
 	if collapse {
 		content := strings.Builder{}
 		for _, msg := range msgs {

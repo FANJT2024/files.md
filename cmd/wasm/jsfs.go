@@ -158,7 +158,6 @@ func readFile(_ afero.Fs, path string) ([]byte, error) {
 }
 
 func writeFile(_ afero.Fs, path string, data []byte, perm os.FileMode) error {
-	writtenFiles = append(writtenFiles, path)
 	resultChan := make(chan struct{}, 1)
 	errorChan := make(chan error, 1)
 
@@ -167,6 +166,7 @@ func writeFile(_ afero.Fs, path string, data []byte, perm os.FileMode) error {
 			errorChan <- err
 			return
 		}
+		writtenFiles = append(writtenFiles, path)
 		resultChan <- struct{}{}
 	}, path, string(data))
 
