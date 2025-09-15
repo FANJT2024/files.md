@@ -244,7 +244,7 @@ async function saveToInbox(content) {
 
     const formattedContent = `\n\`${timestamp}\` ${content}\n`;
 
-    await addToTextFile(INBOX_PATH, formattedContent);
+    await writeAtEnd(INBOX_PATH, formattedContent);
 }
 
 async function receive(modifiedPaths) {

@@ -271,7 +271,7 @@ function initEditor(el) {
                 const fileName = `${new Date().toISOString().replace(/[:.]/g, '-')}.${getImageExtension(item.type)}`;
 
                 try {
-                    const fileHandle = await saveImageFile(fileName, file);
+                    const fileHandle = await writeMediaFile(fileName, file);
                     if (fileHandle) {
                         if (!files['media/']) {
                             files['media/'] = {};
@@ -1198,7 +1198,7 @@ function log(...args) {
     ).join(' ');
     const logMsg = `\`${now}\` ${msg}\n`;
     try {
-        addToTextFile(LOG_PATH, logMsg);
+        writeAtEnd(LOG_PATH, logMsg);
     } catch (error) {
     }
 }

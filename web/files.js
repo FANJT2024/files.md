@@ -216,7 +216,7 @@ async function syncTextsWithServer() {
             }
 
             try {
-                const lastClientModified = await saveTextFile(path, content)
+                const lastClientModified = await writeIfContentIsDifferent(path, content)
                 addMemFile(path, {
                     isFile: true,
                     content: content,
@@ -235,7 +235,7 @@ async function syncTextsWithServer() {
                     const oldPath = joinPath('/', response.renames[relPath]);
                     try {
                         log('DELETED due to renaming', oldPath);
-                        await removeFile(oldPath);
+                        await remove(oldPath);
                     } catch (err) {
                         log('RENAME: cant remove file: ', err, path);
                     }
@@ -331,7 +331,7 @@ async function syncLocalFileWithServer(path) {
     // 1) New file from server
     // 2) Modified only on server
     // 3) Merged on server
-    const lastClientModified = await saveTextFile(path, serverFile.content);
+    const lastClientModified = await writeIfContentIsDifferent(path, serverFile.content);
     setServerFile(path, serverFile.content, serverFile.lastModified, lastClientModified);
     log(`Saved server file for ${path} with timestamp ${serverFile.lastModified}`);
     saveServerFiles();
@@ -712,39 +712,6 @@ async function getFileStatus(path) {
     };
 }
 
-async function getFileHandle(path, create = false) {
-    let dir, filename;
-    if (path.includes('/')) {
-        const parts = path.split('/');
-        filename = parts.pop();
-        dir = parts.join('/');
-    } else {
-        dir = '';
-        filename = path;
-    }
-
-    const dirs = dir.split('/');
-    let currentDirHandle = await getRootDirHandle();
-    for (const dirName of dirs) {
-        if (dirName) {
-            try {
-                currentDirHandle = await currentDirHandle.getDirectoryHandle(dirName, {create: create});
-            } catch (error) {
-                throw error;
-            }
-        }
-    }
-
-    let fileHandle;
-    try {
-        fileHandle = await currentDirHandle.getFileHandle(filename, {create: create});
-    } catch (error) {
-        throw error;
-    }
-
-    return fileHandle;
-}
-
 // TODO split into two, sometimes we need just compare
 async function isContentEqual(path, content) {
     log('checking content for', path);
@@ -781,69 +748,6 @@ async function isContentEqual(path, content) {
     }
 }
 
-// TODO save metadata & files
-async function saveTextFile(path, content) {
-    let fileHandle = await getFileHandle(path, true);
-    if (fileHandle === null) {
-        // TODO fix once Chromium fixes the bug
-        throw new Error('Invalid file name');
-    }
-
-    const fileExists = !await exists(path);
-    if (fileExists || !await isContentEqual(path, content)) {
-        // TODO what if we're syncing first time and already have changes?
-        log('Hashes do not match, writing file...', path);
-        const writable = await fileHandle.createWritable();
-        await writable.write(content);
-        await writable.close();
-    } else {
-        log('Hashes match, no need to write file.');
-    }
-
-    const file = await fileHandle.getFile();
-    return file.lastModified;
-}
-
-async function addToTextFile(path, content) {
-    let fileHandle = await getFileHandle(path, true);
-    if (fileHandle === null) {
-        // TODO fix once Chromium fixes the bug
-        throw new Error('Invalid file name');
-    }
-
-    const writable = await fileHandle.createWritable({ keepExistingData: true });
-    await writable.seek(await fileHandle.getFile().then(file => file.size));
-    await writable.write(content);
-    await writable.close();
-
-    const file = await fileHandle.getFile();
-    return file.lastModified;
-}
-
-async function saveImageFile(fileName, file) {
-    try {
-        const rootDirHandle = await getRootDirHandle();
-
-        let mediaDirHandle;
-        try {
-            mediaDirHandle = await rootDirHandle.getDirectoryHandle('media', {create: true});
-        } catch (error) {
-            console.error('Error creating media directory:', error);
-            throw new Error('Could not create media directory');
-        }
-
-        const fileHandle = await mediaDirHandle.getFileHandle(fileName, {create: true});
-        const writable = await fileHandle.createWritable();
-        await writable.write(file);
-        await writable.close();
-
-        return fileHandle;
-    } catch (error) {
-        console.error('Error in saveImageFile:', error);
-        throw error;
-    }
-}
-
 function getImageExtension(mimeType) {
     const extensions = {
         'image/png': 'png',
@@ -853,20 +757,6 @@ function getImageExtension(mimeType) {
         'image/webp': 'webp'
     };
     return extensions[mimeType] || 'png';
-}
-
-
-async function removeFile(path) {
-    let fileHandle = await getFileHandle(path);
-    if (fileHandle === null) {
-        // TODO fix once Chromium fixes the bug
-        log('Malformed name, skipping file...');
-        return;
-    }
-    await fileHandle.remove()
-    log(`File ${path} removed successfully.`);
-
-    removeMemFile(path);
 }
 
 // TODO can we reuse moveFile?
@@ -879,7 +769,7 @@ async function moveCurrentFile(toDir) {
 
     try {
         let content = getCurrentContent();
-        await saveTextFile(newPath, content);
+        await writeIfContentIsDifferent(newPath, content);
         // TODO move to saveTextFile?
         removeMemFile(oldPath);
         // delete files[editor.currentDir][editor.currentFile];
@@ -901,7 +791,7 @@ async function moveCurrentFile(toDir) {
         setServerFile(newPath, content, 0);
         saveServerFiles();
 
-        await removeFile(oldPath);
+        await remove(oldPath);
         await renderSidebar();
     } catch (error) {
         console.error('Error moving file:', error);
@@ -956,7 +846,7 @@ async function moveFile(oldPath, newPath) {
     try {
         let file = await (await getFileHandle(oldPath)).getFile();
         let content = await file.text();
-        await saveTextFile(newPath, content);
+        await writeIfContentIsDifferent(newPath, content);
 
         log('saving ' + newPath);
         addMemFile(newPath, {
@@ -970,7 +860,7 @@ async function moveFile(oldPath, newPath) {
         saveServerFiles();
 
         // Server file will be removed here.
-        await removeFile(oldPath);
+        await remove(oldPath);
         // delete files[oldDir][oldFilename];
         await renderSidebar();
 
@@ -1255,7 +1145,7 @@ async function syncCurrentFile(syncWithServer = true) {
 
                 let content = getCurrentContent();
                 // TODO every await means we can can have RC due to editor content change
-                await removeFile(path);
+                await remove(path);
                 log('Removed due to filename change', path);
 
                 // Get fresher content after await.
@@ -1275,7 +1165,7 @@ async function syncCurrentFile(syncWithServer = true) {
                     path: newPath,
                     handle: await getFileHandle(newPath, true),
                 });
-                await saveTextFile(newPath, getCurrentContent());
+                await writeIfContentIsDifferent(newPath, getCurrentContent());
                 setServerFile(newPath, content, 0);
                 saveServerFiles();
                 log('Created', newPath);
@@ -1749,7 +1639,7 @@ async function removeCurrentFile() {
     currentEditor.path = undefined;
     if (toDirPath(path) === '/archive') {
         log('Removing file permanently', path);
-        await removeFile(oldPath);
+        await remove(oldPath);
     } else {
         log('Moving file to archive', path);
         await moveFile(oldPath, newPath);
