@@ -88,14 +88,14 @@ func TestMultilineTextWithMarkdown(t *testing.T) {
 
 func TestSpacedItalic(t *testing.T) {
 	r := require.New(t)
-	text := "Header\nLeverage one Minute Praising instead"
+	text := "DisplayName\nLeverage one Minute Praising instead"
 
 	messageEntities := []tgbotapi.MessageEntity{
 		{Type: "italic", Offset: 16, Length: 20},
 	}
 
 	markdown := TelegramEntitiesToMarkdown(text, messageEntities)
-	expectedMarkdown := "Header\nLeverage *one Minute Praising* instead"
+	expectedMarkdown := "DisplayName\nLeverage *one Minute Praising* instead"
 	r.Equal(expectedMarkdown, markdown)
 }
 

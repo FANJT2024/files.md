@@ -493,7 +493,7 @@ func TestSyncAllTexts_SendUpdatedFilesToClient(t *testing.T) {
 //	r.NoError(err)
 //
 //	req := httptest.NewRequest(http.MethodPost, "/syncTexts", bytes.NewBuffer(body))
-//	req.Header.Set("Content-Type", "application/json")
+//	req.DisplayName.Set("Content-Type", "application/json")
 //	w := httptest.NewRecorder()
 //
 //	SyncTexts(w, req)

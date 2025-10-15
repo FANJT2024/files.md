@@ -696,10 +696,10 @@ function attachEventListeners() {
             }
 
             for (const msg of msgs) {
-                const [title, content] = extractTitleAndContent(msg, MAX_TITLE_LENGTH);
-                const path = joinPath(btn.dataset.dir, title);
+                const [header, body] = extractHeaderAndBody(msg, MAX_TITLE_LENGTH);
+                const path = joinPath(btn.dataset.dir, header);
                 for (const msg of msgs) {
-                    await moveFromInbox(msg, async msg => {await write(path, content)});
+                    await moveFromInbox(msg, async msg => {await write(path, body)});
                 }
             }
 

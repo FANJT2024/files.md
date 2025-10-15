@@ -41,7 +41,7 @@ func Habits(userFS *fs.FS, year int) (map[string]Year, error) {
 
 	habits := make(map[string]Year)
 	for _, existingHabit := range existingHabits {
-		habits[existingHabit.Header] = make(Year)
+		habits[existingHabit.DisplayName] = make(Year)
 	}
 
 	filename := fmt.Sprintf("%d Habits.md", year)

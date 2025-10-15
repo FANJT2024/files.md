@@ -54,7 +54,7 @@ async function addChecklistItem(path, item, checked = false) {
     await write(path, result);
 }
 
-function extractTitleAndContent(text, maxTitleLen) {
+function extractHeaderAndBody(text, maxTitleLen) {
     if (text.length === 0) {
         throw new Error('extract title: empty msg');
     }

@@ -53,7 +53,7 @@ func UnsanitizeFilename(filename string) string {
 	return filename
 }
 
-func Header(filename string) string {
+func DisplayName(filename string) string {
 	return txt.Ucfirst(strings.TrimSuffix(strings.TrimSpace(filename), MDExt))
 }
 

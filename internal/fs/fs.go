@@ -75,8 +75,8 @@ type FS struct {
 // File represents a file or directory
 type File struct {
 	Name        string // Filename with extension
+	DisplayName string
 	Hash        string
-	Header      string
 	Ctime       int64
 	IsMultiline bool
 	IsDir       bool
@@ -320,7 +320,7 @@ func (fs FS) FilesAndDirs(dir string) ([]File, error) {
 		file := NewFile(
 			entry.Name(),
 			Hash(entry.Name()),
-			Header(entry.Name()),
+			DisplayName(entry.Name()),
 			Ctime(entry),
 			entry.Size() > 0,
 			entry.IsDir(),
@@ -448,8 +448,8 @@ func (fs FS) SearchFiles(query string) ([]File, error) {
 	var matchedNotes []File
 	for _, note := range notes {
 		isWildcard := len(search) == 0
-		isSubstring := strings.Contains(strings.ToLower(note.Header), search)
-		isSimilar := txt.Similar(strings.ToLower(note.Header), search) > minSearchSimilarity
+		isSubstring := strings.Contains(strings.ToLower(note.DisplayName), search)
+		isSimilar := txt.Similar(strings.ToLower(note.DisplayName), search) > minSearchSimilarity
 		if isWildcard || isSubstring || isSimilar {
 			matchedNotes = append(matchedNotes, note)
 		}

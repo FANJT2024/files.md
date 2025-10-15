@@ -287,7 +287,7 @@ func MarkdownToHTML(md string) string {
 	reInlineCode := regexp.MustCompile("`([^`]+?)`")
 	mdWithCode = reInlineCode.ReplaceAllString(mdWithCode, "<code>$1</code>")
 
-	// Convert #+ Header to <b>Header</b>
+	// Convert #+ DisplayName to <b>DisplayName</b>
 	reHeader := regexp.MustCompile(`(?m)^#+\s*(.+)`)
 	mdWithCode = reHeader.ReplaceAllString(mdWithCode, "<b>$1</b>")
 

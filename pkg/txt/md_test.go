@@ -9,19 +9,19 @@ import (
 func TestMarkdownToHTML(t *testing.T) {
 	r := require.New(t)
 
-	md := "### Header\n**bold**\n*italic*"
+	md := "### DisplayName\n**bold**\n*italic*"
 	html := MarkdownToHTML(md)
 
-	r.Equal("<b>Header</b>\n<b>bold</b>\n<i>italic</i>", html)
+	r.Equal("<b>DisplayName</b>\n<b>bold</b>\n<i>italic</i>", html)
 }
 
 func TestMarkdownToHTMLHeaderAndText(t *testing.T) {
 	r := require.New(t)
 
-	md := "# Header\nText"
+	md := "# DisplayName\nText"
 	html := MarkdownToHTML(md)
 
-	r.Equal("<b>Header</b>\nText", html)
+	r.Equal("<b>DisplayName</b>\nText", html)
 }
 
 func TestMarkdownToHTMLBold(t *testing.T) {
@@ -201,10 +201,10 @@ func TestMarkdownToHTMLEscapeHtml(t *testing.T) {
 func TestMarkdownToHTMLHeader(t *testing.T) {
 	r := require.New(t)
 
-	md := "Multiline\n# Header"
+	md := "Multiline\n# DisplayName"
 	html := MarkdownToHTML(md)
 
-	r.Equal("Multiline\n<b>Header</b>", html)
+	r.Equal("Multiline\n<b>DisplayName</b>", html)
 }
 
 func TestMarkdownToHTMLMultipleHeaders(t *testing.T) {
@@ -246,10 +246,10 @@ func TestMarkdownToHTMLCodeWithBold(t *testing.T) {
 func TestMarkdownToHTMLHeaderWithInlineCode(t *testing.T) {
 	r := require.New(t)
 
-	md := "# Header\n`inline code`"
+	md := "# DisplayName\n`inline code`"
 	html := MarkdownToHTML(md)
 
-	r.Equal("<b>Header</b>\n<code>inline code</code>", html)
+	r.Equal("<b>DisplayName</b>\n<code>inline code</code>", html)
 }
 
 func TestChecklistItems(t *testing.T) {
@@ -281,7 +281,7 @@ func TestChecklistItemsEmpty(t *testing.T) {
 func TestChecklistItemsWithRegularText(t *testing.T) {
 	r := require.New(t)
 
-	md := "# Header\n- [ ] task one\nregular text\n- [x] task two"
+	md := "# DisplayName\n- [ ] task one\nregular text\n- [x] task two"
 	items, isChecked := ChecklistItems(md)
 	r.Equal([]string{"task one", "task two"}, items)
 	expected := map[string]bool{
@@ -416,10 +416,10 @@ func TestRemoveChecklistItemNotFound(t *testing.T) {
 func TestRemoveChecklistItemWithRegularText(t *testing.T) {
 	r := require.New(t)
 
-	md := "# Header\n- [ ] task one\nregular text\n- [x] task two"
+	md := "# DisplayName\n- [ ] task one\nregular text\n- [x] task two"
 	result, removedItem := RemoveChecklistItem(md, "task one")
 
-	r.Equal("# Header\nregular text\n- [x] task two", result)
+	r.Equal("# DisplayName\nregular text\n- [x] task two", result)
 	r.Equal("task one", removedItem)
 }
 
@@ -456,10 +456,10 @@ func TestRemoveCompletedChecklistItemsAllCompleted(t *testing.T) {
 func TestRemoveCompletedChecklistItemsWithRegularText(t *testing.T) {
 	r := require.New(t)
 
-	md := "# Header\n- [ ] unchecked\nregular text\n- [x] completed"
+	md := "# DisplayName\n- [ ] unchecked\nregular text\n- [x] completed"
 	result, removedMD := RemoveCompletedChecklistItems(md)
 
-	r.Equal("# Header\n- [ ] unchecked\nregular text", result)
+	r.Equal("# DisplayName\n- [ ] unchecked\nregular text", result)
 	r.Equal("- [x] completed\n", removedMD)
 }
 

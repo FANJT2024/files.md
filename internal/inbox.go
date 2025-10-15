@@ -241,7 +241,7 @@ func readBlocks(content string) []string {
 				blocks = append(blocks, strings.TrimSpace(currentBlock.String()))
 				currentBlock.Reset()
 			}
-			// Header is always its own block
+			// DisplayName is always its own block
 			blocks = append(blocks, line)
 		} else if isTimestamp {
 			// Save previous block if exists

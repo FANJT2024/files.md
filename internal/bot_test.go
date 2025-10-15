@@ -3859,10 +3859,10 @@ func TestExtractTitleAndContent_SimpleMessage(t *testing.T) {
 
 	bot := NewBot(-1, nil, nil, nil, nil)
 
-	msg := "Simple Header"
+	msg := "Simple DisplayName"
 	title, content, err := bot.extractHeaderAndBody(msg, 33)
 	r.NoError(err)
-	r.Equal("Simple Header", title)
+	r.Equal("Simple DisplayName", title)
 	r.Equal("", content)
 }
 
@@ -3871,10 +3871,10 @@ func TestExtractTitleAndContent_MultilineMessage(t *testing.T) {
 
 	bot := NewBot(-1, nil, nil, nil, nil)
 
-	msg := "Header Line\nThis is the content"
+	msg := "DisplayName Line\nThis is the content"
 	title, content, err := bot.extractHeaderAndBody(msg, 33)
 	r.NoError(err)
-	r.Equal("Header Line", title)
+	r.Equal("DisplayName Line", title)
 	r.Equal("This is the content", content)
 }
 
@@ -3898,10 +3898,10 @@ func TestExtractTitleAndContent_TitleSameAsContent(t *testing.T) {
 
 	bot := NewBot(-1, nil, nil, nil, nil)
 
-	msg := "Identical Header"
+	msg := "Identical DisplayName"
 	title, content, err := bot.extractHeaderAndBody(msg, 33)
 	r.NoError(err)
-	r.Equal("Identical Header", title)
+	r.Equal("Identical DisplayName", title)
 	r.Equal("", content)
 }
 
@@ -3910,11 +3910,11 @@ func TestExtractTitleAndContent_ContentStartsWithTitle(t *testing.T) {
 
 	bot := NewBot(-1, nil, nil, nil, nil)
 
-	msg := "Header Line\nHeader Line\nAdditional content"
+	msg := "DisplayName Line\nDisplayName Line\nAdditional content"
 	title, content, err := bot.extractHeaderAndBody(msg, 33)
 	r.NoError(err)
-	r.Equal("Header Line", title)
-	r.Equal("Header Line\nAdditional content", content)
+	r.Equal("DisplayName Line", title)
+	r.Equal("DisplayName Line\nAdditional content", content)
 }
 
 func TestExtractTitleAndContent_TitleNeedsSanitization(t *testing.T) {
@@ -3922,12 +3922,12 @@ func TestExtractTitleAndContent_TitleNeedsSanitization(t *testing.T) {
 
 	bot := NewBot(-1, nil, nil, nil, nil)
 
-	msg := "Invalid/Header?Name\nContent here"
+	msg := "Invalid/DisplayName?Name\nContent here"
 
 	title, content, err := bot.extractHeaderAndBody(msg, 33)
 	r.NoError(err)
-	r.Equal("Invalid／Header？Name", title)
-	r.Equal("Invalid/Header?Name\nContent here", content)
+	r.Equal("Invalid／DisplayName？Name", title)
+	r.Equal("Invalid/DisplayName?Name\nContent here", content)
 }
 
 func TestMoveToExistingNote_Success(t *testing.T) {
