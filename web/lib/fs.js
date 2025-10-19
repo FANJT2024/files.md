@@ -167,8 +167,24 @@ async function writeMediaFile(fileName, file) {
     }
 }
 
-function generateSafeFileName(originalName) {
+function generateSafeFilename(originalName) {
     const now = new Date();
     const timestamp = `${String(now.getDate()).padStart(2, '0')}.${String(now.getMonth() + 1).padStart(2, '0')}.${now.getFullYear()} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
     return `${timestamp}-${originalName}`.replace(/[<>:"/\\|?*\s]/g, '-');
+}
+
+function sanitizeFilename(filename) {
+    return Object.entries({
+        '<': '＜',
+        '>': '＞',
+        ':': '꞉',
+        '"': '″',
+        '|': '⼁',
+        '\\': '＼',
+        '?': '？',
+        '*': '﹡',
+        '\x00': '',
+        '/': '／'
+    }).reduce((result, [forbidden, safe]) =>
+        result.replaceAll(forbidden, safe), filename);
 }

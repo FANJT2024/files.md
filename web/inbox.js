@@ -342,7 +342,7 @@ chatInput.addEventListener('paste', async (e) => {
         if (item.kind === 'file' && item.type.startsWith('image/')) {
             e.preventDefault();
             const file = item.getAsFile();
-            const fileName = generateSafeFileName(file.name);
+            const fileName = generateSafeFilename(file.name);
 
             const saved = await writeMediaFile(fileName, file);
             if (saved) {
@@ -682,7 +682,7 @@ function attachEventListeners() {
             (async () => {
                 for (const msg of msgs) {
                     const [header, body] = extractHeaderAndBody(msg, MAX_TITLE_LENGTH);
-                    const path = joinPath('/', btn.dataset.dir, header) + '.md';
+                    const path = joinPath('/', btn.dataset.dir, sanitizeFilename(header)) + '.md';
                     for (const msg of msgs) {
                         console.log(path, body);
                         await moveFromInbox(msg, async () => {
