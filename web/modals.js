@@ -274,8 +274,7 @@ class SearchModal {
                 listItem.textContent = trimPrefix(`${dirName}/${title}`, '/');
             }
             listItem.setAttribute('data-path', path);
-            listItem.setAttribute('data-index', index);
-            listItem.onclick = () => this.handleClick(path);
+            listItem.onclick = () => this.moveToFile(path);
 
             listItem.onmousemove = () => {
                 document.querySelectorAll('#search-results li').forEach(li => li.classList.remove('focused'));
@@ -289,7 +288,7 @@ class SearchModal {
         this.updateFocusedItem();
     }
 
-    async handleClick(path) {
+    async moveToFile(path) {
         if (this.selectedMsgText !== null) {
             const selectedMessages = document.querySelectorAll('.message.selected');
 
@@ -300,7 +299,7 @@ class SearchModal {
                 messagesToRemove = selectedMessages;
             } else {
                 const btn = document.querySelector(`.message[data-text="${this.selectedMsgText}"] button`);
-                msgs = [btn.closest('.message').querySelector('.message-content').textContent];
+                msgs = [this.selectedMsgText];
                 messagesToRemove = [btn.closest('.message')];
             }
 
@@ -328,7 +327,7 @@ class SearchModal {
         const resultsList = document.getElementById('search-results').querySelectorAll('li');
         if (resultsList[this.focusedIndex]) {
             const path = resultsList[this.focusedIndex].getAttribute('data-path');
-            this.handleClick(path);
+            this.moveToFile(path);
         }
     }
 
@@ -388,7 +387,7 @@ class SearchModal {
 
 class MoveModal {
     constructor() {
-        this.messageIndex = null;
+        this.selectedMsgText = null;
         this.focusedIndex = 0;
         this.init();
     }
@@ -437,9 +436,9 @@ class MoveModal {
         });
     }
 
-    open(messageIndex = null, buttonElement = null) {
+    open(selectedMsgText = null, buttonElement = null) {
         searchModal.close();
-        this.messageIndex = messageIndex;
+        this.selectedMsgText = selectedMsgText;
 
         let modal = document.getElementById('move');
         modal.style.display = 'flex';
@@ -447,7 +446,7 @@ class MoveModal {
         const inputField = document.getElementById('move-input');
         inputField.focus();
 
-        if (buttonElement && this.messageIndex !== null) {
+        if (buttonElement && this.selectedMsgText !== null) {
             const rect = buttonElement.getBoundingClientRect();
             const modalHeight = 300;
             const viewportHeight = window.innerHeight;
@@ -492,7 +491,7 @@ class MoveModal {
     close() {
         document.getElementById('move').style.display = 'none';
         document.getElementById('move').classList.remove('modal-reversed');
-        this.messageIndex = null;
+        this.selectedMsgText = null;
     }
 
     getMoveDestinations() {
@@ -542,9 +541,7 @@ class MoveModal {
             const listItem = document.createElement('li');
             listItem.textContent = dir;
             listItem.setAttribute('data-path', dataDir);
-            listItem.setAttribute('data-index', index);
-
-            listItem.onclick = () => this.handleClick(dir);
+            listItem.onclick = () => this.moveToDir(dir);
 
             listItem.onmousemove = () => {
                 document.querySelectorAll('#move-results li').forEach(li => li.classList.remove('focused'));
@@ -563,7 +560,7 @@ class MoveModal {
         const resultsList = document.getElementById('move-results').querySelectorAll('li');
         if (resultsList[this.focusedIndex]) {
             const toDir = resultsList[this.focusedIndex].getAttribute('data-path');
-            this.handleClick(toDir);
+            this.moveToDir(toDir);
         }
     }
 
@@ -580,36 +577,50 @@ class MoveModal {
         });
     }
 
-    handleClick(toDir) {
-        if (this.messageIndex !== null) {
-            const selectedMessages = document.querySelectorAll('.message.selected');
-            let indices = [];
-            let messagesToRemove = [];
-            if (selectedMessages.length > 0) {
-                indices = Array.from(selectedMessages).map(msg => msg.dataset.index);
-                messagesToRemove = selectedMessages;
-            } else {
-                indices = [this.messageIndex.toString()];
-                const btn = document.querySelector(`.message[data-index="${this.messageIndex}"] button`);
-                messagesToRemove = [btn.closest('.message')];
-            }
-
-            sendCmd('mv', [toDir, indices.join(',')]);
-            messagesToRemove.forEach(message => {
-                message.classList.add('removing');
-                setTimeout(() => {
-                    message.remove();
-                }, 300);
-            });
-            chatInput.focus();
-            renderSidebar();
-            this.close();
-        } else {
+    moveToDir(toDir) {
+        if (this.selectedMsgText === null) {
             log('CLICKED ON folder to move', toDir);
             moveCurrentFile(toDir).then(() => {
                 this.close();
             });
+            return;
         }
+
+        const selectedMessages = document.querySelectorAll('.message.selected');
+        let msgs = [];
+        let messagesToRemove = [];
+        if (selectedMessages.length > 0) {
+            msgs = Array.from(selectedMessages).map(msg => msg.querySelector('.message-content').textContent);
+            messagesToRemove = selectedMessages;
+        } else {
+            const btn = document.querySelector(`.message[data-text="${this.selectedMsgText}"] button`);
+            msgs = [this.selectedMsgText];
+            messagesToRemove = [btn.closest('.message')];
+        }
+
+        (async () => {
+            for (const msg of msgs) {
+                const [header, body] = extractHeaderAndBody(msg, MAX_TITLE_LENGTH);
+                const path = joinPath('/', toDir, sanitizeFilename(header)) + '.md';
+                for (const msg of msgs) {
+                    console.log(path, body);
+                    await moveFromInbox(msg, async () => {
+                        await write(path, body)
+                    });
+                }
+            }
+            await renderMessages();
+        })();
+
+        messagesToRemove.forEach(message => {
+            message.classList.add('removing');
+            setTimeout(() => {
+                message.remove();
+            }, 300);
+        });
+        chatInput.focus();
+        renderSidebar();
+        this.close();
     }
 }
 

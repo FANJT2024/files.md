@@ -576,7 +576,7 @@ function attachEventListeners() {
             if (searchModalElement.style.display !== 'none' && searchModalElement.style.display !== '') {
                 searchModal.close();
             } else {
-                searchModal.open('', btn.closest('.message-content').textContent, e.target);
+                searchModal.open('', btn.closest('.message').querySelector('.message-content'), e.target);
             }
         });
     });
@@ -589,7 +589,7 @@ function attachEventListeners() {
             if (moveModalElement.style.display !== 'none' && moveModalElement.style.display !== '') {
                 moveModal.close();
             } else {
-                moveModal.open(btn.dataset.index, e.target);
+                moveModal.open(btn.closest('.message').querySelector('.message-content').textContent, e.target);
             }
         });
     });
