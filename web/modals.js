@@ -218,9 +218,9 @@ class SearchModal {
             // TODO move to css
             const positionAbove = spaceBelow < modalHeight && spaceAbove > spaceBelow;
             modal.style.position = 'fixed';
-            modal.style.right = '20px';
-            modal.style.left = '';
-            modal.style.transform = '';
+
+            modal.style.left = '50%';
+            modal.style.transform = 'translateX(-50% + 150px)';
             modal.style.width = '320px';
 
             if (positionAbove) {
@@ -458,8 +458,10 @@ class MoveModal {
 
             const positionAbove = spaceBelow < modalHeight && spaceAbove > spaceBelow;
             modal.style.position = 'fixed';
-            modal.style.right = '20px';
-            modal.style.left = '';
+
+            modal.style.left = '50%';
+            modal.style.transform = 'translateX(-50% + 150px)';
+
             modal.style.transform = '';
             modal.style.width = '320px';
 

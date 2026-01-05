@@ -134,7 +134,10 @@
     opacity: 0;
     transition: opacity 0.2s;
     position: absolute;
-    left: -8px;
+
+    left: 50%;
+    transform: translateX(-50%);
+
     bottom: -4px;
 }
 
