@@ -155,9 +155,10 @@
 .cm-s-hypermd-light span.cm-property {
     color: black;
 }
-.cm-s-hypermd-light span.cm-operator {
-    color: black;
-}
+/* MODIFIED */
+/* .cm-s-hypermd-light span.cm-operator { */
+/*     color: black; */
+/* } */
 .cm-s-hypermd-light span.cm-comment {
     color: #4F9F5F;
 }
