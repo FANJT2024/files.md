@@ -94,6 +94,7 @@ Read 4K randomly from SSD = 150,000 ns
 ```
 
 ## ADRs (Architecture Decision Records)
+- Tried to move web/* stuff in the root folder for simplicity. Bad decision - there should be an explicit dir which we can use as public DOCROOT on our server.
 - Switched to [link] for links. The [link](full%20path) syntax is too overwhelming and clunky, plus we don't want to deal with path changes.
 - Removed WASM. I had a bug when a message was removed from Inbox.txt, and was not added to a file (I pressed "move to file" button). I wasn't able to reproduce the issue, but what I found is a lot of complexity. JS -> Go (writeFile) -> Go awaiting a promise from JS -> JS Golang runtime somewhere in between -> JS (writeFile) -> Go (returning from promise) -> Sending results back to JS. And it has to be done in a separate goroutine, because both WASM and JS are running in the same thread. Also, Golang's WASM is still experimental. We have too many components and a lot of uncertainty involved. I didn't want to implement same functionality in JS back then, at the solution served for some time. Now it's time to reimplement the functionality in JS and give up all this complexity. Also, inbox.wasm is ~8MB and I wanted the application to be really small.  
 - Decided to use OPFS as an initial driver for file system. Better browsers support, less hustle for users. The app starts with OPFS driver by default, if needed, user can replace the driver with Local FileSystem API by opening a local dir. DirHandle would be saved to IndexedDB in such scenario and reused every time.
