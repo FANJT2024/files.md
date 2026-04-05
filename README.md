@@ -1,9 +1,9 @@
 <img src="https://github.com/zakirullin/files.md/raw/main/web/icon.png" alt="Files.md logo" title="Files.md" align="right" height="76" />
 
 # What is it?
-<img src="https://github.com/zakirullin/files.md/raw/main/web/files.md.png" alt="Files.md screenshot" title="Files.md"/>  
-
 A simple application for your `.md` files.
+
+<img src="https://github.com/zakirullin/files.md/raw/main/web/files.md.png" alt="Files.md screenshot" title="Files.md"/>
 
 You can store whole your life:
 - 📝 Notes, Projects
