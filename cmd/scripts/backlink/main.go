@@ -15,7 +15,7 @@ import (
 	"golang.org/x/exp/slices"
 	"golang.org/x/text/unicode/norm"
 
-	"zakirullin/stuffbot/internal/fs"
+	"zakirullin/stuffbot/server/fs"
 )
 
 func main() {

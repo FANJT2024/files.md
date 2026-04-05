@@ -16,12 +16,12 @@ import (
 
 	"zakirullin/stuffbot/config"
 	"zakirullin/stuffbot/i18n"
-	"zakirullin/stuffbot/internal"
-	"zakirullin/stuffbot/internal/db"
-	"zakirullin/stuffbot/internal/fs"
-	"zakirullin/stuffbot/internal/sched/worker"
-	"zakirullin/stuffbot/internal/server"
-	"zakirullin/stuffbot/internal/userconfig"
+	"zakirullin/stuffbot/server"
+	"zakirullin/stuffbot/server/db"
+	"zakirullin/stuffbot/server/fs"
+	"zakirullin/stuffbot/server/sched/worker"
+	"zakirullin/stuffbot/server/server"
+	"zakirullin/stuffbot/server/userconfig"
 	"zakirullin/stuffbot/pkg/tg"
 	"zakirullin/stuffbot/pkg/txt"
 )
