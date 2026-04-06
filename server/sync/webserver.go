@@ -107,7 +107,7 @@ func router(serverLogger *log.Logger) *http.ServeMux {
 	r.HandleFunc("/syncText", corsMiddleware(panicMiddleware(tokenMiddleware(SyncText))))
 	r.HandleFunc("/syncMedias", corsMiddleware(panicMiddleware(tokenMiddleware(SyncMedias))))
 	r.HandleFunc("/syncMedia", corsMiddleware(panicMiddleware(tokenMiddleware(SyncMedia))))
-	r.HandleFunc("/token", corsMiddleware(panicMiddleware(corsMiddleware(IssueToken))))
+	r.HandleFunc("/token", corsMiddleware(panicMiddleware(IssueToken)))
 
 	r.HandleFunc("GET /habits_v2/{userID}", func(w http.ResponseWriter, r *http.Request) {
 		userID, err := strconv.ParseInt(r.PathValue("userID"), 10, 64)
@@ -258,9 +258,15 @@ func panicMiddleware(next http.HandlerFunc) http.HandlerFunc {
 
 func corsMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "*")
+		origin := r.Header.Get("Origin")
+		if origin == config.BotCfg.AppHost {
+			w.Header().Set("Access-Control-Allow-Origin", origin)
+		}
+
+		w.Header().Set("Access-Control-Allow-Credentials", "true")
 		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
 		w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, Authorization, X-CSRF-OneTimeToken, Version")
+		w.Header().Set("Vary", "Origin")
 
 		if r.Method == "OPTIONS" {
 			w.WriteHeader(http.StatusOK)

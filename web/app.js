@@ -29,6 +29,7 @@ async function init() {
             // Exchange one-time token for permanent token
             const response = await fetch(`${API_HOST}/token`, {
                 method: 'POST',
+                credentials: 'include',
                 headers: {
                     'Content-Type': 'application/json'
                 },

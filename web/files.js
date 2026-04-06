@@ -309,6 +309,7 @@ async function syncLocalFileWithServer(path) {
             const clientLastModified = file.lastModified;
             let response = await fetch(`${API_HOST}/syncText`, {
                 method: 'POST',
+                credentials: 'include',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': localStorage.getItem('token'),
@@ -409,6 +410,7 @@ async function syncMedia() {
 
                 const response = await fetch(`${API_HOST}/syncMedia`, {
                     method: 'POST',
+                    credentials: 'include',
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': localStorage.getItem('token'),
@@ -438,6 +440,7 @@ async function syncMedia() {
     try {
         const response = await fetch(`${API_HOST}/syncMedias`, {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': localStorage.getItem('token'),
@@ -462,6 +465,7 @@ async function syncMedia() {
                 // Fetch binary file
                 const response = await fetch(`${API_HOST}/syncMedia`, {
                     method: 'POST',
+                    credentials: 'include',
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': localStorage.getItem('token')
@@ -1340,6 +1344,7 @@ async function post(endpoint, data) {
     try {
         let response = await fetch(`${API_HOST}/${endpoint}`, {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': localStorage.getItem('token'),

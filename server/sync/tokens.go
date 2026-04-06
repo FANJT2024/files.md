@@ -24,6 +24,8 @@ import (
 const (
 	TokenLength            = 32
 	OneTimeTokenExpiration = 10 * time.Minute
+	AuthCookieName         = "token"
+	AuthCookieMaxAge       = 10 * 365 * 24 * 60 * 60 // ~10 years
 )
 
 var (
@@ -72,6 +74,18 @@ func findUserID(token string) (int64, bool) {
 	return userID, true
 }
 
+func setAuthCookie(w http.ResponseWriter, token string) {
+	http.SetCookie(w, &http.Cookie{
+		Name:     AuthCookieName,
+		Value:    token,
+		Path:     "/",
+		MaxAge:   AuthCookieMaxAge,
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteNoneMode,
+	})
+}
+
 func IssueToken(w http.ResponseWriter, r *http.Request) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -90,6 +104,8 @@ func IssueToken(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid or expired token", http.StatusUnauthorized)
 		return
 	}
+
+	setAuthCookie(w, permanentToken)
 
 	w.Header().Set("Content-Type", "application/json")
 	err := json.NewEncoder(w).Encode(map[string]string{"token": permanentToken})
@@ -114,7 +130,17 @@ func tokenMiddleware(next http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 
-		token := r.Header.Get("Authorization")
+		// Try cookie first, fall back to Authorization header.
+		var token string
+		fromCookie := false
+		if cookie, err := r.Cookie(AuthCookieName); err == nil && cookie.Value != "" {
+			token = cookie.Value
+			fromCookie = true
+		}
+		if token == "" {
+			token = r.Header.Get("Authorization")
+		}
+
 		userID, ok := findUserID(token)
 		if !ok {
 			blockedIPsMutex.Lock()
@@ -123,6 +149,11 @@ func tokenMiddleware(next http.HandlerFunc) http.HandlerFunc {
 
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
+		}
+
+		// Migrate old clients from Authorization header to cookie.
+		if !fromCookie {
+			setAuthCookie(w, token)
 		}
 
 		ctx := context.WithValue(r.Context(), "userID", userID)

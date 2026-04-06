@@ -13,7 +13,7 @@ type BotConfig struct {
 	StorageDir     string `default:"./storage"  envconfig:"STORAGE_DIR"`
 	BotAPIToken    string `required:"true" envconfig:"BOT_API_TOKEN"`
 	ConfigFilename string `default:"config.json"`
-	ApiHost        string `default:"" envconfig:"API_HOST"`
+	APIHost        string `default:"" envconfig:"API_HOST"`
 	AppHost        string `default:"" envconfig:"APP_HOST"`
 	ServerCertDir  string `default:"/tmp" envconfig:"CERT_DIR"`
 	TokensDir      string `default:"/tmp" envconfig:"TOKENS_DIR"`
