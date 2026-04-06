@@ -142,6 +142,8 @@ func issueNewPermanentToken(r *http.Request) (string, bool) {
 		return "", false
 	}
 
+	r.Body = http.MaxBytesReader(nil, r.Body, MaxTokenSize)
+
 	var req struct {
 		OneTimeToken string `json:"oneTimeToken"`
 	}

@@ -20,6 +20,12 @@ const (
 	StatusNotModified     = "notModified"
 	StatusUpdatedOnServer = "updatedOnServer"
 	StatusMerged          = "merged"
+
+	MaxTextSize   = 5 << 20   // 5 MB
+	MaxTextsSize  = 10 << 20  // 10 MB
+	MaxMediaSize  = 20 << 20  // 20 MB
+	MaxMediasSize = 512 << 10 // 512 KB
+	MaxTokenSize  = 4 << 10   // 4 KB
 )
 
 var OnTodayUpdate = func(userID int64) {}
@@ -57,6 +63,8 @@ func SyncTexts(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
+
+	r.Body = http.MaxBytesReader(w, r.Body, MaxTextsSize)
 
 	var request syncRequest
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
@@ -247,6 +255,8 @@ func SyncText(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
+
+	r.Body = http.MaxBytesReader(w, r.Body, MaxTextSize)
 
 	var clientFile file
 	if err := json.NewDecoder(r.Body).Decode(&clientFile); err != nil {

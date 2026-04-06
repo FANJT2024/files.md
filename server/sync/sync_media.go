@@ -28,6 +28,8 @@ func SyncMedias(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	r.Body = http.MaxBytesReader(w, r.Body, MaxMediasSize)
+
 	if err := json.NewDecoder(r.Body).Decode(&syncMediasRequest); err != nil {
 		http.Error(w, "Invalid syncMediasRequest JSON", http.StatusBadRequest)
 		return
@@ -88,6 +90,8 @@ func SyncMedia(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
+
+	r.Body = http.MaxBytesReader(w, r.Body, MaxMediaSize)
 
 	var clientMedia media
 	body, err := io.ReadAll(r.Body)
