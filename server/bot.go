@@ -229,6 +229,17 @@ func NewBot(userID int64, tg Chat, fs *fs.FS, db Database, cfg *userconfig.Confi
 	return &Bot{userID, tg, fs, db, cfg}
 }
 
+func (b *Bot) warnIfQuotaExceeded() {
+	if fs.IsUnlimitedQuota(b.userID, config.ServerCfg.UnlimitedQuotaIDs) {
+		return
+	}
+	exceeded, err := b.fs.ExceedsQuota(config.ServerCfg.StorageQuotaKB)
+	if err != nil || !exceeded {
+		return
+	}
+	b.tg.Send(b.userID, "⚠️ Storage quota exceeded. Please delete some files to continue syncing.", nil, tg.MarkupHTML)
+}
+
 // Reply to incoming text message, command or inline query
 func (b *Bot) Reply(u Update) error {
 	// Handle inline queries.
@@ -477,6 +488,7 @@ func (b *Bot) extractCmd(u Update) (*tg.Cmd, error) {
 }
 
 func (b *Bot) saveFromTextMsg(u Update) error {
+	defer b.warnIfQuotaExceeded()
 	msg := extractMarkdown(u)
 	if len(msg) == 0 {
 		return fmt.Errorf("save: empty message")
@@ -527,6 +539,7 @@ func (b *Bot) saveFromTextMsg(u Update) error {
 
 // TODO test collapsing from both regular messages and images
 func (b *Bot) saveFromImage(u Update) error {
+	defer b.warnIfQuotaExceeded()
 	content, err := b.saveImage(u)
 	if err != nil {
 		return fmt.Errorf("save from image: %w", err)

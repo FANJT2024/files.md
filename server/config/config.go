@@ -9,16 +9,18 @@ import (
 )
 
 type Config struct {
-	WorkingDir     string
-	StorageDir     string `default:"./storage"  envconfig:"STORAGE_DIR"`
-	BotAPIToken    string `required:"true" envconfig:"BOT_API_TOKEN"`
-	ConfigFilename string `default:"config.json"`
-	APIHost        string `default:"" envconfig:"API_HOST"`
-	AppHost        string `default:"" envconfig:"APP_HOST"`
-	ServerCertDir  string `default:"/tmp" envconfig:"CERT_DIR"`
-	TokensDir      string `default:"/tmp" envconfig:"TOKENS_DIR"`
-	TokensSalt     string `envconfig:"TOKENS_SALT"`
-	ServerLogFile  string `default:"/tmp/server.log" envconfig:"LOG_FILE"`
+	WorkingDir        string
+	StorageDir        string `default:"./storage"  envconfig:"STORAGE_DIR"`
+	BotAPIToken       string `required:"true" envconfig:"BOT_API_TOKEN"`
+	ConfigFilename    string `default:"config.json"`
+	APIHost           string `default:"" envconfig:"API_HOST"`
+	AppHost           string `default:"" envconfig:"APP_HOST"`
+	ServerCertDir     string `default:"/tmp" envconfig:"CERT_DIR"`
+	TokensDir         string `default:"/tmp" envconfig:"TOKENS_DIR"`
+	TokensSalt        string `envconfig:"TOKENS_SALT"`
+	ServerLogFile     string `default:"/tmp/server.log" envconfig:"LOG_FILE"`
+	StorageQuotaKB    int64  `default:"1024" envconfig:"STORAGE_QUOTA_KB"` // 1MB
+	UnlimitedQuotaIDs string `envconfig:"UNLIMITED_QUOTA_IDS"`
 }
 
 var ServerCfg Config

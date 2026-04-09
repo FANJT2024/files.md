@@ -98,10 +98,10 @@ func router(serverLogger *log.Logger) *http.ServeMux {
 
 	// TODO CHECK that user id belongs to oneTimeToken ID, or get userID by oneTimeToken id
 	// TODO for further safety, remove * cors?
-	r.HandleFunc("/syncTexts", corsMiddleware(panicMiddleware(tokenMiddleware(SyncTexts))))
-	r.HandleFunc("/syncText", corsMiddleware(panicMiddleware(tokenMiddleware(SyncText))))
-	r.HandleFunc("/syncMedias", corsMiddleware(panicMiddleware(tokenMiddleware(SyncMedias))))
-	r.HandleFunc("/syncMedia", corsMiddleware(panicMiddleware(tokenMiddleware(SyncMedia))))
+	r.HandleFunc("/syncTexts", corsMiddleware(panicMiddleware(tokenMiddleware(quotaMiddleware(SyncTexts)))))
+	r.HandleFunc("/syncText", corsMiddleware(panicMiddleware(tokenMiddleware(quotaMiddleware(SyncText)))))
+	r.HandleFunc("/syncMedias", corsMiddleware(panicMiddleware(tokenMiddleware(quotaMiddleware(SyncMedias)))))
+	r.HandleFunc("/syncMedia", corsMiddleware(panicMiddleware(tokenMiddleware(quotaMiddleware(SyncMedia)))))
 	r.HandleFunc("/token", corsMiddleware(panicMiddleware(IssueToken)))
 
 	r.HandleFunc("GET /habits_v2/{userID}", func(w http.ResponseWriter, r *http.Request) {
@@ -226,6 +226,39 @@ func (fw *FilteredWriter) Write(p []byte) (n int, err error) {
 	}
 
 	return fw.writer.Write(p)
+}
+
+func quotaMiddleware(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		uid := userID(r)
+		if fs.IsUnlimitedQuota(uid, config.ServerCfg.UnlimitedQuotaIDs) {
+			next(w, r)
+			return
+		}
+
+		userFS, err := fs.NewUserFS(uid)
+		if err != nil {
+			slog.Error("Quota check: error creating user FS", "error", err)
+			next(w, r)
+			return
+		}
+
+		exceeded, err := userFS.ExceedsQuota(config.ServerCfg.StorageQuotaKB)
+		if err != nil {
+			slog.Error("Quota check: error checking quota", "error", err)
+			next(w, r)
+			return
+		}
+
+		if exceeded {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusRequestEntityTooLarge)
+			w.Write([]byte(`{"error":"Storage quota exceeded"}`))
+			return
+		}
+
+		next(w, r)
+	}
 }
 
 func panicMiddleware(next http.HandlerFunc) http.HandlerFunc {
