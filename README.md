@@ -21,12 +21,10 @@ Maybe. But this time:
 - Works offline
 - Local first, you own all your files
 - Fully open source, you can tweak it however you want
-- Radically simple code. **Easy for one person or an LLM to understand**
+- Radically simple code. **One person or an LLM can fit the whole project in head**
 - Portable, no build systems, just open `web/index.html` 
 - Out of the box synchronization
-- The server is just one binary 
-- You can set up the server inside your protected network in seconds
-- You can also use iCloud/Dropbox/Google Drive for sync
+- The server is just one binary (or use iCloud/Dropbox/Google Drive for sync)
 - Telegram Bot as an on-the-go entry point to your files
 
 ## Are there enough features and plugins?
