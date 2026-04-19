@@ -631,6 +631,9 @@ window.addEventListener('focus', async () => {
 
     // We don't want to do heavy stuff when chat is open.
     if (isInbox || isMemFS) {
+        if (isInbox) {
+            document.getElementById('chat-input').focus();
+        }
         return false;
     }
 
