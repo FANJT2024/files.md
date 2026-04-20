@@ -362,6 +362,10 @@ async function syncLocalFileWithServer(path) {
             log('Opening file after sync');
             await openFile(path);
         }
+        if (path === editor2.path) {
+            log('Opening file after sync in editor2');
+            await openFile(path, true, 'editor2-textarea');
+        }
         log('File synced with server');
     } finally {
         isSyncingFileWithServer[path] = false;
@@ -1266,7 +1270,8 @@ async function syncCurrentEditor(switchAwayEditor = false) {
         try {
             if (!switchAwayEditor) {
                 isMessingWithCurrentEditor = false;
-                await openFile(path, false);
+                const el = currentEditor === editor2 ? 'editor2-textarea' : 'editor-textarea';
+                await openFile(path, false, el);
             }
         } catch (error) {
             console.error('Error opening file:', error);
