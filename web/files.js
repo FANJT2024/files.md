@@ -1006,15 +1006,7 @@ async function openFile(path, saveToHistory = true, el = 'editor-textarea') {
 
     const start = performance.now();
 
-    // Check if we're loading the same file — save cursor + exact scroll position
-    // so a same-file reload (external sync) doesn't jump the viewport.
-    let cursorPos = null;
-    let scrollTop = null;
-    if (currentEditor.path === path) {
-        log('saving cursor');
-        cursorPos = currentEditor.getCursor();
-        scrollTop = currentEditor.getScrollInfo().top;
-    }
+    const isSameFile = currentEditor.path === path;
 
     let filename = toFilename(path);
     const header = toHeader(filename)
@@ -1037,37 +1029,48 @@ async function openFile(path, saveToHistory = true, el = 'editor-textarea') {
         history.pushState(state, '');
     }
 
-    // New editor is initialized, even if the file is same.
-    // If we reuse an old editor - visual glitches appear.
-    if (el === 'editor-textarea') {
-        editor = initEditor(document.getElementById(el));
-        currentEditor = editor;
-        hideEditor2();
-    } else if (el === 'editor2-textarea') {
-        editor2 = initEditor(document.getElementById(el));
-        currentEditor = editor2;
-        showEditor2();
-    }
-
-    currentEditor.path = path;
-    currentEditor.getDoc().setValue(content);
-    currentEditor.clearHistory();
-    currentEditor.markClean();
-
-    if (cursorPos !== null) {
-        log('cursor not null');
-        // {scroll: false} — setCursor would otherwise scroll the cursor into view
-        // and clobber the scrollTo below.
-        currentEditor.setCursor(cursorPos.line, cursorPos.ch, {scroll: false});
-        // TODO only focus if there's no quick dialogue
-        currentEditor.focus();
-        if (scrollTop !== null) {
-            currentEditor.refresh();
-            currentEditor.scrollTo(null, scrollTop);
-        } else {
-            currentEditor.scrollTo(null, 0);
+    if (isSameFile) {
+        // Same-file reload (e.g. API sync or changes from local fs). Diff old and new content and
+        // replaceRange only the differing middle — cursor and scroll stay put
+        // naturally when the edit doesn't span them.
+        currentEditor.path = path;
+        const oldContent = currentEditor.getValue();
+        if (oldContent !== content) {
+            let prefixEnd = 0;
+            const minLen = Math.min(oldContent.length, content.length);
+            while (prefixEnd < minLen && oldContent[prefixEnd] === content[prefixEnd]) {
+                prefixEnd++;
+            }
+            let oldEnd = oldContent.length;
+            let newEnd = content.length;
+            while (oldEnd > prefixEnd && newEnd > prefixEnd
+            && oldContent[oldEnd - 1] === content[newEnd - 1]) {
+                oldEnd--;
+                newEnd--;
+            }
+            currentEditor.replaceRange(
+                content.substring(prefixEnd, newEnd),
+                currentEditor.posFromIndex(prefixEnd),
+                currentEditor.posFromIndex(oldEnd)
+            );
         }
+        currentEditor.markClean();
     } else {
+        // New editors are initialized to avoid visual glitches and refresh plugins' state.
+        if (el === 'editor-textarea') {
+            editor = initEditor(document.getElementById(el));
+            currentEditor = editor;
+            hideEditor2();
+        } else if (el === 'editor2-textarea') {
+            editor2 = initEditor(document.getElementById(el));
+            currentEditor = editor2;
+            showEditor2();
+        }
+
+        currentEditor.path = path;
+        currentEditor.getDoc().setValue(content);
+        currentEditor.clearHistory();
+        currentEditor.markClean();
         focusLastLine();
     }
 
