@@ -6,8 +6,8 @@ A simple application for your `.md` files.
 <img src="https://github.com/zakirullin/files.md/raw/main/web/app.png" alt="Files.md screenshot" title="Files.md"/>
 
 You can store whole your life:
-- 📄 Documents
-- 📝 Notes, Projects
+- 📌 Notes
+- 📝 Documents, Projects
 - 💚 Journal, Habits
 - ✅ Checklists, Tasks
 
@@ -57,14 +57,14 @@ I'll quote [I Deleted My Second Brain](https://www.joanwestenberg.com/i-deleted-
 > 
 > **Eventually, I realized I had created a new problem: deferral. The more my system grew, the more I deferred the work of thought to some future self who would sort, tag, distill, and extract the gold.**
 
-The “Second Brain” is fancy. _It is thrilling._
+The Second Brain is fancy. _It is thrilling._
 
-You invest a lot in structure, guru templates, AI workflows, plugins, tweaking.  
-You are very motivated to scrape the wisdom of the whole internet into your second brain.  
-You get dopamine spikes every time your second brain becomes smarter and bigger.  
-There’s some beauty in your system and neatly organized notes. _You feel good._  
+Advanced guru templates, plugins...  
+One wants to scrape the wisdom of the whole internet.  
+There’s some beauty in this neat system. Every new note brings dopamine.  
+_Second brain gets better and better._  
 
-However, your first brain never actually gets smarter. _The actual job is postponed._  
+However, the first brain never actually gets smarter. _The actual job is postponed._  
 
 There's another path.  
 
