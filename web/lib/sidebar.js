@@ -1345,53 +1345,63 @@ async function folderContextMenu(e, node) {
     });
 }
 
+// addNewFileItem/addNewDirItem add the "New file"/"New dir" rows that create
+// under parentDir. parentDir is '/' for root or '/some/dir' for a sub-path.
+function addNewFileItem(item, parentDir) {
+    item('New file', async () => {
+        const name = prompt('New file name:');
+        if (name === null) return;
+        const trimmed = name.trim().replace(/^\/+|\/+$/g, '');
+        if (!trimmed) return;
+        if (trimmed.includes('/')) { alert('File name cannot contain "/"'); return; }
+        const finalName = trimmed.endsWith('.md') ? trimmed : trimmed + '.md';
+        const newFilePath = (parentDir === '/' ? '' : parentDir) + '/' + finalName;
+        try {
+            await write(newFilePath, '');
+            addMemFile(newFilePath, {
+                isFile: true,
+                content: '',
+                lastModified: 0,
+                path: newFilePath,
+                handle: await getFileHandle(newFilePath),
+            });
+            setServerFile(newFilePath, '', 0);
+            saveServerFiles();
+            await renderSidebar();
+            await openFile(newFilePath);
+        } catch (err) {
+            console.error('new file failed', err);
+            alert('Create file failed: ' + (err && err.message ? err.message : err));
+        }
+    });
+}
+
+function addNewDirItem(item, parentDir) {
+    item('New dir', async () => {
+        const name = prompt('New directory name:');
+        if (name === null) return;
+        const trimmed = name.trim().replace(/^\/+|\/+$/g, '');
+        if (!trimmed) return;
+        if (trimmed.includes('/')) { alert('Folder name cannot contain "/"'); return; }
+        const newDirPath = (parentDir === '/' ? '' : parentDir) + '/' + trimmed;
+        try {
+            await createDir(newDirPath);
+            await renderSidebar();
+        } catch (err) {
+            console.error('new dir failed', err);
+            alert('Create dir failed: ' + (err && err.message ? err.message : err));
+        }
+    });
+}
+
 // rootContextMenu handles right-click on empty sidebar area — offers creating
 // a new file or directory at the root.
 function rootContextMenu(e) {
     if (e.defaultPrevented) return;
     e.preventDefault();
     openContextMenu(e, (item) => {
-        item('New file', async () => {
-            const name = prompt('New file name:');
-            if (name === null) return;
-            const trimmed = name.trim().replace(/^\/+|\/+$/g, '');
-            if (!trimmed) return;
-            if (trimmed.includes('/')) { alert('File name cannot contain "/"'); return; }
-            const finalName = trimmed.endsWith('.md') ? trimmed : trimmed + '.md';
-            const newFilePath = '/' + finalName;
-            try {
-                await write(newFilePath, '');
-                addMemFile(newFilePath, {
-                    isFile: true,
-                    content: '',
-                    lastModified: 0,
-                    path: newFilePath,
-                    handle: await getFileHandle(newFilePath),
-                });
-                setServerFile(newFilePath, '', 0);
-                saveServerFiles();
-                await renderSidebar();
-                await openFile(newFilePath);
-            } catch (err) {
-                console.error('new file failed', err);
-                alert('Create file failed: ' + (err && err.message ? err.message : err));
-            }
-        });
-
-        item('New dir', async () => {
-            const name = prompt('New directory name:');
-            if (name === null) return;
-            const trimmed = name.trim().replace(/^\/+|\/+$/g, '');
-            if (!trimmed) return;
-            if (trimmed.includes('/')) { alert('Folder name cannot contain "/"'); return; }
-            try {
-                await createDir('/' + trimmed);
-                await renderSidebar();
-            } catch (err) {
-                console.error('new dir failed', err);
-                alert('Create dir failed: ' + (err && err.message ? err.message : err));
-            }
-        });
+        addNewFileItem(item, '/');
+        addNewDirItem(item, '/');
     });
 }
 
@@ -1403,6 +1413,9 @@ document.addEventListener('DOMContentLoaded', () => {
 function buildFolderMenu(item, dirPath) {
     const dirName = dirPath.split('/').filter(Boolean).pop();
     const pathIsInsideDir = (p) => p && (p === dirPath || p.startsWith(dirPath + '/'));
+
+    addNewFileItem(item, dirPath);
+    addNewDirItem(item, dirPath);
 
     item('Rename', async () => {
         const newName = prompt('Rename folder:', dirName);
@@ -1471,19 +1484,10 @@ function buildFileMenu(item, filePath) {
     });
 
     item('Move', async () => {
-        const target = prompt('Move to folder (leave empty for root):', parentDir === '/' ? '' : parentDir.replace(/^\//, ''));
-        if (target === null) return;
-        const trimmed = target.trim().replace(/^\/+|\/+$/g, '');
-        const newParent = trimmed ? '/' + trimmed : '';
-        const newPath = newParent + '/' + fileName;
-        if (newPath === filePath) return;
         try {
-            if (isCurrent) {
-                await moveCurrentFile(trimmed);
-            } else {
-                await moveFile(filePath, newPath);
-            }
-            await renderSidebar();
+            if (!isCurrent) await openFile(filePath);
+            document.getElementById('move-input').value = '';
+            moveModal.open();
         } catch (err) {
             console.error('move failed', err);
             alert('Move failed: ' + (err && err.message ? err.message : err));
@@ -1505,46 +1509,6 @@ function buildFileMenu(item, filePath) {
         }
     });
 
-    item('New file', async () => {
-        const name = prompt('New file name:');
-        if (name === null) return;
-        const trimmed = name.trim().replace(/^\/+|\/+$/g, '');
-        if (!trimmed) return;
-        if (trimmed.includes('/')) { alert('File name cannot contain "/"'); return; }
-        const finalName = trimmed.endsWith('.md') ? trimmed : trimmed + '.md';
-        const newFilePath = (parentDir === '/' ? '' : parentDir) + '/' + finalName;
-        try {
-            await write(newFilePath, '');
-            addMemFile(newFilePath, {
-                isFile: true,
-                content: '',
-                lastModified: 0,
-                path: newFilePath,
-                handle: await getFileHandle(newFilePath),
-            });
-            setServerFile(newFilePath, '', 0);
-            saveServerFiles();
-            await renderSidebar();
-            await openFile(newFilePath);
-        } catch (err) {
-            console.error('new file failed', err);
-            alert('Create file failed: ' + (err && err.message ? err.message : err));
-        }
-    });
-
-    item('New dir', async () => {
-        const name = prompt('New directory name:');
-        if (name === null) return;
-        const trimmed = name.trim().replace(/^\/+|\/+$/g, '');
-        if (!trimmed) return;
-        if (trimmed.includes('/')) { alert('Folder name cannot contain "/"'); return; }
-        const newDirPath = (parentDir === '/' ? '' : parentDir) + '/' + trimmed;
-        try {
-            await createDir(newDirPath);
-            await renderSidebar();
-        } catch (err) {
-            console.error('new dir failed', err);
-            alert('Create dir failed: ' + (err && err.message ? err.message : err));
-        }
-    });
+    addNewFileItem(item, parentDir);
+    addNewDirItem(item, parentDir);
 }
