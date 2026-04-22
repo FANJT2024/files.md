@@ -1086,6 +1086,7 @@ function TreeView(root, container, options) {
                 name = trimFirstEmoji(name);
             } else if (node.toString() === 'inbox') {
                 ret += '<span class="tj_mod_icon" style="padding-right: 2px">' + TreeConfig.chat_icon + '</span>';
+                name = 'today';
             } else if (icon != "") {
                 ret += '<span class="tj_mod_icon">' + icon + '</span>';
             } else if ((icon = TreeUtil.getProperty(options, "leaf_icon", "")) != "") {
