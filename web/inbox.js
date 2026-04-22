@@ -247,54 +247,6 @@ function initInbox() {
     });
 }
 
-async function receive(modifiedPaths) {
-    log('Wasm: receiving:', modifiedPaths);
-    // We only update sidebar if we're in either chat mode
-    let noChatModal = !document.getElementById('chat-container').classList.contains('modal');
-    let noFullScreenChat = currentEditor.path !== INBOX_PATH
-    if (noChatModal && noFullScreenChat) {
-        return;
-    }
-
-    await renderMessages();
-    scrollToBottom();
-
-    const fileHandle = await getFileHandle(INBOX_PATH);
-    let file = await fileHandle.getFile();
-    // TODO inmemory lastmodified should be reloaded
-    if (currentEditor !== null && currentEditor.path === INBOX_PATH) {
-        // Update in-memory lastModified
-        if (getMemFile(INBOX_PATH) !== null) {
-            getMemFile(INBOX_PATH).lastModified = file.lastModified;
-        } else {
-            addMemFile(INBOX_PATH, {
-                isFile: true,
-                past: INBOX_PATH,
-                lastModified: file.lastModified,
-                handle: fileHandle,
-            })
-        }
-    }
-    chatIsClean = true;
-
-    for (const path of modifiedPaths) {
-        const memFile = getMemFile(path);
-        if (memFile !== null) {
-            continue;
-        }
-
-        addMemFile(path, {
-            isFile: true,
-            path: path,
-            lastModified: 0,
-            handle: await getFileHandle(path, false),
-        });
-    }
-    if (modifiedPaths.length !== 0) {
-        renderSidebar('', modifiedPaths);
-    }
-}
-
 function scrollToBottom() {
     setTimeout(function () {
         inbox.scrollTop = inbox.scrollHeight;
