@@ -8,7 +8,7 @@ test.beforeEach(async ({page}) => {
 });
 
 test('send message to chat', async ({ page }) => {
-    await page.click(`#tree .tj_description:has-text('today')`);
+    await page.click(`#tree .tree-description:has-text('today')`);
     await page.waitForSelector('#inbox');
     await page.keyboard.type('My message');
     await page.waitForTimeout(300);
@@ -37,7 +37,7 @@ test('send to chat and move to recent file', async ({ page }) => {
         init(document.getElementById("editor"));
     });
 
-    await page.click(`#tree .tj_description:has-text('today')`);
+    await page.click(`#tree .tree-description:has-text('today')`);
     await page.waitForSelector('#inbox');
     await page.keyboard.type('My message');
     await page.waitForTimeout(300);
@@ -80,14 +80,14 @@ async function clickAndExpectContent(page, filePath, expectedContent) {
     const file = parts[parts.length - 1];
 
     for (const dir of dirs) {
-        const isSelected = await page.locator(`#tree .tj_description:has-text('${dir}')`).evaluate(el => el.classList.contains('expanded'));
+        const isSelected = await page.locator(`#tree .tree-description:has-text('${dir}')`).evaluate(el => el.classList.contains('expanded'));
         if (!isSelected) {
-            await page.click(`#tree .tj_description:has-text('${dir}')`);
+            await page.click(`#tree .tree-description:has-text('${dir}')`);
             await page.waitForTimeout(100);
         }
     }
 
-    await page.click(`#tree .tj_description:has-text('${file}')`);
+    await page.click(`#tree .tree-description:has-text('${file}')`);
     await page.waitForTimeout(200);
 
     const codeMirrorContent = await page.evaluate(() => {

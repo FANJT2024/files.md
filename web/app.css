@@ -680,15 +680,15 @@ body.dragging * {
     100% { color: var(--col-link); background-color: var(--col-bg-active); opacity: 1; }
 }
 
-/*.tj_container li ul li ul li .tj_description {*/
+/*.tree-container li ul li ul li .tree-description {*/
 /*    padding-left: 120px !important;*/
 /*}*/
 
-.tj_container ul ul li span.tj_description:not(.tj_leaf) {
+.tree-container ul ul li span.tree-description:not(.tree-leaf) {
     padding-left: 2em;
 }
 
-.tj_container ul ul ul li span.tj_description {
+.tree-container ul ul ul li span.tree-description {
     padding-left: 4em !important;
 }
 

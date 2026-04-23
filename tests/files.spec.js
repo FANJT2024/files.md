@@ -884,7 +884,7 @@ test('pilaf should not be copied to happiness when opening link in editor2 after
 
     await page.waitForTimeout(500);
 
-    const nodeSel = (name) => `#tree .tj_description:text-is('${name}')`;
+    const nodeSel = (name) => `#tree .tree-description:text-is('${name}')`;
     const expand = async (dir) => {
         const locator = page.locator(nodeSel(dir));
         const isExpanded = await locator.evaluate(el => el.classList.contains('expanded'));
@@ -950,14 +950,14 @@ async function clickAndExpectContent(page, filePath, expectedContent) {
     const dirs = parts;
 
     for (const dir of dirs) {
-        const isSelected = await page.locator(`#tree .tj_description:has-text('${dir}')`).evaluate(el => el.classList.contains('expanded'));
+        const isSelected = await page.locator(`#tree .tree-description:has-text('${dir}')`).evaluate(el => el.classList.contains('expanded'));
         if (!isSelected) {
-            await page.click(`#tree .tj_description:has-text('${dir}')`);
+            await page.click(`#tree .tree-description:has-text('${dir}')`);
             await page.waitForTimeout(100);
         }
     }
 
-    await page.click(`#tree .tj_description:has-text('${file}')`);
+    await page.click(`#tree .tree-description:has-text('${file}')`);
     await page.waitForTimeout(200);
 
     const codeMirrorContent = await page.evaluate(() => {

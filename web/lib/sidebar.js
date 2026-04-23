@@ -626,12 +626,12 @@ function TreeView(root, container, options) {
 
     function createDropIndicator() {
         const indicator = document.createElement('div');
-        indicator.className = 'tj_drop_indicator';
+        indicator.className = 'tree-drop_indicator';
         return indicator;
     }
 
     function findNodeElement(element) {
-        while (element && !element.tj_node) {
+        while (element && !element.tree_node) {
             element = element.parentElement;
         }
         return element;
@@ -722,7 +722,7 @@ function TreeView(root, container, options) {
             return;
         }
 
-        container.classList.add("tj_container");
+        container.classList.add("tree-container");
         var cnt = document.createElement("ul");
 
         if (TreeUtil.getProperty(options, "show_root", true)) {
@@ -741,7 +741,7 @@ function TreeView(root, container, options) {
     function setupContainerDropZone() {
         container.addEventListener('dragover', function (e) {
             e.preventDefault();
-            if (dropIndicator && !e.target.closest('.tj_description')) {
+            if (dropIndicator && !e.target.closest('.tree-description')) {
                 dropIndicator.remove();
                 dropIndicator = null;
             }
@@ -783,8 +783,8 @@ function TreeView(root, container, options) {
 
     function createGroupHeader(headerText, headerClass) {
         var li_header = document.createElement("li");
-        li_header.className = "tj_group_header " + headerClass;
-        li_header.innerHTML = '<span class="tj_group_title">' + headerText + '</span>';
+        li_header.className = "tree-group_header " + headerClass;
+        li_header.innerHTML = '<span class="tree-group_title">' + headerText + '</span>';
         return li_header;
     }
 
@@ -807,8 +807,8 @@ function TreeView(root, container, options) {
     function renderNode(node) {
         var li_outer = document.createElement("li");
         var span_desc = document.createElement("span");
-        span_desc.className = "tj_description";
-        span_desc.tj_node = node;
+        span_desc.className = "tree-description";
+        span_desc.tree_node = node;
 
         var needsGroupHeader = false;
         var groupHeaderText = "";
@@ -888,7 +888,7 @@ function TreeView(root, container, options) {
 
             draggedNode = node;
             draggedElement = span_desc;
-            span_desc.classList.add("tj_dragging");
+            span_desc.classList.add("tree-dragging");
 
             e.dataTransfer.effectAllowed = 'move';
             e.dataTransfer.setData('text/plain', node.toString());
@@ -896,7 +896,7 @@ function TreeView(root, container, options) {
         });
 
         span_desc.addEventListener("dragend", function (e) {
-            span_desc.classList.remove("tj_dragging");
+            span_desc.classList.remove("tree-dragging");
             if (dropIndicator) {
                 dropIndicator.remove();
                 dropIndicator = null;
@@ -927,7 +927,7 @@ function TreeView(root, container, options) {
                 dropIndicator.style.width = rect.width + 'px';
                 document.body.appendChild(dropIndicator);
             } else if (position === 'inside' && !node.isLeaf()) {
-                span_desc.classList.add("tj_drop_target");
+                span_desc.classList.add("tree-drop_target");
                 return;
             }
 
@@ -935,14 +935,14 @@ function TreeView(root, container, options) {
         });
 
         span_desc.addEventListener("dragleave", function (e) {
-            span_desc.classList.remove("tj_drop_target");
+            span_desc.classList.remove("tree-drop_target");
         });
 
         span_desc.addEventListener("drop", function (e) {
             e.preventDefault();
             e.stopPropagation();
 
-            span_desc.classList.remove("tj_drop_target");
+            span_desc.classList.remove("tree-drop_target");
 
             if (!draggedNode || draggedNode === node) return;
 
@@ -974,11 +974,11 @@ function TreeView(root, container, options) {
         span_desc.addEventListener("click", function (e) {
             var cur_el = e.target;
 
-            while (typeof cur_el.tj_node === "undefined" || cur_el.classList.contains("tj_container")) {
+            while (typeof cur_el.tree_node === "undefined" || cur_el.classList.contains("tree-container")) {
                 cur_el = cur_el.parentElement;
             }
 
-            var node_cur = cur_el.tj_node;
+            var node_cur = cur_el.tree_node;
 
             if (typeof node_cur === "undefined") {
                 return;
@@ -1017,11 +1017,11 @@ function TreeView(root, container, options) {
         span_desc.addEventListener("contextmenu", function (e) {
             var cur_el = e.target;
 
-            while (typeof cur_el.tj_node === "undefined" || cur_el.classList.contains("tj_container")) {
+            while (typeof cur_el.tree_node === "undefined" || cur_el.classList.contains("tree-container")) {
                 cur_el = cur_el.parentElement;
             }
 
-            var node_cur = cur_el.tj_node;
+            var node_cur = cur_el.tree_node;
 
             if (typeof node_cur === "undefined") {
                 return;
@@ -1042,27 +1042,27 @@ function TreeView(root, container, options) {
 
             let name = node.toString();
             if (startsWithEmoji(name)) {
-                ret += '<span class="tj_mod_icon" ><div style="width: 22px; text-align: center; transform: translateY(-2px);">' + getFirstEmoji(node.toString()) + '</div></span>';
+                ret += '<span class="tree-mod_icon" ><div style="width: 22px; text-align: center; transform: translateY(-2px);">' + getFirstEmoji(node.toString()) + '</div></span>';
                 name = trimFirstEmoji(name);
             } else if (node.toString() === 'inbox') {
-                ret += '<span class="tj_mod_icon" style="padding-right: 2px">' + TreeConfig.chat_icon + '</span>';
+                ret += '<span class="tree-mod_icon" style="padding-right: 2px">' + TreeConfig.chat_icon + '</span>';
                 name = 'today';
             } else if (icon != "") {
-                ret += '<span class="tj_mod_icon">' + icon + '</span>';
+                ret += '<span class="tree-mod_icon">' + icon + '</span>';
             } else if ((icon = TreeUtil.getProperty(options, "leaf_icon", "")) != "") {
-                ret += '<span class="tj_icon">' + icon + '</span>';
+                ret += '<span class="tree-icon">' + icon + '</span>';
             } else if (node.toString() === 'today') {
-                ret += '<span class="tj_mod_icon">' + TreeConfig.tasks_icon + '</span>';
+                ret += '<span class="tree-mod_icon">' + TreeConfig.tasks_icon + '</span>';
             } else if (node.toString() === 'later') {
-                ret += '<span class="tj_mod_icon">' + TreeConfig.tasks_icon + '</span>';
+                ret += '<span class="tree-mod_icon">' + TreeConfig.tasks_icon + '</span>';
             } else if (node.toString().endsWith('_') || node.toString() === 'read' || node.toString() === 'watch' || node.toString() === 'shop') {
-                ret += '<span class="tj_mod_icon">' + TreeConfig.checklists_icon + '</span>';
+                ret += '<span class="tree-mod_icon">' + TreeConfig.checklists_icon + '</span>';
             } else {
-                ret += '<span class="tj_icon">' + TreeConfig.leaf_icon + '</span>';
+                ret += '<span class="tree-icon">' + TreeConfig.leaf_icon + '</span>';
             }
 
             span_desc.innerHTML = ret + name + "</span>";
-            span_desc.classList.add("tj_leaf");
+            span_desc.classList.add("tree-leaf");
             if (node.toString() === 'inbox') {
                 span_desc.classList.add("sidebar-inbox");
             }
@@ -1071,25 +1071,25 @@ function TreeView(root, container, options) {
         } else {
             var ret = '';
             if (node.isExpanded()) {
-                ret += '<span class="tj_mod_icon">' + TreeConfig.open_icon + '</span>';
+                ret += '<span class="tree-mod_icon">' + TreeConfig.open_icon + '</span>';
             } else {
                 if (node.toString().startsWith('_') && node.toString().endsWith('_')) {
-                    ret += '<span class="tj_mod_icon">' + TreeConfig.checklists_icon + '</span>';
+                    ret += '<span class="tree-mod_icon">' + TreeConfig.checklists_icon + '</span>';
                 } else if (node.toString() === 'today' || node.toString() === 'later') {
-                    ret += '<span class="tj_mod_icon">' + TreeConfig.tasks_icon + '</span>';
+                    ret += '<span class="tree-mod_icon">' + TreeConfig.tasks_icon + '</span>';
                 } else {
-                    ret += '<span class="tj_mod_icon">' + TreeConfig.close_icon + '</span>';
+                    ret += '<span class="tree-mod_icon">' + TreeConfig.close_icon + '</span>';
                 }
             }
 
             var icon = TreeUtil.getProperty(node.getOptions(), "icon", "");
             icon = '';
             if (icon != "") {
-                ret += '<span class="tj_icon">' + icon + '</span>';
+                ret += '<span class="tree-icon">' + icon + '</span>';
             } else if ((icon = TreeUtil.getProperty(options, "parent_icon", "")) != "") {
-                ret += '<span class="tj_icon">' + icon + '</span>';
+                ret += '<span class="tree-icon">' + icon + '</span>';
             } else {
-                ret += '<span class="tj_icon">' + TreeConfig.parent_icon + '</span>';
+                ret += '<span class="tree-icon">' + TreeConfig.parent_icon + '</span>';
             }
 
             span_desc.innerHTML = ret + node.toString() + '</span>';
@@ -1300,7 +1300,7 @@ async function folderContextMenu(e, node) {
     // Visually mark the targeted node as selected while the menu is open, so
     // scrolling the menu or moving the mouse doesn't make it unclear which
     // node the action applies to.
-    const span = e.target.closest('.tj_description');
+    const span = e.target.closest('.tree-description');
     if (span) span.classList.add('selected');
 
     openContextMenu(e, (item) => {
