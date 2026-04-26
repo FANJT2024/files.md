@@ -64,17 +64,33 @@ func (b *Bot) showTimezone(_ []string) error {
 	var kb tg.Keyboard
 	timezones := []string{
 		"UTC",
-		"Asia/Nicosia",
-		"Europe/Warsaw",
+		
+		// Europe
 		"Europe/Belgrade",
-		"Europe/Podgorica",
-		"Europe/Moscow",
-		"Africa/Johannesburg",
-		"Africa/Cairo",
+		"Europe/Berlin",
+		"Europe/Istanbul",
 		"Europe/London",
-		"America/Lima",
-		"America/Santiago",
+		"Europe/Madrid",
+		"Europe/Moscow",
+		"Europe/Paris",
+		"Europe/Podgorica",
+		"Europe/Warsaw",
+
+		// Asia
+		"Asia/Nicosia",
+		"Asia/Tbilisi",
+		"Asia/Tokyo",
+
+		// Africa
+		"Africa/Cairo",
+		"Africa/Johannesburg",
+
+		// Americas
 		"America/Buenos_Aires",
+		"America/Lima",
+		"America/Los_Angeles",
+		"America/New_York",
+		"America/Santiago",
 	}
 
 	for _, tz := range timezones {
