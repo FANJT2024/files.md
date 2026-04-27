@@ -320,8 +320,6 @@ func TestFSGetAllNotesInAllDirsForEmptyQuery(t *testing.T) {
 	r.NoError(err)
 	err = fs.Touch("b", "b.md")
 	r.NoError(err)
-	err = fs.Touch("today", "c.md")
-	r.NoError(err)
 
 	notes, err := fs.SearchFiles("")
 	r.NoError(err)

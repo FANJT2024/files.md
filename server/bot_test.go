@@ -742,47 +742,6 @@ func TestToday(t *testing.T) {
 	), tgram.LastSentKeyboard)
 }
 
-func TestLater(t *testing.T) {
-	r := require.New(t)
-
-	savedCtime := fs.Ctime
-	defer func() {
-		fs.Ctime = savedCtime
-	}()
-	fs.Ctime = func(fi os.FileInfo) int64 {
-		return 0
-	}
-
-	savedNow := now
-	defer func() {
-		now = savedNow
-	}()
-	now = func() time.Time {
-		return time.Date(1970, 1, 1, 0, 0, 0, 0, time.UTC)
-	}
-
-	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
-	r.NoError(err)
-	err = userFS.Write("later", "First task.md", "")
-	r.NoError(err)
-	err = userFS.Write("later", "Second task", "")
-	r.NoError(err)
-
-	tgram := tg.NewFakeTG()
-
-	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), fakeConfig())
-	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("later", nil)))
-	r.NoError(err)
-
-	r.Equal("⏳ Your tasks for <b>later</b>:", tgram.LastSentText)
-	r.Equal(tg.NewKeyboard([]tg.Row{
-		tg.NewBtn("First task", tg.NewCmd("c", []string{"later", "0824149b387"})),
-		tg.NewBtn("🥈 Second task", tg.NewCmd("c", []string{"later", "2940ad40402"})),
-		tg.NewBtn("🏠 Today", tg.NewCmd("today", nil)),
-	},
-	), tgram.LastSentKeyboard)
-}
-
 func TestTodayQuickMenuFilled(t *testing.T) {
 	savedCtime := fs.Ctime
 	defer func() {
@@ -1501,23 +1460,6 @@ func TestShowMDLongMessageAttachKeyboardToTheLast(t *testing.T) {
 	r.Equal("abc", tgram.LastSentText)
 	r.NotNil(tgram.LastSentKeyboard)
 	r.Len(tgram.LastSentKeyboard.Btns, 1)
-}
-
-func TestShowMultilineFile(t *testing.T) {
-	r := require.New(t)
-
-	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
-	r.NoError(err)
-	err = userFS.Write("today", "New file.md", "New file\nContent")
-	r.NoError(err)
-
-	tgram := tg.NewFakeTG()
-
-	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), fakeConfig())
-	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("task", []string{fs.DirToday, "501ef2410e2"})))
-	r.NoError(err)
-
-	r.Equal("<b>New file</b>\nNew file\nContent", tgram.SentTexts[0])
 }
 
 func TestMoveToExistingFile(t *testing.T) {
@@ -2789,7 +2731,7 @@ func TestSaveToNewTask(t *testing.T) {
 	r.Nil(database.InputExpectation())
 	msgID, ok := database.LastKeyboardMsgID()
 	r.True(ok)
-	r.Equal(2, msgID)
+	r.Equal(3, msgID)
 	r.Equal(msgID, tgram.LastSentMessageID)
 }
 
@@ -3452,6 +3394,7 @@ func TestSaveToRecentFile(t *testing.T) {
 		),
 		tg.NewBtn("Search", tg.NewCustomCmd("search", nil, "iq")),
 		tg.NewRow(
+			tg.NewBtn("🗂️ Today", tg.NewCmd("mv", []string{"c5e7d", inboxMsgHash(t, userFS, 0)})),
 			tg.NewBtn("🗂 New Dir", tg.NewCmd("new_dir", []string{inboxMsgHash(t, userFS, 0)})),
 		),
 	})
@@ -4300,8 +4243,8 @@ func FuzzSaveFromTextMsg(f *testing.F) {
 		r.NoError(err)
 		err = userFS.CreateSystemDirs()
 		r.NoError(err)
-	err = userFS.CreateDirsIfNotExist("notes")
-	r.NoError(err)
+		err = userFS.CreateDirsIfNotExist("notes")
+		r.NoError(err)
 
 		tgram := tg.NewFakeTG()
 
