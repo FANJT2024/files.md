@@ -212,18 +212,26 @@ func (b *Bot) moveFromInbox(
 			recordContent = recordContent[len(tsMatch[0]):]
 		}
 
-		// Parse full timestamp from header date + time
+		// Parse full timestamp from header date + time. Fall back to today
+		// when the entry has no `#### date` header above it (plain `- [ ] body`).
+		var timestamp time.Time
 		dateRegex := regexp.MustCompile(`^#### (\d{1,2}) ([A-Za-z]+), [A-Za-z]+`)
 		dateMatches := dateRegex.FindStringSubmatch(headerDate)
-		if len(dateMatches) < 3 {
-			return fmt.Errorf("failed to parse header date for block %d", blockIndex)
-		}
-
-		// Build full timestamp
-		dateTimeStr := fmt.Sprintf("%s %s %s", dateMatches[1], dateMatches[2], timeStr)
-		timestamp, err := time.Parse("2 January 15:04", dateTimeStr)
-		if err != nil {
-			return fmt.Errorf("failed to parse timestamp for block %d: %w", blockIndex, err)
+		if len(dateMatches) >= 3 {
+			dateTimeStr := fmt.Sprintf("%s %s %s", dateMatches[1], dateMatches[2], timeStr)
+			parsed, err := time.Parse("2 January 15:04", dateTimeStr)
+			if err != nil {
+				return fmt.Errorf("failed to parse timestamp for block %d: %w", blockIndex, err)
+			}
+			timestamp = parsed
+		} else {
+			today := now()
+			t, err := time.Parse("15:04", timeStr)
+			if err == nil {
+				timestamp = time.Date(today.Year(), today.Month(), today.Day(), t.Hour(), t.Minute(), 0, 0, today.Location())
+			} else {
+				timestamp = today
+			}
 		}
 
 		msgs = append(msgs, struct {

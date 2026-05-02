@@ -341,7 +341,7 @@ func (b *Bot) handlers() map[string]func([]string) error {
 		CmdShowWatchChecklist:  b.showWatch,
 		CmdShowShopChecklist:   b.showShop,
 		CmdShowSchedule:        b.showSchedule,
-		CmdShowMoveFromToday:   b.showMoveFromTodayAndInbox,
+		CmdShowMoveFromToday:   b.showMoveFromToday,
 		CmdShowSettings:        b.showSettings,
 		CmdShowTimezone:        b.showTimezone,
 		CmdSetTimezone:         b.setTimezone,
@@ -1349,10 +1349,10 @@ func (b *Bot) showPostpone(_ []string) error {
 	return nil
 }
 
-func (b *Bot) showMoveFromTodayAndInbox(_ []string) error {
+func (b *Bot) showMoveFromToday(_ []string) error {
 	var kb tg.Keyboard
 
-	// Show inbox items
+	// Show today inbox items
 	inboxContent, err := b.fs.Read(fs.DirUserRoot, fs.InboxFilename)
 	if err == nil {
 		blocks := readBlocks(inboxContent)

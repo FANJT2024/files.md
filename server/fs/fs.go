@@ -39,7 +39,6 @@ var (
 const (
 	DirUserRoot = "/"
 	DirArchive  = "archive"
-	DirToday    = "today" // TODO remove
 	DirLater    = "later" // TODO remove
 	DirMedia    = "media"
 	DirJournal  = "journal"

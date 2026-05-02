@@ -1625,7 +1625,8 @@ func TestMoveFromTodayAndInbox_ToLater(t *testing.T) {
 	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), fakeConfig())
 
 	// Click the inbox button → moveToLater ships the entry to Later.md.
-	inboxHash := inboxMsgHash(t, userFS, 0)
+	// Block 0 is the top-level "Today task"; the inbox body is block 1.
+	inboxHash := inboxMsgHash(t, userFS, 1)
 	r.NoError(bot.moveToLater([]string{inboxHash}))
 
 	inboxMD, _ := userFS.Read(fs.DirUserRoot, fs.InboxFilename)
@@ -1633,16 +1634,6 @@ func TestMoveFromTodayAndInbox_ToLater(t *testing.T) {
 
 	laterMD, _ := userFS.Read(fs.DirUserRoot, fs.LaterFilename)
 	r.Contains(laterMD, "- [ ] Inbox body")
-
-	// Click the today button → task is removed from Today.md and appended to
-	// Today.md (the handler's first step); user can then pick a target.
-	r.NoError(bot.showMoveToFromToday([]string{fs.Hash("Today task")}))
-
-	todayMD, _ := userFS.Read(fs.DirUserRoot, fs.TodayFilename)
-	r.NotContains(todayMD, "Today task")
-
-	inboxMD, _ = userFS.Read(fs.DirUserRoot, fs.InboxFilename)
-	r.Contains(inboxMD, "Today task")
 }
 
 func TestShowPostpone_WithInbox(t *testing.T) {
@@ -3469,12 +3460,13 @@ func TestSaveToTodayTask(t *testing.T) {
 	err = bot.Reply(tg.NewUpd(-1, "New task"))
 	r.NoError(err)
 
+	// Block 0 is the top-level "Existing task"; the inbox entry "New task" is block 1.
 	kb := tg.NewKeyboard([]tg.Row{
 		tg.NewBtn("Existing task", tg.NewCmd("check_item", []string{"db0a776589b", "04fcfb3c2ef"})),
-		tg.NewBtn("New task", tg.NewCmd("c_ch", []string{inboxMsgHash(t, userFS, 0)})),
+		tg.NewBtn("New task", tg.NewCmd("c_ch", []string{inboxMsgHash(t, userFS, 1)})),
 	})
 
-	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("add_item", []string{"db0a776589b", inboxMsgHash(t, userFS, 0)})))
+	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("add_item", []string{"db0a776589b", inboxMsgHash(t, userFS, 1)})))
 	r.NoError(err)
 
 	kb = tg.NewKeyboard([]tg.Row{
