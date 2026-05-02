@@ -202,12 +202,12 @@ Things like these are easy to remember, but again they drain your mental energy.
 ## Files structure
 You don't have to think about the structure, it is predefined.  
 
-- Notes: `brain/Note.md` (`<category>/*.md`)
-- Projects: `My project.md` (`/*.md`) - projects, important notes
-- Unsorted: `Today.md` - incoming messages, append-only chat log
-- Tasks: `Today.md`, `Later.md` - checklist-based task lists
+- Notes: `brain/Note.md` (`<category>/*.md`, files in subfolders)
+- Projects: `My project.md` (`/*.md`, files in the root directory) - projects, important notes
 - Checklists: `Read.md`, `Watch.md`, `Shop.md` - built-in checklists
 - Journal: `journal/2024.08 August.md` (`journal/<YYYY>.<MM> <Month>.md`)
+- Unsorted: `Today.md` - incoming messages, today's tasks, append-only chat log
+- Tasks: `Later.md` - checklist-based task lists
 - Habits: `habits/Ate consciously.md` (`habits/*.md`)
 - Media: `media/*` - images (png, jpg, webp, gif)
 - Archive: `archive/*`, `archive/Done.md` - completed items
