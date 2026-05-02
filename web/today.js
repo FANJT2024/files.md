@@ -1,14 +1,8 @@
-const INBOX_PATH = '/Today.md';
 let chatIsClean = true; // Are there any unsaved changes?
 
-const inbox = document.getElementById('inbox');
+const today = document.getElementById('inbox');
 const chatInput = document.getElementById('inbox-input');
-const chatButton = document.getElementById('open-inbox-modal');
 const chatContainer = document.getElementById('inbox-container');
-
-const READ_PATH = '/Read.md';
-const SHOP_PATH = '/Shop.md';
-const WATCH_PATH = '/Watch.md';
 
 const MAX_TITLE_LENGTH = 100;
 const RECENT_FILES = 2;
@@ -40,7 +34,7 @@ async function addToInbox() {
         minute: '2-digit'
     });
     const formattedContent = `\n- [ ] \`${timestamp}\` ${text}\n`;
-    await writeAtEnd(INBOX_PATH, formattedContent);
+    await writeAtEnd(TODAY_PATH, formattedContent);
 
     chatInput.value = '';
     chatIsClean = false;
@@ -53,16 +47,16 @@ async function openInbox() {
     chatContainer.style.display = 'flex';
     // chatButton.classList.add('hidden');
 
-    if (currentEditor.path !== INBOX_PATH) {
+    if (currentEditor.path !== TODAY_PATH) {
         const state = {path: editor.path};
         history.pushState(state, '');
     }
 
-    currentEditor.path = INBOX_PATH;
+    currentEditor.path = TODAY_PATH;
 
     const codemirror = document.querySelector('.CodeMirror-wrap');
     codemirror.style.display = 'none';
-    inbox.style.display = 'flex';
+    today.style.display = 'flex';
     chatInput.style.display = 'block';
     hideEditor2();
 
@@ -79,9 +73,9 @@ async function openInboxModal() {
     chatContainer.classList.add('modal');
     chatContainer.style.display = 'flex';
     // chatButton.classList.add('hidden');
-    inbox.style.display = 'block';
+    today.style.display = 'block';
     chatInput.style.display = 'block';
-    inbox.style.display = 'flex';
+    today.style.display = 'flex';
     chatInput.style.display = 'block';
 
     chatInput.focus();
@@ -93,7 +87,7 @@ function closeInboxModal() {
     chatContainer.classList.remove('modal');
     if (!isInbox) {
         chatContainer.style.display = 'none';
-        inbox.style.display = 'none';
+        today.style.display = 'none';
         chatInput.style.display = 'none';
         // chatButton.classList.remove('hidden');
     }
@@ -113,7 +107,7 @@ async function toggleInboxModal() {
 }
 
 async function parseMessagesFromInbox() {
-    const file = await ((await getFileHandle(INBOX_PATH, true)).getFile());
+    const file = await ((await getFileHandle(TODAY_PATH, true)).getFile());
     let chat = await file.text();
 
     // Normalize line endings
@@ -223,7 +217,7 @@ async function saveMessagesToInbox(messages) {
         });
     });
 
-    await write(INBOX_PATH, content);
+    await write(TODAY_PATH, content);
     lastInboxText = content;
 }
 
@@ -234,7 +228,7 @@ async function saveMessagesToInbox(messages) {
 //   - [x] `HH:MM` text    (new, done)
 // and rewrites it to the requested done/undone marker.
 async function toggleInboxLine(timestamp, text, done) {
-    const handle = await getFileHandle(INBOX_PATH, true);
+    const handle = await getFileHandle(TODAY_PATH, true);
     const file = await handle.getFile();
     let content = await file.text();
 
@@ -271,7 +265,7 @@ function initInbox() {
 
 function scrollToBottom() {
     setTimeout(function () {
-        inbox.scrollTop = inbox.scrollHeight;
+        today.scrollTop = today.scrollHeight;
     }, 100);
 }
 
@@ -313,9 +307,8 @@ function getRecentlyModifiedFiles(n) {
         const content = files[filename];
         if (filename && content &&
             ![
-                toFilename(INBOX_PATH),
-                toFilename(CONFIG_PATH),
                 toFilename(TODAY_PATH),
+                toFilename(CONFIG_PATH),
                 toFilename(LATER_PATH),
                 toFilename(WATCH_PATH),
                 toFilename(READ_PATH),
@@ -433,16 +426,16 @@ function attachEventListeners() {
 
             if (e.target.id !== 'inbox-input') {
                 e.preventDefault();
-                const allMessages = inbox.querySelectorAll('.message');
+                const allMessages = today.querySelectorAll('.message');
                 allMessages.forEach(message => message.classList.add('selected'));
             }
         }
     });
 
-    inbox.addEventListener('mousedown', function (e) {
+    today.addEventListener('mousedown', function (e) {
         // If clicking outside messages, prepare for multi-select
         if (!e.target.closest('.message')) {
-            let allMessages = Array.from(inbox.querySelectorAll('.message'));
+            let allMessages = Array.from(today.querySelectorAll('.message'));
             let startMessage = null;
 
             function handleMouseMove(e) {
@@ -493,7 +486,7 @@ function attachEventListeners() {
         if (e.shiftKey) {
             const selectedMessages = document.querySelectorAll('.message.selected');
             if (selectedMessages.length > 0) {
-                const allMessages = Array.from(inbox.querySelectorAll('.message'));
+                const allMessages = Array.from(today.querySelectorAll('.message'));
                 const lastSelected = selectedMessages[selectedMessages.length - 1];
                 const startIndex = allMessages.indexOf(lastSelected);
                 const endIndex = allMessages.indexOf(message);
@@ -511,7 +504,7 @@ function attachEventListeners() {
         message.classList.add('selected');
 
         let startMessage = message;
-        let allMessages = Array.from(inbox.querySelectorAll('.message'));
+        let allMessages = Array.from(today.querySelectorAll('.message'));
 
         function handleMouseMove(e) {
             const currentMessage = e.target.closest('.message');
@@ -540,16 +533,16 @@ function attachEventListeners() {
         document.addEventListener('mouseup', handleMouseUp);
     });
 
-    inbox.addEventListener('click', function (e) {
+    today.addEventListener('click', function (e) {
         // Only clear selection if clicking outside messages AND not dragging
         if (!e.target.closest('.message') && !e.detail > 1) {
             document.querySelectorAll('.message.selected').forEach(m => m.classList.remove('selected'));
         }
     });
 
-    inbox.addEventListener('keydown', function (e) {
+    today.addEventListener('keydown', function (e) {
         if (e.key === 'Escape') {
-            const selectedMessages = inbox.querySelectorAll('.message.selected');
+            const selectedMessages = today.querySelectorAll('.message.selected');
             if (selectedMessages.length > 0) {
                 selectedMessages.forEach(message => message.classList.remove('selected'));
                 e.preventDefault();
@@ -581,7 +574,7 @@ function attachEventListeners() {
     //     });
     // });
 
-    inbox.querySelectorAll('.complete-btn').forEach(btn => {
+    today.querySelectorAll('.complete-btn').forEach(btn => {
         btn.addEventListener('click', async function (e) {
             e.stopPropagation();
             const el = btn.closest('.message');
@@ -596,7 +589,7 @@ function attachEventListeners() {
         });
     });
 
-    inbox.querySelectorAll('.to-file-btn').forEach(btn => {
+    today.querySelectorAll('.to-file-btn').forEach(btn => {
         btn.addEventListener('click', function (e) {
             e.stopPropagation();
             const searchModalElement = document.getElementById('search');
@@ -609,7 +602,7 @@ function attachEventListeners() {
         });
     });
 
-    inbox.querySelectorAll('.to-journal-btn').forEach(btn => {
+    today.querySelectorAll('.to-journal-btn').forEach(btn => {
         btn.addEventListener('click', async function (e) {
             e.stopPropagation();
             const selectedMessages = document.querySelectorAll('.message.selected');
@@ -643,7 +636,7 @@ function attachEventListeners() {
         });
     });
 
-    inbox.querySelectorAll('.to-checklist-btn').forEach(btn => {
+    today.querySelectorAll('.to-checklist-btn').forEach(btn => {
         btn.addEventListener('click', async function (e) {
             e.stopPropagation();
             const selectedMessages = document.querySelectorAll('.message.selected');
@@ -680,7 +673,7 @@ function attachEventListeners() {
         });
     });
 
-    inbox.querySelectorAll('.to-archive-btn').forEach(btn => {
+    today.querySelectorAll('.to-archive-btn').forEach(btn => {
         btn.addEventListener('click', async function (e) {
             e.stopPropagation();
             const selectedMessages = document.querySelectorAll('.message.selected');
@@ -719,7 +712,7 @@ function attachEventListeners() {
         });
     });
 
-    inbox.querySelectorAll('.to-recent-btn').forEach(btn => {
+    today.querySelectorAll('.to-recent-btn').forEach(btn => {
         btn.addEventListener('click', async function (e) {
             e.stopPropagation();
             const selectedMessages = document.querySelectorAll('.message.selected');
@@ -755,7 +748,7 @@ function attachEventListeners() {
     });
 
     // Enable editing on double-click
-    inbox.querySelectorAll('.message-content').forEach(content => {
+    today.querySelectorAll('.message-content').forEach(content => {
         content.addEventListener('dblclick', function (e) {
             e.stopPropagation();
             this.style.pointerEvents = 'auto';
@@ -772,10 +765,10 @@ async function renderMessages() {
         return;
     }
     lastInboxText = text;
-    log(`Loaded ${messages.length} messages from ${INBOX_PATH}`);
+    log(`Loaded ${messages.length} messages from ${TODAY_PATH}`);
 
     if (messages.length === 0) {
-        inbox.innerHTML = `
+        today.innerHTML = `
             <div class="empty-state">
                 <img class="empty-icon" src="img/icon.png" alt="">
                 <div class="empty-title">Free your head</div>
@@ -796,7 +789,7 @@ async function renderMessages() {
     `).join('');
 
     // add own class every other message
-    inbox.innerHTML = messages.map((message, i) => `
+    today.innerHTML = messages.map((message, i) => `
         <div class="message ${i % 2 === 1 ? 'own' : ''}${message.done ? ' completed' : ''}" data-text="${escapeHtml(message.text)}" data-timestamp="${message.timestamp}">
             <button class="complete-btn" title="Mark as done">
                 <svg width="22" height="22" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">

@@ -15,7 +15,7 @@ const urlsToCache = [
     '/lib/hypermd.css',
     '/lib/theme-light.css',
     '/lib/theme-dark.css',
-    '/inbox.css',
+    '/today.css',
     '/lib/sidebar.js',
     '/lib/codemirror.js',
     '/lib/core.js',
@@ -44,7 +44,7 @@ const urlsToCache = [
     '/welcome.js',
     '/files.js',
     '/editor.js',
-    '/inbox.js',
+    '/today.js',
     '/modals.js',
 ];
 

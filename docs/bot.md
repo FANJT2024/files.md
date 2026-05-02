@@ -46,7 +46,7 @@ flowchart TB
 The server runs one binary with three long-running components:
 
 - **Telegram update loop** (`cmd/server/server.go`) - long-polls Telegram, routes each update to a per-user goroutine. Per-user channels serialize one user's messages so concurrent edits to the same files can't race.
-- **HTTP sync server** (`server/sync`) - serves the PWA's sync requests (`/syncTexts`, `/syncText`, `/syncMedia`). When the web app changes `Today.md` or the inbox, it calls `OnTodayUpdate` which triggers the bot to send the user a fresh "Today" keyboard so the two stay in lockstep.
+- **HTTP sync server** (`server/sync`) - serves the PWA's sync requests (`/syncTexts`, `/syncText`, `/syncMedia`). When the web app changes `Today.md` or the today, it calls `OnTodayUpdate` which triggers the bot to send the user a fresh "Today" keyboard so the two stay in lockstep.
 - **Worker ticker** - every 5 seconds moves scheduled tasks out of `later` into `today`, and prunes completed checklist items.
 
 Everything reads and writes the same per-user filesystem tree (`UserFS`), which is the single source of truth - `.md` files on disk. The PWA fetches those same files through the sync API.

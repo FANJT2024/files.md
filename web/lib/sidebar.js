@@ -32,7 +32,7 @@ function renderSidebar(focusDir = '', modifiedPaths) {
     root.path = '/';
 
     let inbox = new TreeNode('inbox');
-    inbox.path = INBOX_PATH;
+    inbox.path = TODAY_PATH;
     if ((currentEditor.path === undefined && !isMemFS) || selectedNodes.has('inbox')) {
         inbox.setSelected(true);
     }
@@ -201,7 +201,7 @@ function renderSidebar(focusDir = '', modifiedPaths) {
             return;
         }
 
-        if ([CONFIG_PATH, INBOX_PATH, TODAY_PATH, LATER_PATH].includes(path)) {
+        if ([CONFIG_PATH, TODAY_PATH, LATER_PATH].includes(path)) {
             return;
         }
 
@@ -1271,7 +1271,7 @@ async function folderContextMenu(e, node) {
     const path = node && node.path;
     if (!path || path === '/') return;
 
-    const isFile = !isDir && !path.endsWith('/') && path !== INBOX_PATH;
+    const isFile = !isDir && !path.endsWith('/') && path !== TODAY_PATH;
     if (!isDir && !isFile) return;
 
     // Visually mark the targeted node as selected while the menu is open, so

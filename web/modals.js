@@ -284,7 +284,7 @@ class SearchModal {
             if (path === CONFIG_PATH) {
                 return;
             }
-            if (this.selectedMsgText !== null && path === INBOX_PATH) {
+            if (this.selectedMsgText !== null && path === TODAY_PATH) {
                 return;
             }
 

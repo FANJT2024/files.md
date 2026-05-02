@@ -32,7 +32,7 @@ flowchart TD
     G2 -->|no| SetFlag[isMessingWithCurrentEditor = true;<br/>path = currentEditor.path]
 
     SetFlag --> IsInbox{path == INBOX_PATH?}
-    IsInbox -->|yes| InboxBranch[inbox sync logic]
+    IsInbox -->|yes| InboxBranch[today sync logic]
     InboxBranch --> Ret3([return])
 
     IsInbox -->|no| RenameCheck{firstLine's filename<br/>!= current filename?}

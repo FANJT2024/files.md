@@ -982,13 +982,13 @@ async function openFile(path, saveToHistory = true, el = 'editor-textarea') {
     // We should do this before any awaits.
     isMessingWithCurrentEditor = true;
     try {
-        if (path === INBOX_PATH) {
+        if (path === TODAY_PATH) {
             openInbox();
             return;
         } else {
             const codemirror = document.querySelector('.CodeMirror-wrap');
             codemirror.style.display = 'block';
-            inbox.style.display = 'none';
+            today.style.display = 'none';
             chatInput.style.display = 'none';
             isInbox = false;
         }
@@ -1120,12 +1120,12 @@ async function syncCurrentEditor(switchAwayEditor = false) {
         return path === window.currentEditor.path;
     }
 
-    if (path === INBOX_PATH) {
+    if (path === TODAY_PATH) {
         // Try to load local changes.
         if (chatIsClean) {
             try {
                 let inMemoryLastModified = getMemFile(path)?.lastModified;
-                let file = await ((await getFileHandle(INBOX_PATH)).getFile());
+                let file = await ((await getFileHandle(TODAY_PATH)).getFile());
 
                 // Update last modified in memory.
                 let memFile = getMemFile(path);
@@ -1140,7 +1140,7 @@ async function syncCurrentEditor(switchAwayEditor = false) {
                     log(files);
                     isMessingWithCurrentEditor = false;
                     if (!switchAwayEditor) {
-                        await openFile(INBOX_PATH);
+                        await openFile(TODAY_PATH);
                     }
                     return;
                 }
@@ -1155,7 +1155,7 @@ async function syncCurrentEditor(switchAwayEditor = false) {
 
         if (!switchAwayEditor) {
             try {
-                await syncLocalFileWithServer(INBOX_PATH);
+                await syncLocalFileWithServer(TODAY_PATH);
             } catch (error) {
                 console.error('Error during sync with server:', error);
             }
@@ -1609,7 +1609,7 @@ function findSiblingPath(path) {
     let foundDesiredPath = false;
     let nextPath = null;
     walk(files, (filePath, isFile) => {
-        if (filePath === CONFIG_PATH || filePath === INBOX_PATH) {
+        if (filePath === CONFIG_PATH || filePath === TODAY_PATH) {
             return;
         }
 
@@ -1639,7 +1639,7 @@ function findSiblingPath(path) {
 
 async function removeCurrentFile() {
     const path = currentEditor.path;
-    if (path === INBOX_PATH) {
+    if (path === TODAY_PATH) {
         return;
     }
 
