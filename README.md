@@ -333,6 +333,7 @@ Read 4K randomly from SSD = 150,000 ns
 ```
 
 ## ADRs (Architecture Decision Records)
+- Now hide-token runs synchronously on every change, previously it had 100ms debounce which caused jitter on by word removals in links and formatted texts.
 - Merged Inbox.md and Today.md to Today.md. Inbox name is too abstract, productivity-related and GTD-ish. I want calmness and simplicity. Today is like "the page I live in today".
 - Moved from API_HOST, APP_HOST to API_URL, APP_URL. For different environments it's better to provide more information like desired schema in configuration.
 - Inbox entries in the bot are now identified by a stable content hash (`fs.Hash` of the block with the `- [ ] `/`- [x] ` marker stripped) instead of a positional index, so a button keeps pointing at the right line even if other entries are added/removed/completed in between.
