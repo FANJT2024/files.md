@@ -674,28 +674,32 @@ func TestSaveFromReplyPhotoWithCaption(t *testing.T) {
 //}
 
 func TestCompleteTask(t *testing.T) {
+	savedNow := now
+	defer func() {
+		now = savedNow
+	}()
+	now = func() time.Time {
+		return time.Date(1970, 1, 1, 0, 0, 0, 0, time.UTC)
+	}
+
 	r := require.New(t)
 
 	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
 	r.NoError(err)
 
-	err = userFS.Write("today", "First task.md", "")
+	err = userFS.Write("/", "Today.md", "- [ ] `00:00` New task")
 	r.NoError(err)
 
 	tgram := tg.NewFakeTG()
 
 	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), fakeConfig())
-	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("c", []string{"today", "0824149b387"})))
+	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("c", []string{"58d765d4752"})))
 	r.NoError(err)
 
-	todayTasks, err := bot.fs.FilesAndDirs("today")
+	todayMD, err := userFS.Read("/", "Today.md")
 	r.NoError(err)
-	r.Len(todayTasks, 0)
 
-	completedTasks, err := bot.fs.FilesAndDirs("archive")
-	r.NoError(err)
-	r.Len(completedTasks, 1)
-	r.Equal("First task.md", completedTasks[0].Name)
+	r.Equal("- [x] `00:00` New task", todayMD)
 }
 
 func TestToday(t *testing.T) {
@@ -736,8 +740,8 @@ func TestToday(t *testing.T) {
 
 	r.Equal("<b>2</b> left"+wideSpacer, tgram.LastSentText)
 	r.Equal(tg.NewKeyboard([]tg.Row{
-		tg.NewBtn("First task", tg.NewCmd("c_ch", []string{"060f6b7c9c8"})),
-		tg.NewBtn("🥈 Second task", tg.NewCmd("c_ch", []string{"083d6c37d07"})),
+		tg.NewBtn("First task", tg.NewCmd("c", []string{"060f6b7c9c8"})),
+		tg.NewBtn("🥈 Second task", tg.NewCmd("c", []string{"083d6c37d07"})),
 	},
 	), tgram.LastSentKeyboard)
 }
@@ -774,7 +778,7 @@ func TestTodayQuickMenuFilled(t *testing.T) {
 	r.NoError(err)
 	r.Equal("<b>1</b> left"+wideSpacer, tgram.LastSentText)
 	r.Equal(tg.NewKeyboard([]tg.Row{
-		tg.NewBtn("First task", tg.NewCmd("c_ch", []string{"832a6c2a713"})),
+		tg.NewBtn("First task", tg.NewCmd("c", []string{"832a6c2a713"})),
 		tg.NewRow(
 			tg.NewBtn("📄", tg.NewCmd("files", nil)),
 			tg.NewBtn("☑️", tg.NewCmd("checklists", nil)),
@@ -3460,26 +3464,22 @@ func TestSaveToTodayTask(t *testing.T) {
 	err = bot.Reply(tg.NewUpd(-1, "New task"))
 	r.NoError(err)
 
+	// Click "move to checklist
+	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("today", nil)))
+	r.NoError(err)
 	// Block 0 is the top-level "Existing task"; the inbox entry "New task" is block 1.
 	kb := tg.NewKeyboard([]tg.Row{
-		tg.NewBtn("Existing task", tg.NewCmd("check_item", []string{"db0a776589b", "04fcfb3c2ef"})),
-		tg.NewBtn("New task", tg.NewCmd("c_ch", []string{inboxMsgHash(t, userFS, 1)})),
+		tg.NewBtn("Existing task", tg.NewCmd("c", []string{"04fcfb3c2ef"})),
+		tg.NewBtn("New task", tg.NewCmd("c", []string{"58d765d4752"})),
 	})
 
-	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("add_item", []string{"db0a776589b", inboxMsgHash(t, userFS, 1)})))
-	r.NoError(err)
-
-	kb = tg.NewKeyboard([]tg.Row{
-		tg.NewBtn("New task", tg.NewCmd("check_item", []string{"db0a776589b", "fbd6d26c256"})),
-		tg.NewBtn("Existing task", tg.NewCmd("check_item", []string{"db0a776589b", "04fcfb3c2ef"})),
-	})
 	r.Equal(kb, tgram.LastEditedKeyboard)
 
-	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("check_item", []string{"db0a776589b", "fbd6d26c256"})))
+	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("c", []string{"58d765d4752"})))
 	r.NoError(err)
 
 	kb = tg.NewKeyboard([]tg.Row{
-		tg.NewBtn("Existing task", tg.NewCmd("check_item", []string{"db0a776589b", "04fcfb3c2ef"})),
+		tg.NewBtn("Existing task", tg.NewCmd("c", []string{"04fcfb3c2ef"})),
 	})
 	r.Equal(kb, tgram.LastEditedKeyboard)
 }
@@ -4512,7 +4512,7 @@ func TestShowToday_InboxMixedFormat(t *testing.T) {
 
 	firstBtn, ok := tgram.LastSentKeyboard.Btns[0].(tg.Btn)
 	r.True(ok)
-	r.Equal(tg.Cmd{Name: CmdCompleteFromInbox, Params: []string{inboxBlockHash("- [ ] Plain msg")}, Type: "cmd"}, firstBtn.Cmd)
+	r.Equal(tg.Cmd{Name: CmdComplete, Params: []string{inboxBlockHash("- [ ] Plain msg")}, Type: "cmd"}, firstBtn.Cmd)
 	r.Contains(firstBtn.Name, "Plain msg")
 
 	secondBtn, ok := tgram.LastSentKeyboard.Btns[1].(tg.Btn)
@@ -4520,7 +4520,7 @@ func TestShowToday_InboxMixedFormat(t *testing.T) {
 	// The completed `- [x] `09:10` Done msg` entry is hidden, but the
 	// remaining unchecked entry keeps its own stable hash (unchanged by
 	// completion-toggle behaviour).
-	r.Equal(tg.Cmd{Name: CmdCompleteFromInbox, Params: []string{inboxBlockHash("- [ ] `09:05` New msg")}, Type: "cmd"}, secondBtn.Cmd)
+	r.Equal(tg.Cmd{Name: CmdComplete, Params: []string{inboxBlockHash("- [ ] `09:05` New msg")}, Type: "cmd"}, secondBtn.Cmd)
 	r.Contains(secondBtn.Name, "New msg")
 }
 

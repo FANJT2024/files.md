@@ -42,6 +42,7 @@ func stripInboxEntryPrefix(block string) string {
 // AND identical first line would hash the same. Per-minute resolution makes
 // this rare in practice, and the outcome (acting on the older entry) is
 // harmless — it's still the user's own content with the same first line.
+// !!! TIME IS INCLUDED in the hash !!!
 func inboxBlockHash(block string) string {
 	stripped := inboxMarkerPrefix.ReplaceAllString(block, "")
 	firstLine := strings.SplitN(stripped, "\n", 2)[0]

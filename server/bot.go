@@ -133,7 +133,6 @@ const (
 	CmdShowPostpone                    = "postpone"
 	CmdShowMoveFromToday               = "move"
 	CmdShowMoveTo                      = "s_move"
-	CmdShowMoveToFromToday             = "s_move_t"
 	CmdShowRename                      = "rename"
 	CmdShowRenameFile                  = "rename_file"
 	CmdShowChecklists                  = "checklists"
@@ -141,7 +140,6 @@ const (
 	CmdOpenInApp                       = "app"
 	CmdShowHelp                        = "help"
 	CmdComplete                        = "c"
-	CmdCompleteFromInbox               = "c_ch"
 	CmdPostpone                        = "post"
 	CmdShowLongItem                    = "item"
 	CmdShowLongItemFromInbox           = "item_i"
@@ -292,7 +290,7 @@ func (b *Bot) Reply(u Update) error {
 
 		if callbackQueryID, ok := u.CallbackQueryID(); ok {
 			// We can tolerate an error here, that won't affect UX
-			if cmd.Name == CmdComplete || cmd.Name == CmdCompleteHabit || cmd.Name == CmdCompleteFromInbox {
+			if cmd.Name == CmdCompleteHabit || cmd.Name == CmdComplete {
 				_ = b.tg.AnswerCallbackQuery(callbackQueryID, completedMsg())
 			} else if cmd.Name == CmdShare {
 				_ = b.tg.AnswerCallbackQuery(callbackQueryID, "Shared 💚!")
@@ -324,30 +322,28 @@ func (b *Bot) Reply(u Update) error {
 func (b *Bot) handlers() map[string]func([]string) error {
 	handlers := map[string]func([]string) error{
 		// Direct user commands
-		CmdShowToday:      b.ShowToday,
-		CmdShowStart:      b.showStart,
-		CmdShowLater:      b.showLaterTasks,
-		CmdShowFiles:      b.showFiles,
-		CmdShowDirs:       b.showDirs,
-		CmdShowChecklists: b.showChecklists,
-		CmdShowPostpone:   b.showPostpone,
-		//CmdShowMoveFromToday:  b.showMoveFromToday,
-		CmdShowMoveTo:          b.showMoveTo,
-		CmdShowMoveToFromToday: b.showMoveToFromToday,
-		CmdShowRename:          b.showRename,
-		CmdShowStats:           b.showStats,
-		CmdShowReadChecklist:   b.showRead,
-		CmdRandomNote:          b.randomNote,
-		CmdShowWatchChecklist:  b.showWatch,
-		CmdShowShopChecklist:   b.showShop,
-		CmdShowSchedule:        b.showSchedule,
-		CmdShowMoveFromToday:   b.showMoveFromToday,
-		CmdShowSettings:        b.showSettings,
-		CmdShowTimezone:        b.showTimezone,
-		CmdSetTimezone:         b.setTimezone,
-		CmdOpenInApp:           b.openInApp,
-		CmdShowHelp:            b.showHelp,
-		CmdDownload:            b.download,
+		CmdShowToday:          b.ShowToday,
+		CmdShowStart:          b.showStart,
+		CmdShowLater:          b.showLaterTasks,
+		CmdShowFiles:          b.showFiles,
+		CmdShowDirs:           b.showDirs,
+		CmdShowChecklists:     b.showChecklists,
+		CmdShowPostpone:       b.showPostpone,
+		CmdShowMoveTo:         b.showMoveTo,
+		CmdShowRename:         b.showRename,
+		CmdShowStats:          b.showStats,
+		CmdShowReadChecklist:  b.showRead,
+		CmdRandomNote:         b.randomNote,
+		CmdShowWatchChecklist: b.showWatch,
+		CmdShowShopChecklist:  b.showShop,
+		CmdShowSchedule:       b.showSchedule,
+		CmdShowMoveFromToday:  b.showMoveFromToday,
+		CmdShowSettings:       b.showSettings,
+		CmdShowTimezone:       b.showTimezone,
+		CmdSetTimezone:        b.setTimezone,
+		CmdOpenInApp:          b.openInApp,
+		CmdShowHelp:           b.showHelp,
+		CmdDownload:           b.download,
 		// Button's commands (callbacks)
 		CmdShowRenameFile:                  b.showRenameFile,
 		CmdShowLongItem:                    b.showLongItem,
@@ -378,7 +374,6 @@ func (b *Bot) handlers() map[string]func([]string) error {
 		CmdSchedule:                        b.schedule,
 		CmdScheduleForTmrw:                 b.scheduleForTmrw,
 		CmdComplete:                        b.complete,
-		CmdCompleteFromInbox:               b.completeFromChat,
 		CmdPostpone:                        b.postpone,
 		CmdPomodoro:                        b.togglePomodoro,
 		CmdShowScheduleForDayRecurring:     b.showToADayRecurring,
@@ -962,32 +957,6 @@ func (b *Bot) showMoveTo(params []string) error {
 	return nil
 }
 
-func (b *Bot) showMoveToFromToday(params []string) error {
-	taskHash := params[0]
-
-	todayMD, err := b.fs.Read(fs.DirUserRoot, fs.TodayFilename)
-	if err != nil {
-		return fmt.Errorf("move from today.md: can't read today file: %w", err)
-	}
-
-	todayMD, task := txt.RemoveChecklistItem(todayMD, taskHash)
-	if task == "" {
-		return fmt.Errorf("move from today.md: task not found")
-	}
-
-	err = b.fs.Write(fs.DirUserRoot, fs.TodayFilename, todayMD)
-	if err != nil {
-		return fmt.Errorf("move from today.md: can't write today file: %w", err)
-	}
-
-	msgHash, err := b.appendToInbox(task, b.cfg.Timezone())
-	if err != nil {
-		return fmt.Errorf("move from today.md: can't save to inbox: %w", err)
-	}
-
-	return b.showMoveTo([]string{msgHash})
-}
-
 func (b *Bot) recentCmdBtn(msgHash string) *tg.Btn {
 	recentCmd, ok := b.db.RecentCommand()
 	if !ok {
@@ -1086,7 +1055,7 @@ func (b *Bot) ShowToday(_ []string) error {
 			btn := tg.NewBtn(txt.Emoji(i18n.Emoji("eyes"), title), cmd)
 			kb.AddRow(btn)
 		} else {
-			cmd := tg.NewCmd(CmdCompleteFromInbox, []string{msgHash})
+			cmd := tg.NewCmd(CmdComplete, []string{msgHash})
 			btn := tg.NewBtn(txt.Emoji(i18n.Emoji(title), title), cmd)
 			kb.AddRow(btn)
 		}
@@ -1588,7 +1557,7 @@ func (b *Bot) showLongItemFromInbox(params []string) error {
 		tg.NewRow(
 			tg.NewBtn(i18n.StrBack, tg.NewCmd(CmdShowToday, []string{})),
 			tg.NewBtn(i18n.AddEmoji("Move"), tg.NewCmd(CmdShowMoveTo, []string{msgHash})),
-			tg.NewBtn(txt.Emoji(i18n.Emoji("Archive"), "Complete"), tg.NewCmd(CmdCompleteFromInbox, []string{msgHash})),
+			tg.NewBtn(txt.Emoji(i18n.Emoji("Archive"), "Complete"), tg.NewCmd(CmdComplete, []string{msgHash})),
 		),
 	})
 
@@ -2256,35 +2225,10 @@ func (b *Bot) moveToLater(params []string) error {
 	return b.moveToChecklist([]string{fs.LaterFilename, msgHash})
 }
 
-func (b *Bot) complete(params []string) error {
-	dir := params[0]
-	filenameHash := params[1]
-
-	filename, err := b.fs.Unhash(dir, filenameHash)
-	if err != nil {
-		return fmt.Errorf("complete: can't unhash filename %s: %w", filename, err)
-	}
-
-	// Not critical if we were unable to touch.
-	_ = b.fs.Touch(dir, filename)
-
-	// TODO multiline?
-	err = b.fs.Rename(dir, filename, fs.DirArchive, filename)
-	if err != nil {
-		return fmt.Errorf("complete: can't complete %s: %w", filename, err)
-	}
-
-	if dir == fs.DirLater {
-		return b.showLaterTasks(nil)
-	}
-
-	return b.ShowToday(nil)
-}
-
-// completeFromChat toggles the Markdown task marker on a single Inbox.md entry
+// complete toggles the Markdown task marker on a single Inbox.md entry
 // in place. `- [ ]` ↔ `- [x]`. Legacy entries without a prefix are upgraded to
 // `- [x]`. The entry stays in the file; it is no longer archived.
-func (b *Bot) completeFromChat(params []string) error {
+func (b *Bot) complete(params []string) error {
 	msgHash := params[0]
 
 	key, err := b.fs.SafePath(fs.DirUserRoot, "")
