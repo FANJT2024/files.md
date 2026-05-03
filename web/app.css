@@ -532,7 +532,7 @@ body.dragging * {
     }
 
     #sidebar {
-        display: none;
+        width: 140px !important;
     }
 }
 
