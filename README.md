@@ -53,27 +53,6 @@ Open a folder to store your files locally.
 3) Open the link in your Chrome browser
 4) Done! The app and the bot are synchronized now 
 
-## A real-world example
-**Q**: Are there enough features and plugins?  
-**A**: Enough to do the real work.  
-
-1) I used [files.md](https://files.md) to grow my knowledge about brain and software development
-2) I added new notes to either `brain` or `dev` folders. One idea per note
-3) I made connections between the notes. Everything is connected, just as in our brain
-4) **I spent time travelling through the notes and thinking it through**
-5) At some point, `brain` and `dev` notes appeared very related
-6) I interconnected the knowledge, **I got the insight**
-7) I wrote an article about [Cognitive Load in Software Development](https://github.com/zakirullin/cognitive-load)
-
-Many considered it a great write-up.  
-
-All this activity helped me to:
-- **Think deeply** (which is very important in the AI-age)
-- **Think systematically and see the bigger picture**
-- **Write insightful texts**
-
-To achieve all that, **you'll have to use your brain**, not advanced templates or AI workflows.  
-
 ## How to take notes 🗒️
 Leonardo da Vinci, Charles Darwin, Jules Verne and many others took notes using just pen and paper.
 
@@ -101,6 +80,27 @@ That's all you need to take notes.
 My friends and I have been using this setup for five years and it works well.
 
 Telegram bot: [@FilesMDBot](https://t.me/FilesMDBot) (other messengers will follow).
+
+## A real-world example
+Are there enough features and plugins?  
+Enough to do the real work.
+
+1) I used [files.md](https://files.md) to grow my knowledge about brain and software development
+2) I added new notes to either `brain` or `dev` folders. One idea per note
+3) I made connections between the notes. Everything is connected, just as in our brain
+4) **I spent time travelling through the notes and thinking it through**
+5) At some point, `brain` and `dev` notes appeared very related
+6) I interconnected the knowledge, **I got the insight**
+7) I wrote an article about [Cognitive Load in Software Development](https://github.com/zakirullin/cognitive-load)
+
+Many considered it a great write-up.
+
+All this activity helped me to:
+- **Think deeply** (which is very important in the AI-age)
+- **Think systematically and see the bigger picture**
+- **Write insightful texts**
+
+To achieve all that, **you'll have to use your brain**, not advanced templates or AI workflows.
 
 ## Taking notes in the web app
 Open `today`, type in a note:
