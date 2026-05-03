@@ -37,6 +37,22 @@ Just drop your note into the chat-like input and press `Enter`.
 
 That's it. Nothing to learn or setup.
 
+## Web Application
+1) Open Chrome browser
+2) Open [app.files.md](https://app.files.md)
+3) Click "Install Files.md" on the right side of the address bar:
+<div align="center">
+    <img src="https://github.com/zakirullin/files.md/raw/main/web/img/install.png" alt="Install" title="Install" width="350"/>
+</div>
+
+Open a folder to store your files locally.  
+
+## Telegram bot 
+1) Open [@FilesMDBot](https://t.me/FilesMDBot)
+2) Execute `/app` command
+3) Open link in your Chrome browser
+4) Done! The app and the bot are synchronized now 
+
 ## Are there enough features and plugins?
 Enough to do the real work.  
 
@@ -91,8 +107,7 @@ Open `today`, type in a note:
     <img src="https://github.com/zakirullin/files.md/raw/main/web/img/note1.png" alt="Taking notes" title="Taking notes" width="350"/>
 </div>
 
-Press `Enter`.  
-Then hover over the note (can be done later):  
+Press `Enter`. Then hover over the note (can be done later):  
 <div align="center">
     <img src="https://github.com/zakirullin/files.md/raw/main/web/img/note2.png" alt="Taking notes" title="Taking notes" width="350"/>
 </div>
@@ -224,9 +239,6 @@ You don't have to think about the structure, it is predefined.
 
 Scheme is also available at [files.md/llms.txt](https://files.md/llms.txt).  
 You can copy-paste it into `CLAUDE.md` or `AGENTS.md`, so that your AI agent would understand the structure.  
-
-## Telegram Bot 🤖
-Use `/app` to link your bot the the web app.  
 
 ## Hotkeys
 
