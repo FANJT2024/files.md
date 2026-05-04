@@ -91,7 +91,7 @@ async function setup(page) {
                 await writable.close();
             }
 
-            await root.getFileHandle('Inbox.md', { create: true });
+            await root.getFileHandle('Today.md', { create: true });
             const fileHandle =  await root.getFileHandle('config.json', { create: true });
             const writable = await fileHandle.createWritable()
             await writable.write('{}');
@@ -435,12 +435,12 @@ test('files exist on both client and server, serverFiles contains proper server 
         return server['files'];
     });
     expect(filesOnServer).toEqual({
-        'Inbox.md': {
+        'Today.md': {
             hash: expect.any(Number),
             isFile: true,
             lastModified: expect.any(Number),
             lastClientModified: expect.any(Number),
-            path: '/Inbox.md'
+            path: '/Today.md'
         },
         'Notes.md': {
             hash: expect.any(Number),

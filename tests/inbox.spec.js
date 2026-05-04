@@ -140,6 +140,69 @@ test('move to existing file appends content', async ({page}) => {
     expect(content).toContain('Append me');
 });
 
+test('move to file does not prepend a timestamp', async ({page}) => {
+    await page.evaluate(async () => {
+        const root = await navigator.storage.getDirectory();
+        const fh = await root.getFileHandle('Notes.md', {create: true});
+        const w = await fh.createWritable();
+        await w.write('# Notes');
+        await w.close();
+        window.getTemporaryStorageDirHandle = async () => navigator.storage.getDirectory();
+    });
+    await page.evaluate(() => init(document.getElementById('editor')));
+
+    await page.click(`#tree .tree-item:has-text('today')`);
+    await page.waitForSelector('#inbox');
+    await page.keyboard.type('500k заявок в неделю от водителей');
+    await page.waitForTimeout(300);
+    await page.keyboard.press('Enter');
+    await page.waitForSelector('.message');
+
+    await page.hover('.message');
+    await page.locator('.to-file-btn').first().click({force: true});
+    await page.waitForSelector('#search', {state: 'visible'});
+
+    await page.locator('#search-results li[data-path="/Notes.md"]').click();
+    await page.waitForSelector('.message', {state: 'detached'});
+
+    await page.click(`#tree .tree-item:has-text('Notes')`);
+    await page.waitForTimeout(200);
+    const content = await page.evaluate(() => document.querySelector('.CodeMirror').CodeMirror.getValue());
+    expect(content).toContain('500k заявок в неделю от водителей');
+    // The body must not be prefixed with `HH:MM` — that's reserved for the
+    // chat→journal flow, not move-to-file (web/lib/md.js:addHeaderAndText).
+    expect(content).not.toMatch(/`\d{2}:\d{2}`\s*500k/);
+});
+
+test('move to recent file does not prepend a timestamp', async ({page}) => {
+    await page.evaluate(() => {
+        window.getTemporaryStorageDirHandle = async function () {
+            const root = await navigator.storage.getDirectory();
+            await root.getFileHandle('File.md', {create: true});
+            return root;
+        };
+    });
+    await page.evaluate(() => init(document.getElementById('editor')));
+
+    await page.click(`#tree .tree-item:has-text('today')`);
+    await page.waitForSelector('#inbox');
+    await page.keyboard.type('500k заявок в неделю от водителей');
+    await page.waitForTimeout(300);
+    await page.keyboard.press('Enter');
+    await page.waitForSelector('.message');
+
+    await page.hover('.message');
+    await page.locator('.action-btn').filter({hasText: 'File'}).click({force: true});
+    await page.waitForSelector('.message', {state: 'detached'});
+
+    await page.click(`#tree .tree-item:has-text('File')`);
+    await page.waitForTimeout(200);
+    const fileContent = await page.evaluate(() =>
+        document.querySelector('.CodeMirror').CodeMirror.getValue());
+    expect(fileContent).toContain('500k заявок в неделю от водителей');
+    expect(fileContent).not.toMatch(/`\d{2}:\d{2}`\s*500k/);
+});
+
 test('system dirs (archive, today) are hidden in move-to-file modal', async ({page}) => {
     await page.evaluate(() => {
         window.getTemporaryStorageDirHandle = async function () {
