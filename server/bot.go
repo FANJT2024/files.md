@@ -101,12 +101,8 @@ type Database interface {
 	InputExpectation() *tg.Cmd
 	SetInputExpectation(cmd tg.Cmd)
 	DelInputExpectation()
-	FilenameByMsgID(msgID int) (string, bool)
-	DirByMsgID(msgID int) (string, bool)
-	SetRecentFilenameByMsgID(msgID int, filename string)
-	SetRecentDirByMsgID(msgID int, filename string)
-	ChatMsgHashByMsgID(msgID int) (string, bool)
-	SetChatMsgHashByMsgID(msgID int, msgHash string)
+	HashOrPathByMsgID(msgID int) (string, bool)
+	SetHashOrPathByMsgID(msgID int, value string)
 	RecentCommand() (string, bool)
 	SetRecentCommand(cmd string)
 	RecentCommandParams() ([]string, bool)
@@ -496,10 +492,7 @@ func (b *Bot) saveFromTextMsg(u Update) error {
 
 	// Adding to an existing file or chat item
 	if replyMsgID, ok := u.ReplyToMsgID(); ok {
-		if msgHash, ok := b.db.ChatMsgHashByMsgID(replyMsgID); ok {
-			return b.addToRepliedChatMsg(msgHash, msg)
-		}
-		return b.addToRepliedFile(replyMsgID, msg)
+		return b.addToReplied(replyMsgID, msg)
 	}
 
 	msgHash, err := b.appendToChat(msg, b.cfg.Timezone())
@@ -545,9 +538,9 @@ func (b *Bot) saveFromImage(u Update) error {
 		}
 	}
 
-	// Adding to an existing file
+	// Adding to an existing file or chat item
 	if replyMsgID, ok := u.ReplyToMsgID(); ok {
-		return b.addToRepliedFile(replyMsgID, content)
+		return b.addToReplied(replyMsgID, content)
 	}
 
 	msgHash, err := b.appendToChat(content, b.cfg.Timezone())
@@ -604,48 +597,48 @@ func (b *Bot) saveImage(u Update) (string, error) {
 	return content, nil
 }
 
-// addToRepliedChatMsg appends newContent to the chat block identified by
-// msgHash (i.e. a reply to a previously-rendered chat item appends to that
-// item rather than creating a new one).
-func (b *Bot) addToRepliedChatMsg(msgHash, newContent string) error {
-	chatMD, err := b.fs.Read(fs.DirUserRoot, fs.ChatFilename)
-	if err != nil {
-		return fmt.Errorf("add to chat msg: can't read chat: %w", err)
-	}
-	updated, err := appendToChatMsg(chatMD, msgHash, newContent)
-	if err != nil {
-		return fmt.Errorf("add to chat msg: %w", err)
-	}
-	if err := b.fs.Write(fs.DirUserRoot, fs.ChatFilename, updated); err != nil {
-		return fmt.Errorf("add to chat msg: can't write chat: %w", err)
-	}
-
-	b.delAllKeyboards()
-	return b.ShowHome(nil)
-}
-
-func (b *Bot) addToRepliedFile(replyToMsgID int, newContent string) error {
-	dir, _ := b.db.DirByMsgID(replyToMsgID)
-	existingFilename, ok := b.db.FilenameByMsgID(replyToMsgID)
+// addToReplied appends newContent to whatever the bot rendered for
+// replyToMsgID. Chat-item targets are stored with a "#" prefix
+// ("#<msgHash>"); file targets are stored as a plain relative path.
+func (b *Bot) addToReplied(replyToMsgID int, newContent string) error {
+	value, ok := b.db.HashOrPathByMsgID(replyToMsgID)
 	if !ok {
-		return fmt.Errorf("add to replied: can't find filename by msgID %d", replyToMsgID)
+		return fmt.Errorf("add to replied: no target for msgID %d", replyToMsgID)
 	}
-	existingContent, err := b.fs.Read(dir, existingFilename)
+
+	if strings.HasPrefix(value, "#") {
+		msgHash := strings.TrimPrefix(value, "#")
+		chatMD, err := b.fs.Read(fs.DirUserRoot, fs.ChatFilename)
+		if err != nil {
+			return fmt.Errorf("add to replied chat: can't read chat: %w", err)
+		}
+		updated, err := appendToChatMsg(chatMD, msgHash, newContent)
+		if err != nil {
+			return fmt.Errorf("add to replied chat: %w", err)
+		}
+		if err := b.fs.Write(fs.DirUserRoot, fs.ChatFilename, updated); err != nil {
+			return fmt.Errorf("add to replied chat: can't write chat: %w", err)
+		}
+		b.delAllKeyboards()
+		return b.ShowHome(nil)
+	}
+
+	// File case: value is a relative path under user root. fs.SafePath
+	// accepts the whole thing as `filename` when dir is the user root.
+	existingContent, err := b.fs.Read(fs.DirUserRoot, value)
 	if err != nil {
 		return fmt.Errorf("add: can't read: %w", err)
 	}
 
-	header := fmt.Sprintf("#### %d %s, %s", now().Day(), now().Format("January"), now().Weekday())
-	content := txt.AddHeaderAndText(existingContent, header, newContent)
-	err = b.fs.Write(dir, existingFilename, content)
-	if err != nil {
+	content := strings.TrimRight(existingContent, "\n") + "\n\n" + strings.TrimSpace(newContent) + "\n"
+	if err := b.fs.Write(fs.DirUserRoot, value, content); err != nil {
 		return fmt.Errorf("add: can't write: %w", err)
 	}
 
 	b.delAllKeyboards()
 
 	b.db.SetRecentCommand(CmdMoveToExistingFile)
-	b.db.SetRecentCommandParams([]string{fs.ShortHash(existingFilename)})
+	b.db.SetRecentCommandParams([]string{fs.ShortHash(value)})
 
 	return b.ShowHome(nil)
 }
@@ -1594,7 +1587,7 @@ func (b *Bot) showLongItem(params []string) error {
 	// gets routed back to it via addToRepliedFile's chat-item branch.
 	msgID, hasLastKeyboard := b.db.LastKeyboardMsgID()
 	if hasLastKeyboard {
-		b.db.SetChatMsgHashByMsgID(msgID, msgHash)
+		b.db.SetHashOrPathByMsgID(msgID, "#"+msgHash)
 	}
 
 	return nil
@@ -1642,8 +1635,7 @@ func (b *Bot) showFile(params []string) error {
 
 	msgID, hasLastKeyboard := b.db.LastKeyboardMsgID()
 	if hasLastKeyboard {
-		b.db.SetRecentFilenameByMsgID(msgID, filename)
-		b.db.SetRecentDirByMsgID(msgID, dir)
+		b.db.SetHashOrPathByMsgID(msgID, filepath.ToSlash(filepath.Join(dir, filename)))
 	}
 
 	return nil
@@ -2289,8 +2281,7 @@ func (b *Bot) showChecklistItem(params []string) error {
 
 	msgID, hasLastKeyboard := b.db.LastKeyboardMsgID()
 	if hasLastKeyboard {
-		b.db.SetRecentFilenameByMsgID(msgID, filename)
-		b.db.SetRecentDirByMsgID(msgID, dir)
+		b.db.SetHashOrPathByMsgID(msgID, filepath.ToSlash(filepath.Join(dir, filename)))
 	}
 
 	return nil

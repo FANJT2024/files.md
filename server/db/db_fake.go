@@ -46,28 +46,12 @@ func (db *FakeDB) DelInputExpectation() {
 	db.InputExpectationCMD = nil
 }
 
-func (db *FakeDB) SetRecentFilenameByMsgID(msgID int, filename string) {
-	db.FilenameByMessageID = filename
+func (db *FakeDB) HashOrPathByMsgID(msgID int) (string, bool) {
+	return db.HashOrPathByMID, db.HashOrPathByMID != ""
 }
 
-func (db *FakeDB) FilenameByMsgID(msgID int) (string, bool) {
-	return db.FilenameByMessageID, db.FilenameByMessageID != ""
-}
-
-func (db *FakeDB) DirByMsgID(msgID int) (string, bool) {
-	return db.DirByMessageID, db.DirByMessageID != ""
-}
-
-func (db *FakeDB) SetRecentDirByMsgID(msgID int, filename string) {
-	db.DirByMessageID = filename
-}
-
-func (db *FakeDB) ChatMsgHashByMsgID(msgID int) (string, bool) {
-	return db.ChatMsgHashByMID, db.ChatMsgHashByMID != ""
-}
-
-func (db *FakeDB) SetChatMsgHashByMsgID(msgID int, msgHash string) {
-	db.ChatMsgHashByMID = msgHash
+func (db *FakeDB) SetHashOrPathByMsgID(msgID int, value string) {
+	db.HashOrPathByMID = value
 }
 
 func (db *FakeDB) RecentCommand() (string, bool) {

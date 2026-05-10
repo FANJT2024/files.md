@@ -459,8 +459,8 @@ func TestSaveFromRegularReply(t *testing.T) {
 
 	tgram := tg.NewFakeTG()
 	database := db.NewFakeDB()
-	database.SetRecentDirByMsgID(255, "home")
-	database.SetRecentFilenameByMsgID(255, "Existing file.md")
+	database.SetHashOrPathByMsgID(255, "home/Existing file.md")
+
 	bot := NewBot(-1, tgram, userFS, database, fakeConfig())
 
 	upd := tg.NewUpd(-1, "Line")
@@ -474,7 +474,7 @@ func TestSaveFromRegularReply(t *testing.T) {
 
 	content, err := bot.fs.Read("home", "Existing file.md")
 	r.NoError(err)
-	r.Equal("#### 11 August, Sunday\nLine\n\nExisting content", content)
+	r.Equal("Existing content\n\nLine\n", content)
 }
 
 func TestSaveFromPhotoWithCaption(t *testing.T) {
@@ -678,8 +678,8 @@ func TestSaveFromReplyPhotoWithCaption(t *testing.T) {
 	tgram := tg.NewFakeTG()
 
 	database := db.NewFakeDB()
-	database.SetRecentDirByMsgID(255, "home")
-	database.SetRecentFilenameByMsgID(255, "Existing file.md")
+	database.SetHashOrPathByMsgID(255, "home/Existing file.md")
+
 	bot := NewBot(-1, tgram, userFS, database, fakeConfig())
 
 	upd := tg.NewUpd(-1, "")
@@ -691,7 +691,7 @@ func TestSaveFromReplyPhotoWithCaption(t *testing.T) {
 
 	content, err := bot.fs.Read("home", "Existing file.md")
 	r.NoError(err)
-	r.Equal("#### 11 August, Sunday\n![](media/tg_PHOTO_ID)\nCaption\n\nExisting content", content)
+	r.Equal("Existing content\n\n![](media/tg_PHOTO_ID)\nCaption\n", content)
 }
 
 func TestAddTaskToLater(t *testing.T) {
@@ -4066,8 +4066,8 @@ func TestSaveFromImage_ReplyToExistingFile(t *testing.T) {
 
 	tgram := tg.NewFakeTG()
 	database := db.NewFakeDB()
-	database.SetRecentDirByMsgID(255, "home")
-	database.SetRecentFilenameByMsgID(255, "Existing file.md")
+	database.SetHashOrPathByMsgID(255, "home/Existing file.md")
+
 	bot := NewBot(-1, tgram, userFS, database, fakeConfig())
 
 	upd := tg.NewUpd(-1, "")
@@ -4080,7 +4080,7 @@ func TestSaveFromImage_ReplyToExistingFile(t *testing.T) {
 
 	content, err := bot.fs.Read("home", "Existing file.md")
 	r.NoError(err)
-	r.Equal("#### 1 January, Thursday\n![](media/tg_PHOTO_ID)\nImage Caption\n\nExisting content", content)
+	r.Equal("Existing content\n\n![](media/tg_PHOTO_ID)\nImage Caption\n", content)
 }
 
 func TestSaveFromImage_EmptyCaption(t *testing.T) {
