@@ -112,7 +112,7 @@ The client's `server.files` object holds the triple `(content, lastModified, las
 
 The auth token lives in an HttpOnly cookie, so JS can't see it directly. Instead, every successful response from the server stamps `localStorage.lastServerOk` with `Date.now()` via `markServerOk()` (files.js). `hasLastServerOk()` returns true if that key exists - which it only can if the server has previously accepted us. Use this as the gate before kicking off sync work: no stamp ⇒ no token ⇒ skip the request entirely. The flag is set in:
 
-- `app.js` after the `/token` exchange returns 200
+- `app.js` after the `/issuePermanentToken` exchange returns 200
 - `post()` after a 2xx response (covers all `/syncFilenames`, `/syncFile`, `/syncMediaFilenames`, `/syncMediaFile` upload calls now that they go through this helper)
 - `syncMedia` directly after the raw `POST /syncMediaFile` download (binary blob, can't share `post()`)
 

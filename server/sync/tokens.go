@@ -88,7 +88,7 @@ func setAuthCookie(w http.ResponseWriter, token string) {
 	})
 }
 
-func IssuePermanentToken(w http.ResponseWriter, r *http.Request) {
+func IssueToken(w http.ResponseWriter, r *http.Request) {
 	defer func() {
 		if r := recover(); r != nil {
 			log.Printf("PANIC in IssueToken: %v", r)
@@ -209,11 +209,6 @@ func issueNewPermanentToken(r *http.Request) (string, bool) {
 			}
 		}
 		mu.Unlock()
-
-		// Block IP for 1 minute if token is invalid or expired
-		blockedIPsMutex.Lock()
-		blockedIPs[ip] = time.Now().Add(1 * time.Minute)
-		blockedIPsMutex.Unlock()
 
 		reason := "onetime_token_not_in_map_401"
 		if exists {
