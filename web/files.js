@@ -424,7 +424,7 @@ async function syncMedia() {
                 }
                 const base64String = btoa(binaryString);
 
-                const { error } = await post('syncMedia', {
+                const { error } = await post('syncMediaFile', {
                     filename: mediaFilename,
                     data: base64String,
                 });
