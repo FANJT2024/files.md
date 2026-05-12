@@ -544,6 +544,8 @@ body.dragging * {
     display: inline-block;
 
     margin-left: 25%;
+    margin-top: 0.6em;
+    margin-bottom: 0.6em;
 }
 
 @media (max-width: 768px) {
@@ -631,8 +633,14 @@ body.dragging * {
     background: rgba(135, 131, 120, .15) !important;
     border-radius: 4px;
     vertical-align: baseline;
-    padding: 2px 3px !important;
-    font-size: 100% !important;
+    padding: 0.16em 0.32em !important;
+    font-size: 0.9em !important;
+}
+
+/* The backtick tokens appear when the cursor enters inline code; size them
+   to match the code body so the revealed tokens don't push the line height. */
+.cm-s-hypermd-light span.cm-formatting-code:not(.hmd-hidden-token) {
+    font-size: 0.9em !important;
 }
 
 .cm-s-hypermd-light div.HyperMD-codeblock-bg {
