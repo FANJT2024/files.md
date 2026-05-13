@@ -95,10 +95,13 @@
 }
 
 /* Skip the gap for the very first line of the doc - usually the doc title.
-   CodeMirror appends each line as a direct child of .CodeMirror-code. */
+   CodeMirror appends each line as a direct child of .CodeMirror-code.
+   Compensate with extra bottom padding so the title doesn't sit on top of
+   the next line. */
 .cm-s-hypermd-light .CodeMirror-code > pre.HyperMD-header.HyperMD-header-1:first-child,
 .cm-s-hypermd-light .CodeMirror-code > :first-child pre.HyperMD-header.HyperMD-header-1 {
     padding-top: 0 !important;
+    padding-bottom: 11px !important;
 }
 
 .cm-s-hypermd-light pre.HyperMD-header.HyperMD-header-2 {
