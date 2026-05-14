@@ -64,9 +64,12 @@ function initEditor(el) {
             path = path.replace('../', '');
         }
 
-        // Bare domain like google.com/test — window.open treats it as a relative
+        // Bare domain like google.com/test - window.open treats it as a relative
         // path without a protocol, which makes the PWA navigate to a sub-path.
-        if (/^[a-z0-9-]+(\.[a-z0-9-]+)+(\/|$)/i.test(path) && !/\.md$/i.test(path)) {
+        // Exclude local-file extensions (md, image types) so `![](img.png)`
+        // isn't mistaken for a domain.
+        if (/^[a-z0-9-]+(\.[a-z0-9-]+)+(\/|$)/i.test(path)
+            && !/\.(md|png|jpg|jpeg|gif|webp)$/i.test(path)) {
             return 'https://' + path;
         }
 
@@ -80,8 +83,9 @@ function initEditor(el) {
             return path;
         }
 
-        // TODO support other than media and img folders
-        const match = path.match(/\/(.+\.(png|jpg|jpeg|gif|webp))$/i);
+        // Capture only the bare filename (no slashes) so the media/img
+        // lookups by filename work even when path has a folder prefix.
+        const match = path.match(/(?:^|\/)([^/]+\.(png|jpg|jpeg|gif|webp))$/i);
 
         if (match && files['media/'] && files['media/'][match[1]]) {
             return files['media/'][match[1]].imageUrl;
@@ -89,6 +93,16 @@ function initEditor(el) {
 
         if (match && files['img/'] && files['img/'][match[1]]) {
             return files['img/'][match[1]].imageUrl;
+        }
+
+        // Filename fallback - look up bare filename in the global
+        // image index built by loadLocalFiles. Resolves images stored in
+        // any folder when the markdown link's path doesn't match.
+        if (match) {
+            const bareName = match[1].split('/').pop();
+            if (mediaIndex[bareName] && mediaIndex[bareName].imageUrl) {
+                return mediaIndex[bareName].imageUrl;
+            }
         }
 
         return path;

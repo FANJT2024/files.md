@@ -1038,10 +1038,10 @@ func (b *Bot) ShowHome(_ []string) error {
 	}
 	blocks := readChatMsgs(content)
 	// Today entry: `- [ ] body` or `- [ ] `HH:MM` body` (timestamp optional).
-	inboxEntryRegex := regexp.MustCompile(`^- \[([ xX])\] (?:` + "`" + `\d{2}:\d{2}` + "` )?")
+	chatEntryRegex := regexp.MustCompile(`^- \[([ xX])\] (?:` + "`" + `\d{2}:\d{2}` + "` )?")
 	shownCount := 0
 	for _, block := range blocks {
-		m := inboxEntryRegex.FindStringSubmatch(block)
+		m := chatEntryRegex.FindStringSubmatch(block)
 		if m == nil {
 			continue
 		}
@@ -2476,7 +2476,7 @@ func (b *Bot) showMoveToFileOrDir(params []string) error {
 
 	b.db.SetInputExpectation(tg.NewCmd(CmdMoveToNewFile, []string{msgHash, "%s"}))
 
-	err = b.showHTML("📄 Select a file or enter a new name:", kb)
+	err = b.showHTML("📄 Select where to save or send a new name:", kb)
 	if err != nil {
 		return fmt.Errorf("to file dialog: %w", err)
 	}

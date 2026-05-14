@@ -1,7 +1,4 @@
-// TODO Do sync not as often
-// TODO migrate to unversal file id = filepath, instead of two components
 const API_URL = localStorage.getItem('apiUrl') || 'https://api.files.md';
-// TODO that's quite often. Maybe on edit + focus?
 const CURRENT_FILE_SYNC_INTERVAL = 1000; // ms, how often to save currently open file
 
 let isSaving = false;
@@ -48,9 +45,13 @@ function hasLastServerOk() {
 //     ...
 //   ]
 // }
-// TODO multidir rename to memFiles?
 let files = {}; // In-memory representation of local files
 let server = {files: {}, media: {}, timestamps: {}, mediaTimestamp: 0}; // In-memory representation of server
+
+// Reverse index for non-md files (currently just images): filename -> first.
+// Lets the editor resolve `![](foo.png)` even when the
+// image lives in a folder other than media.
+let mediaIndex = {};
 
 const SERVER_STORAGE_KEY = 'server'; // If scheme is migrated, I believe it's better to introduce a new key, because for now old keys aren't removed.
 const SUPPORTED_EXTENSIONS = ['md', 'png', 'jpg', 'jpeg', 'webp', 'gif',];
@@ -64,13 +65,16 @@ async function loadLocalFiles(rootDirHandle, slowMode = false) {
     isLoadingLocalFiles = true;
 
     // TODO should we wait for editor2 as well?
-    // What if "cleanes" is changed mid-through? We have awaits.
+    // What if "isClean" is changed mid-through? We have awaits.
     // Better check per/file right before loading?
     while (!editor.isClean()) {
         await new Promise(r => setTimeout(r, 50));
     }
 
     let newFiles = {};
+    // Rebuild the filename->path image index from scratch on every load so
+    // renamed/deleted images don't linger in the lookup.
+    mediaIndex = {};
 
     // Loads files recursively
     async function loadDir(dirHandle, path = '/', depth = 0) {
@@ -85,7 +89,7 @@ async function loadLocalFiles(rootDirHandle, slowMode = false) {
             const entry = entries[i];
             const filename = entry.name.normalize('NFC');
 
-            let isSupportedExtension = SUPPORTED_EXTENSIONS.includes(filename.split('.').pop());
+            let isSupportedExtension = SUPPORTED_EXTENSIONS.includes(filename.split('.').pop().toLowerCase());
             let isConfig = filename === toFilename(CONFIG_PATH);
 
             let dirs = path.split('/');
@@ -116,23 +120,31 @@ async function loadLocalFiles(rootDirHandle, slowMode = false) {
                     }
                     existingDir = existingDir[dir];
                 }
-                if (existingDir && existingDir[filename] !== undefined) {
+
+                const fileWasPreviouslyLoaded = existingDir && existingDir[filename] !== undefined
+                if (fileWasPreviouslyLoaded) {
                     currentDir[filename] = existingDir[filename];
-                    continue;
+                } else {
+                    currentDir[filename] = {path: `${path}${filename}`, isFile: true, handle: entry};
+                    entry.getFile().then(file => {
+                        currentDir[filename].lastModified = file.lastModified;
+                    });
                 }
 
-                currentDir[filename] = {path: `${path}${filename}`, isFile: true, handle: entry};
-                entry.getFile().then(file => {
-                    currentDir[filename].lastModified = file.lastModified;
-                });
+                const ext = filename.split('.').pop().toLowerCase();
+                const isImg = ['png', 'jpg', 'jpeg', 'webp', 'gif'].includes(ext);
+                if (!isImg) {
+                    continue
+                }
 
-                // TODO support any dirs
-                if (dirs[0] === 'media' || dirs[0] === 'img') {
+                if (!currentDir[filename].imageUrl) {
                     getImageUrl(entry).then(imageUrl => {
-                        currentDir[filename].path = `${path}${filename}`;
-                        currentDir[filename].isFile = true;
                         currentDir[filename].imageUrl = imageUrl;
                     });
+                }
+                // Index every image by its bare filename. First write wins.
+                if (!mediaIndex[filename]) {
+                    mediaIndex[filename] = currentDir[filename];
                 }
             }
             if (slowMode && i % 50 === 0) {

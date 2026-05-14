@@ -198,7 +198,7 @@ const WELCOME_FILES = {
             isFile: true,
         },
         "Brain is the most complex object in known universe.md": {
-            "content": "Nothing will make you appreciate human intelligence like learning about how unbelievably challenging it is to try to create a computer as smart as we are. Building skyscrapers, putting humans in space, figuring out the details of how the Big Bang went down - all far easier than understanding our own brain or how to make something as cool as it\n\n[We think that we understand, but in reality we just know](/brain/We%20think%20that%20we%20understand%2C%20but%20in%20reality%20we%20just%20know.md)",
+            "content": "Nothing will make you appreciate human intelligence like learning about how unbelievably challenging it is to try to create a computer as smart as we are. Building skyscrapers, putting humans in space, figuring out the details of how the Big Bang went down - all far easier than understanding our own brain or how to make something as cool as it\n\n[We think that we understand, but in reality we just know](/brain/We%20think%20that%20we%20understand,%20but%20in%20reality%20we%20just%20know.md)",
             isFile: true,
         },
         "Change your environment instead of using willpower.md": {
@@ -218,8 +218,8 @@ const WELCOME_FILES = {
     },
     "🪴 Welcome.md": {
         "content":
-            "[Open or create folder](cmd:openDir) to save changes.\n\n" +
-            "[Use chat](cmd:openChat) to dump whatever is on your mind.\n\n" +
+            "To store files in a local folder, [open or create folder](cmd:openDir).\n\n" +
+            "Use [chat](cmd:openChat) to dump whatever is on your mind.\n\n" +
             "Press `Cmd+K` or `Ctrl+K` to quick switch between notes.\n\n" +
             "[Markdown Guide](/Markdown%20Guide.md)\n[Hotkeys](/Hotkeys.md)\n[Links](/Links.md)",
         isFile: true,

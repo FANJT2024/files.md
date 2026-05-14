@@ -253,7 +253,14 @@ function renderSidebar(focusDir = '', modifiedPaths) {
 
         fileEntries.push(path);
     });
-    fileEntries.sort((a, b) => a.localeCompare(b));
+    // Journal entries are filenames like "2026.05 May.md" - sort reverse so
+    // newest months land at the top of the journal folder.
+    fileEntries.sort((a, b) => {
+        const aJournal = a.startsWith('/journal/');
+        const bJournal = b.startsWith('/journal/');
+        if (aJournal && bJournal) return b.localeCompare(a);
+        return a.localeCompare(b);
+    });
 
     for (const path of fileEntries) {
         const {dirPath, filename} = toDirPathAndFilename(path);

@@ -33,6 +33,10 @@ async function sendToChat() {
         await addToJournal(text.slice(0, -3).trim());
         chatInput.value = '';
         chatIsClean = false;
+        // Reload from disk so the journal file/dir created by addToJournal
+        // shows up, then blink its row in the sidebar.
+        files = await loadLocalFiles(await getRootDirHandle());
+        renderSidebar('', [`/journal/${todayJournalFilename()}`]);
         return;
     }
 

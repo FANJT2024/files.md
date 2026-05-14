@@ -264,10 +264,10 @@ go run /abs/path/to/files.md/cmd/shifttime/shifttime.go
 - `tests` - E2E tests, test both the web app and the server
 
 ## How to contribute
-- **Junior developers should be able to understand the code**
-- **Ideally, every PR should remove or simplify code, not add it**
-- All dependencies are our code and responsibility. So, avoid dependencies if possible
+- Junior developers should be able to understand the code
+- Ideally, every PR should remove or simplify code, not add it
 - **The less code we have, the more flexible we are**
+- All dependencies are our code and responsibility. So, avoid dependencies if possible
 - Code should be self-sufficient, so `vendor` and `web/lib` folders are included in the repository
 - **Do we really need this feature? Will it help us to do the real job, or does it just give dopamine?**
 
