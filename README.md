@@ -25,7 +25,8 @@ Try it out: [app.files.md](https://app.files.md)
 
 **Connect ideas. Let them compound. Think through.**
 
-Another note taking app? Maybe. But this time:  
+## Another note taking app? 
+Maybe. But this time:
 - Only necessary features, **restrictions foster creativity**
 - No need to install anything, all you need is a browser
 - Works offline
