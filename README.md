@@ -57,7 +57,7 @@ Open the chat and send a message:
 
 Select where to save:
 <div align="center">
-    <img src="https://github.com/zakirullin/files.md/raw/main/web/img/actions.png" width="350"/>
+    <img src="https://github.com/zakirullin/files.md/raw/main/web/img/note2.png" width="400"/>
 </div>
 
 You can save notes, journal and checklists.
