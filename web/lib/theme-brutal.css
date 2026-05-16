@@ -346,6 +346,15 @@
     stroke: #1A1A1A !important;
 }
 
+/* Search/move dialog: highlight the focused row in neo-orange to match
+   the sidebar's selected-row treatment instead of the muted grey
+   `--col-bg-active`. */
+#search-results .focused,
+#move-results .focused {
+    background-color: var(--color-neo-orange) !important;
+    color: #1A1A1A !important;
+}
+
 /* Chat panel: brutal-palette overrides for the few spots in chat.css
    that hard-code colors instead of using CSS variables. */
 .message-content:hover {
