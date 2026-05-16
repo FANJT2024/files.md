@@ -339,26 +339,26 @@
 }
 
 .tree-container li span.tree-item:hover {
-    background-color: var(--color-neo-blue) !important;
-    color: #FFF !important;
+    background-color: var(--color-neo-orange) !important;
+    color: #1A1A1A !important;
 }
 .tree-container li span.tree-item:hover .tree-mod_icon svg {
-    stroke: #FFF !important;
+    stroke: #1A1A1A !important;
 }
 
 .tree-container span.tree-item.selected,
 .tree-container span.tree-item.selected:hover {
-    background-color: var(--color-neo-orange) !important;
-    color: #1A1A1A !important;
+    background-color: var(--color-neo-blue) !important;
+    color: #FFF !important;
 }
 .tree-container span.tree-item.selected .tree-mod_icon svg,
 .tree-container span.tree-item.selected:hover .tree-mod_icon svg {
-    stroke: #1A1A1A !important;
+    stroke: #FFF !important;
 }
 
-/* Search/move dialog: highlight the focused row in neo-orange to match
-   the sidebar's selected-row treatment instead of the muted grey
-   `--col-bg-active`. */
+/* Search/move dialog: highlight the focused row in neo-orange - matches
+   the sidebar's hover treatment so "the thing under the pointer" is
+   always orange across the app. */
 #search-results .focused,
 #move-results .focused {
     background-color: var(--color-neo-orange) !important;
@@ -380,8 +380,7 @@
 .action-btn:hover {
     background: var(--color-neo-orange) !important;
 }
-/* Selected/pinned message uses neo-orange for parity with the sidebar's
-   selected-row treatment. */
+/* Selected/pinned message: neo-orange tint. */
 .message.actions-pinned,
 .message.selected {
     background: color-mix(in srgb, var(--color-neo-orange) 18%, transparent) !important;
