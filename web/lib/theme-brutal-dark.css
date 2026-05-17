@@ -58,7 +58,7 @@
     color: var(--col-tx-alt) !important;
 }
 
-#open-inbox-modal:hover svg {
+#open-chat-modal:hover svg {
    stroke: var(--col-accent) !important;
 }
 
@@ -66,7 +66,7 @@
     color: var(--color-neo-orange) !important;
 }
 
-#open-inbox-modal svg {
+#open-chat-modal svg {
     stroke: #F5F5F5 !important;
 }
 
@@ -367,8 +367,8 @@
 .complete-btn:hover {
     background: transparent !important;
 }
-#inbox .message-content,
-#inbox .message-content:hover {
+#chat .message-content,
+#chat .message-content:hover {
     background: transparent !important;
     cursor: pointer !important;
 }
@@ -416,9 +416,9 @@
 
 #search, #move,
 #search-input, #move-input,
-#inbox,
-#inbox-container.modal,
-#inbox-input,
+#chat,
+#chat-container.modal,
+#chat-input,
 #nav-buttons,
 #open-folder,
 .message,

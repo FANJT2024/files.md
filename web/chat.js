@@ -1,8 +1,8 @@
 let chatIsClean = true; // Are there any unsaved changes?
 
-const chat = document.getElementById('inbox');
-const chatInput = document.getElementById('inbox-input');
-const chatContainer = document.getElementById('inbox-container');
+const chat = document.getElementById('chat');
+const chatInput = document.getElementById('chat-input');
+const chatContainer = document.getElementById('chat-container');
 
 const MAX_TITLE_LENGTH = 100;
 const RECENT_FILES = 1;
@@ -112,8 +112,8 @@ async function toggleChatModal() {
         return;
     }
 
-    let isInboxModal = document.getElementById('inbox-container').classList.contains('modal');
-    if (isInboxModal) {
+    let isChatModal = document.getElementById('chat-container').classList.contains('modal');
+    if (isChatModal) {
         closeChatModal();
     } else {
         openChatModal();
@@ -178,7 +178,7 @@ async function parseMessagesFromChat() {
         }
 
         // Strip optional `- [ ]`/`- [x]` marker, then optional `HH:MM`
-        // timestamp. Lines without either are not inbox entries.
+        // timestamp. Lines without either are not chat entries.
         let rest = block;
         let mark = '';
         const markerMatch = rest.match(/^- \[([ xX])\] /);
@@ -235,7 +235,7 @@ async function saveMessagesToChat(messages) {
     lastChatText = content;
 }
 
-// Toggle the checkbox marker on a single inbox line in place.
+// Toggle the checkbox marker on a single chat line in place.
 // Matches any of the three shapes the line might be in on disk:
 //   `HH:MM` text          (legacy)
 //   - [ ] `HH:MM` text    (new, not done)
@@ -429,7 +429,7 @@ function attachEventListeners() {
                 return;
             }
 
-            if (e.target.id !== 'inbox-input') {
+            if (e.target.id !== 'chat-input') {
                 e.preventDefault();
                 const allMessages = chat.querySelectorAll('.message');
                 allMessages.forEach(message => message.classList.add('selected'));
@@ -588,7 +588,7 @@ function attachEventListeners() {
             try {
                 await toggleChatMessage(el.dataset.timestamp, el.dataset.text, done);
             } catch (err) {
-                logError('Failed to toggle inbox line:', err);
+                logError('Failed to toggle chat line:', err);
                 el.classList.toggle('completed'); // revert
             }
         });
@@ -796,7 +796,7 @@ function attachEventListeners() {
 async function renderMessages() {
     const { messages, text } = await parseMessagesFromChat();
     if (text === lastChatText) {
-        log('Inbox unchanged, skipping render');
+        log('Chat unchanged, skipping render');
         return;
     }
     lastChatText = text;

@@ -38,7 +38,7 @@ All files are plain Markdown (.md) stored locally.
 One idea per file. The filename is the title. Files can link to each other using standard Markdown: `[title](file.md).
 Relations among ideas are far more important than the ideas themselves.
 
-### Inbox (Inbox.md)
+### Chat (Chat.md)
 Append-only chat log. New messages are appended with timestamps under daily headers.
 ```
 #### 15 August, Friday

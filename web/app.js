@@ -13,9 +13,9 @@ const READ_PATH = '/Read.md';
 const SHOP_PATH = '/Shop.md';
 const WATCH_PATH = '/Watch.md';
 const LOG_PATH = '/archive/Log.txt';
-const OPEN_INBOX_AFTER_IDLE = 60 * 60 * 1000; // ms
+const OPEN_CHAT_AFTER_IDLE = 60 * 60 * 1000; // ms
 
-let openInboxIdleTimer = null;
+let openChatIdleTimer = null;
 let isChat = false;
 let isMemFS = false;
 let debug = false;
@@ -755,7 +755,7 @@ document.addEventListener('keydown', (event) => {
 
 // Toggle focus mode
 document.addEventListener('keydown', function(event) {
-    // Cmd+shift+enter toglle inbox modal
+    // Cmd+shift+enter toggle chat modal.
     if (event.shiftKey && isMetaKey(event) && event.key === 'Enter') {
         event.preventDefault();
         if (isChat) {
@@ -800,17 +800,17 @@ window.addEventListener('popstate', (event) => {
 
 // Reload files once the app gains focus.
 window.addEventListener('focus', async () => {
-    // Clear any pending inbox open timer
-    if (openInboxIdleTimer) {
-        clearTimeout(openInboxIdleTimer);
-        openInboxIdleTimer = null;
+    // Clear any pending chat open timer.
+    if (openChatIdleTimer) {
+        clearTimeout(openChatIdleTimer);
+        openChatIdleTimer = null;
     }
 
     // We don't want to do heavy stuff when chat is open.
     const userHasCustomAPIUrl = localStorage.getItem('apiUrl') !== null;
     if (isChat || (isMemFS && !userHasCustomAPIUrl)) {
         if (isChat) {
-            document.getElementById('inbox-input').focus();
+            document.getElementById('chat-input').focus();
         }
         return false;
     }
@@ -821,7 +821,7 @@ window.addEventListener('focus', async () => {
         return;
     }
 
-    document.getElementById('inbox-input').focus();
+    document.getElementById('chat-input').focus();
 
     const savedDirectoryHandle = await getRootDirHandle();
     // TODO check if access granted
@@ -844,10 +844,10 @@ window.addEventListener('blur', async function() {
     log('Window lost focus');
     editor.refresh();
 
-    // Start timer to open inbox after idle
-    openInboxIdleTimer = setTimeout(() => {
+    // Start timer to open chat after idle.
+    openChatIdleTimer = setTimeout(() => {
         openChat();
-    }, OPEN_INBOX_AFTER_IDLE);
+    }, OPEN_CHAT_AFTER_IDLE);
 
     // Sync media first, so that new images for current file would be loaded
     // if files is not empty object

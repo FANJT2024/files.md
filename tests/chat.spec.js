@@ -29,15 +29,15 @@ test('select all in chat input selects input text, not bubbles', async ({page}) 
     await page.keyboard.press('Enter');
     await page.waitForSelector('.message');
 
-    await page.locator('#inbox-input').click();
+    await page.locator('#chat-input').click();
     await page.keyboard.type('to be cleared');
-    await expect(page.locator('#inbox-input')).toHaveValue('to be cleared');
+    await expect(page.locator('#chat-input')).toHaveValue('to be cleared');
 
     const modifier = process.platform === 'darwin' ? 'Meta' : 'Control';
     await page.keyboard.press(`${modifier}+a`);
     await page.keyboard.press('Delete');
 
-    await expect(page.locator('#inbox-input')).toHaveValue('');
+    await expect(page.locator('#chat-input')).toHaveValue('');
     await expect(page.locator('.message-content')).toHaveText('First message');
 });
 

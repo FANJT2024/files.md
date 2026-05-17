@@ -47,7 +47,7 @@
         color: var(--col-tx-alt) !important;
     }
 
-    #open-inbox-modal:hover svg {
+    #open-chat-modal:hover svg {
        stroke: var(--col-link) !important;
     }
 
@@ -59,7 +59,7 @@
         color: var(--col-link) !important;
     }
 
-    #open-inbox-modal svg {
+    #open-chat-modal svg {
         stroke: #F5F5F5 !important;
     }
 

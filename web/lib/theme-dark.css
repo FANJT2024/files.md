@@ -39,11 +39,11 @@
         stroke: var(--col-link) !important;
     }
 
-    #open-inbox-modal svg {
+    #open-chat-modal svg {
         stroke: var(--col-link) !important;
     }
 
-    #open-inbox-modal:hover svg {
+    #open-chat-modal:hover svg {
         stroke: var(--col-tx) !important;
     }
 
