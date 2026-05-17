@@ -285,7 +285,7 @@
     color: var(--color-neo-orange) !important;
     border: 1px solid var(--color-neo-orange) !important;
     border-radius: 4px !important;
-    padding: 0.2em 0.5em !important;
+    padding: 0.1em 0.4em !important;
     font-size: 0.9em !important;
     position: relative;
     top: -1px;
@@ -306,7 +306,7 @@
 
 .cm-hmd-comment,
 .cm-hmd-comment-marker {
-    color: #42A92C !important;
+    color: var(--color-neo-lime) !important;
 }
 .cm-s-hypermd-light pre.hmd-inactive-line .cm-hmd-comment-marker {
     display: none;
