@@ -244,7 +244,7 @@ var __assign = (this && this.__assign) || Object.assign || function(t) {
                     // `//` is at start-of-line (or right after whitespace) AND
                     // followed by a space, so URL schemes like `http://...`
                     // aren't touched. Consume the rest of the line as one
-                    // `hmd-comment` token, and preserve any active markdown
+                    // `hmd-comment` token; preserve any active markdown
                     // context (header, quote) so font/size styling continues
                     // through the comment - otherwise the cursor jumps
                     // because of metric changes between styled spans.
@@ -255,8 +255,8 @@ var __assign = (this && this.__assign) || Object.assign || function(t) {
                         stream.skipToEnd();
                         // Only inherit header/quote classes when we're mid-line.
                         // At stream.start === 0 the markdown mode hasn't yet had
-                        // a chance to reset its per-line state (header/quote),
-                        // so values there are stale from the previous line.
+                        // a chance to reset its per-line state, so values there
+                        // are stale from the previous line.
                         var extra = '';
                         if (stream.start > 0) {
                             if (state.header) extra += ' header header-' + state.header;

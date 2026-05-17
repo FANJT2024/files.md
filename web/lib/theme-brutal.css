@@ -351,6 +351,12 @@
 .cm-hmd-comment {
     color: #42A92C !important;
 }
+/* Hide the `// ` prefix on inactive lines, the way bold `**` markers
+   fade out when the cursor isn't on the line. hide-token.js wraps the
+   first 3 chars of `.cm-hmd-comment` in a `.hmd-comment-marker` child. */
+.cm-s-hypermd-light pre.hmd-inactive-line .hmd-comment-marker {
+    display: none;
+}
 
 /* Images: no border, slightly rounded corners (matching the chat modal). */
 .cm-s-hypermd-light img.hmd-image {

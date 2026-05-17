@@ -308,6 +308,9 @@
 .cm-hmd-comment {
     color: var(--color-neo-orange) !important;
 }
+.cm-s-hypermd-light pre.hmd-inactive-line .hmd-comment-marker {
+    display: none;
+}
 
 .cm-s-hypermd-light img.hmd-image {
     border-radius: 7px !important;

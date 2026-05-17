@@ -74,6 +74,26 @@
             this.renderLineHandler = function (cm, line, el) {
                 // TODO: if we procLine now, we can only get the outdated lineView, lineViewMeasure and lineViewMap. Calling procLine will be wasteful!
                 var changed = _this.procLine(line, el);
+                // PATCHED: wrap the `// ` prefix inside `.cm-hmd-comment` spans
+                // in a `.hmd-comment-marker` child span so CSS can hide just
+                // the marker on inactive lines (theme rule:
+                // `pre.hmd-inactive-line .hmd-comment-marker { display:none }`).
+                // The comment text after the marker stays visible.
+                var commentSpans = el.querySelectorAll('.cm-hmd-comment');
+                for (var ci = 0; ci < commentSpans.length; ci++) {
+                    var commentSpan = commentSpans[ci];
+                    if (commentSpan.querySelector('.hmd-comment-marker')) continue;
+                    var first = commentSpan.firstChild;
+                    if (!first || first.nodeType !== Node.TEXT_NODE) continue;
+                    var text = first.textContent;
+                    if (!text || text.substr(0, 3) !== '// ') continue;
+                    var marker = document.createElement('span');
+                    marker.className = 'hmd-comment-marker';
+                    marker.textContent = '// ';
+                    var rest = document.createTextNode(text.substr(3));
+                    commentSpan.replaceChild(rest, first);
+                    commentSpan.insertBefore(marker, rest);
+                }
                 if (DEBUG)
                     console.log("renderLine return " + changed);
             };
