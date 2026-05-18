@@ -16,6 +16,11 @@ All in plain `.md` files, local-first. LLM-friendly.
 Try it out: [app.files.md](https://app.files.md)  (Beta)  
 Site: [files.md](https://files.md)  
 
+> You should own your files, and **the software that opens them**.  
+> You grow your knowledge with your brain.  
+> You grow software around it with an LLM.  
+> Both can last through the ages.   
+
 **My friends and I have been building this project for 5 years. Hope you'll like it!**   
 
 **[Sponsor on GitHub 💚](https://github.com/sponsors/zakirullin)**
