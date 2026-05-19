@@ -1,7 +1,7 @@
 <img src="https://github.com/zakirullin/files.md/raw/main/web/img/icon.png" alt="Files.md icon" title="Files.md" align="right" height="76" />
 
 # Files.md  
-Free, quiet space for thinking. A simple app for your `.md` files. Private - **no data is sent to server**.  
+Private, quiet space for thinking. A simple app for your `.md` files.  
 
 <img src="https://github.com/zakirullin/files.md/raw/main/web/img/appdark.png" alt="Files.md screenshot" title="Files.md"/>
 
@@ -12,6 +12,7 @@ You can store your whole life:
 - ✅ Checklists, Tasks
 
 All in plain `.md` files, local-first. LLM-friendly.  
+Private - **no data is sent to server**.    
 
 > You should own your files, and **the software that opens them**.  
 > You grow your knowledge with your brain.  

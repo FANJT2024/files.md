@@ -15,7 +15,7 @@
     --color-neo-border: #000;
     --color-neo-blue: #2E5CFF;
     --color-neo-lime: #C2F970;
-    --color-neo-orange: #FF6B35;
+    --color-neo-orange: #e8912d;
     --col-tx: #1A1A1A !important;
     --col-tx-alt: #6B6B5C !important;
     --col-bg: #F4F4F0 !important;
@@ -329,7 +329,7 @@
     font-family: var(--font-mono-brutal) !important;
     background: transparent !important;
     color: #42A92C !important;
-    border: 1px solid #42A92C !important;
+    border: 1px solid color-mix(in srgb, var(--col-border), transparent 75%) !important;
     border-radius: 4px !important;
     padding: 0.1em 0.4em !important;
     font-size: 0.9em !important;
