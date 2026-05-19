@@ -95,7 +95,7 @@ func main() {
 		func() {
 			defer func() {
 				if r := recover(); r != nil {
-					slog.Error("Bot panic", "update", update, "err", err, "stacktrace", string(debug.Stack()))
+					slog.Error("Bot panic", "update", update, "err", r, "stacktrace", string(debug.Stack()))
 				}
 			}()
 
