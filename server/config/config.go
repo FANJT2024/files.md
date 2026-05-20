@@ -14,7 +14,7 @@ import (
 type Config struct {
 	WorkingDir        string
 	StorageDir        string `default:"./storage"  envconfig:"STORAGE_DIR"`
-	BotAPIToken       string `required:"true" envconfig:"BOT_API_TOKEN"`
+	BotAPIToken       string `required:"false" envconfig:"BOT_API_TOKEN"`
 	ConfigFilename    string `default:"config.json"`
 	APIURL            string `default:"" envconfig:"API_URL"`
 	AppURL            string `default:"" envconfig:"APP_URL"`

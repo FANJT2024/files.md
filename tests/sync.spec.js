@@ -143,7 +143,7 @@ test('sync new files from client', async ({ page }) => {
     await expectFileOnServer(page, 'New file.md', 'Content');
 });
 
-test('sync new files from client, ignore current file in syncTexts', async ({ page }) => {
+test('sync new files from client, ignore current file in syncFiles', async ({ page }) => {
     await setup(page);
 
     const consoleMessages = [];
@@ -155,7 +155,7 @@ test('sync new files from client, ignore current file in syncTexts', async ({ pa
     await page.waitForTimeout(100);
     await page.keyboard.type('Content');
 
-    // Two blurs: first primes server timestamps (syncTexts takes the
+    // Two blurs: first primes server timestamps (syncFiles takes the
     // "NEVER SYNCED BEFORE" path on the very first call), second is the
     // one where the receive-side skip at files.js:229 actually fires —
     // server echoes the current file and client should log the skip.
@@ -187,14 +187,14 @@ test('sync existing files from client', async ({ page }) => {
     await page.click(`#tree .tree-item:has-text('Notes')`);
     await page.waitForTimeout(200);
     expect(await page.evaluate(() => document.querySelector(".CodeMirror").CodeMirror.getValue())).toBe('# Notes\nSome Text');
-    // Trigger syncTexts, first time to get server state
+    // Trigger syncFiles, first time to get server state
     await page.evaluate(() => {
         window.dispatchEvent(new Event('focus'));
     });
 
     await page.waitForTimeout(500);
 
-    // Trigger syncTexts, second time to send client files
+    // Trigger syncFiles, second time to send client files
     await page.evaluate(() => {
         window.dispatchEvent(new Event('focus'));
     });
@@ -293,7 +293,7 @@ test('changed on both client and serve, should merge', async ({ page }) => {
     await expectCurrentContent(page, '# File\ntest content\nadded from server\naddded from client');
 });
 
-test("sync one new file from client doesn't conflict with syncTexts", async ({ page }) => {
+test("sync one new file from client doesn't conflict with syncFiles", async ({ page }) => {
     await setup(page);
 
     await page.click('#new-file');
@@ -304,7 +304,7 @@ test("sync one new file from client doesn't conflict with syncTexts", async ({ p
 
     await page.waitForTimeout(500);
 
-    // Trigger syncTexts
+    // Trigger syncFiles
     await page.evaluate(() => {
         window.dispatchEvent(new Event('focus'));
     });
@@ -353,7 +353,7 @@ test('delete files on client will propagate to server as well', async ({ page })
 
     await page.waitForTimeout(1000);
 
-    // SyncTexts should propagate deletion to server
+    // syncFiles should propagate deletion to server
     await page.evaluate(() => {
         window.dispatchEvent(new Event('focus'));
     });
@@ -387,7 +387,7 @@ test('files exist on both client and server, config is not removed on first sync
     await page.click(`#tree .tree-item:has-text('another')`);
     await page.waitForTimeout(200);
     expect(await page.evaluate(() => document.querySelector(".CodeMirror").CodeMirror.getValue())).toBe('# Another\n*italic*');
-    // Trigger syncTexts
+    // Trigger syncFiles
     await page.waitForTimeout(300);
     await page.evaluate(() => {
         window.dispatchEvent(new Event('focus'));
@@ -423,7 +423,7 @@ test('files exist on both client and server, serverFiles contains proper server 
     await page.click(`#tree .tree-item:has-text('Another')`);
     await page.waitForTimeout(200);
     expect(await page.evaluate(() => document.querySelector(".CodeMirror").CodeMirror.getValue())).toBe('# Another\n*italic*');
-    // Trigger syncTexts
+    // Trigger syncFiles
     await page.evaluate(() => {
         window.dispatchEvent(new Event('focus'));
     });
@@ -597,28 +597,6 @@ test('sync changes from client, update clientLastModified & lastClientModified',
 
     expect(serverFiles['New file.md'].lastModified).not.toBeNull();
     expect(serverFiles['New file.md'].lastClientModified).toEqual(clientFileLastModified);
-
-    // // // // Trigger syncTexts, first time to get server state
-    // // // await page.evaluate(() => {
-    // // //     window.dispatchEvent(new Event('focus'));
-    // // // });
-    // // //
-    // // // await page.waitForTimeout(500);
-    // //
-    // // // Trigger syncTexts, second time to send client files
-    // // await page.evaluate(() => {
-    // //     window.dispatchEvent(new Event('focus'));
-    // // });
-    //
-    // await page.waitForTimeout(500);
-
-    // // Check that existing files from client are synced
-    // await expectFileOnServer(page, 'README.md', 'Hello world');
-    // await expectFileOnServer(page, 'Notes.md', 'Some Text');
-    //
-    // // Check that existing server files are preserved
-    // await clickAndExpectContent(page, 'file', '# File\ntest content');
-    // await clickAndExpectContent(page, 'another', '# Another\n*italic*');
 });
 
 async function createFileOnServer(filepath, content) {

@@ -7,6 +7,9 @@ Create a `.env` file in the project root:
 ```
 APP_URL=http://localhost:3000
 API_URL=http://localhost:8080
+TOKENS_DIR="<PATH_TO_YOUR_FILES.MD_REPO/storage/-1"
+CERT_DIR=""
+TOKENS_SALT=""
 ```
 
 `APP_URL` is where Playwright serves the webapp (`tests/playwright.config.js` starts `npx http-server ../web -p 3000`). `API_URL` is where the Go server listens; the tests point the browser at it via `localStorage.setItem('apiUrl', ...)` in `setup()`.

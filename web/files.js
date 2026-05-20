@@ -994,53 +994,6 @@ function saveServerFiles() {
     localStorage.setItem(SERVER_STORAGE_KEY, JSON.stringify(server));
 }
 
-async function openDir() {
-    let dirHandle = null;
-    try {
-        dirHandle = await window.showDirectoryPicker({ 'mode': 'readwrite' });
-    } catch (error) {
-        // User pressed Esc (AbortError) or the browser doesn't support
-        // the picker (TypeError).
-        if (error instanceof TypeError) {
-            alert('For now only Chrome browser supports local folders :(');
-        }
-        return;
-    }
-    // TODO check that permissions are given?
-
-    // Don't race the existing files loading.
-    while (isLoadingLocalFiles) {
-        await new Promise(r => setTimeout(r, 50));
-    }
-    isLoadingLocalFiles = true
-
-    // Don't race with files sync.
-    while (isSyncingFiles) {
-        await new Promise(r => setTimeout(r, 50));
-    }
-    isSyncingFiles = true
-
-    // New folder would miss files that were synced from server before,
-    // into a previous folder. That would send a signal to server "client has deleted some files".
-    // Which we do not want, so we clean our server files "understanding".
-    server = {files: {}, media: {}, timestamps: {}, mediaTimestamp: 0};
-    localStorage.removeItem("server");
-
-    await saveDirectoryHandle(dirHandle);
-    await write('/Help.md', getHelpContent());
-
-    isLoadingLocalFiles = false
-    try {
-        files = await loadLocalFiles(dirHandle);
-    } finally {
-        isSyncingFiles = false;
-    }
-
-    isMemFS = false;
-    renderSidebar();
-    await openChat();
-}
-
 async function openFile(path, saveToHistory = true, el = 'editor-textarea') {
     // There are a few awaits during syncCurrentFile, we should not change currentEditor during that.
     while (isMessingWithCurrentEditor) {
