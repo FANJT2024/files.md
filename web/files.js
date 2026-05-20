@@ -1185,7 +1185,6 @@ async function syncCurrentFile(switchAwayEditor = false) {
                 let localLastModified = file.lastModified;
                 // TODO inmemory lastmodified should be reloaded
                 if (inMemoryLastModified !== localLastModified) {
-                    log(files);
                     isMessingWithCurrentEditor = false;
                     if (!switchAwayEditor) {
                         await openFile(CHAT_PATH);
