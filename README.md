@@ -23,14 +23,13 @@ Try it out: [app.files.md](https://app.files.md) (Beta). Main site: [files.md](h
 
 **I have been building this project for 5 years**. Consider **[supporting on GitHub 💚](https://github.com/sponsors/zakirullin)**.  
 
-You can use this app for Zettelkasten, Second Brain, Notes taking, Journaling, To Do lists, Checklists, and more.  
+You can use this app for Zettelkasten, Second Brain, Notes, Journaling, To Do lists, Checklists, and more.  
 
 [Dump your thoughts](#dump-your-thoughts) · [How to think deeply](#how-to-think-deeply) · [Second Brain?](#second-brain) · [Journal, tasks and checklists](#journal) · [Files structure](#files-structure)
 
 ## Another note taking app? 
 Maybe. But this time:
 - Only necessary features, **restrictions foster creativity**
-- **Chat-like flow for lazy thought capture**
 - Free and open source
 - No need to install anything, all you need is a browser
 - Works offline
@@ -41,9 +40,10 @@ Maybe. But this time:
 - Optional out of the box synchronization 
 - The server is just one binary (or use iCloud/Dropbox/Google Drive for sync)
 - Telegram chatbot for on-the-go access to your files
+- **Chat-like flow for effortless thought capture**
 
 ## How to use
-- Open [app.files.md](https://app.files.md) (Chrome is recommended)
+- Open [app.files.md](https://app.files.md)
 - Click "Install files.md" on the right side of the address bar:
 <div align="center">
     <img src="https://github.com/zakirullin/files.md/raw/main/web/img/install.png" alt="Install" title="Install" width="350"/>
@@ -51,6 +51,8 @@ Maybe. But this time:
 
 - Open a local folder to persist changes  
 - Occasionally hit force-refresh (`Cmd+Shift+R`) to get new updates.  
+
+P.S. For now Chrome-based browsers are best at [File System API support](https://caniuse.com/native-filesystem-api).  
 
 ## Dump your thoughts
 You can use chat to quickly dump your thoughts.  

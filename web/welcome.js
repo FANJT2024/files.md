@@ -281,20 +281,20 @@ const WELCOME_FILES = {
             "| Hotkey | Action |\n" +
             "| -------- | -------- |\n" +
             "| `[` | Insert a link to a file |\n" +
-            "| `Cmd+K` / `Ctrl+K` | Open file search modal |\n" +
-            "| `Cmd+N` / `Ctrl+N` | New file |\n" +
-            "| `Cmd+M` / `Ctrl+M` | Move file |\n" +
-            "| `Cmd+D` / `Ctrl+D` | Delete file |\n" +
-            "| `Cmd+Enter` / `Ctrl+Enter` | Open chat |\n" +
-            "| `Cmd+Shift+Enter` / `Ctrl+Shift+Enter` | Toggle chat dialog |\n" +
-            "| `Cmd+[` / `Ctrl+[`  | Go to previous file   |\n" +
-            "| `Cmd+]` / `Ctrl+]`  | Go to next file  |\n" +
-            "| `Cmd+~` / `Ctrl+~` | Toggle sidebar |\n" +
-            "| `Cmd+B` / `Ctrl+B` | Toggle **bold** formatting |\n" +
-            "| `Cmd+I` / `Ctrl+I` | Toggle *italic* formatting |\n" +
-            "| `Cmd` / `Ctrl` + `Click` | Copy from `code` element |\n" +
-            "| `Cmd` / `Ctrl` + `Click` | Open a link  |\n" +
-            "| `Ctrl` + `Cmd` + `Space` | Insert emoji (MacOS) |\n" +
+            "| `Cmd+K` / `Ctrl+K`| Open file search modal |\n" +
+            "| `Cmd+N` / `Ctrl+N`| New file |\n" +
+            "| `Cmd+M` / `Ctrl+M`| Move file |\n" +
+            "| `Cmd+D` / `Ctrl+D`| Delete file |\n" +
+            "| `Cmd+Enter` / `Ctrl+Enter`| Open chat |\n" +
+            "| `Cmd+Shift+Enter` / `Ctrl+Shift+Enter`| Toggle chat dialog |\n" +
+            "| `Cmd+[` / `Ctrl+[`| Go to previous file   |\n" +
+            "| `Cmd+]` / `Ctrl+]`| Go to next file  |\n" +
+            "| `Cmd+~` / `Ctrl+~`| Toggle sidebar |\n" +
+            "| `Cmd+B` / `Ctrl+B`| Toggle **bold** formatting |\n" +
+            "| `Cmd+I` / `Ctrl+I`| Toggle *italic* formatting |\n" +
+            "| `Cmd` / `Ctrl` + `Click`| Copy from `code` element |\n" +
+            "| `Cmd` / `Ctrl` + `Click`| Open a link  |\n" +
+            "| `Ctrl` + `Cmd` + `Space`| Insert emoji (MacOS) |\n" +
             "\n" +
             "[Markdown Guide](/Markdown%20Guide.md)",
         isFile: true,
@@ -329,4 +329,3 @@ function getHelpContent() {
         WELCOME_FILES["Markdown Guide.md"].content
     ));
 }
-

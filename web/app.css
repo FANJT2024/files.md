@@ -628,7 +628,7 @@ body.dragging * {
     position: fixed;
     left: 0;
     top: 0;
-    width: 18px;
+    width: 21px;
     height: 100vh;
     opacity: 0;
     cursor: pointer;

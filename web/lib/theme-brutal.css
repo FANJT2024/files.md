@@ -96,7 +96,7 @@
     }
 
     #open-sidebar {
-        background: var(--col-bg-active);
+        background: var(--col-bg-alt);
     }
 
     .message.own {
@@ -125,27 +125,25 @@
 
 .cm-s-hypermd-light pre.HyperMD-header.HyperMD-header-1 {
     padding-top: 18px !important;
-    padding-bottom: 32px !important;
-    background-image: linear-gradient(
-        to bottom,
-        transparent 0,
-        transparent calc(100% - 15.5px),
-        var(--col-border) calc(100% - 15.5px),
-        var(--col-border) calc(100% - 14px),
-        transparent calc(100% - 14px)
-    ) !important;
+    padding-bottom: 0 !important;
 }
 
 .cm-s-hypermd-light .CodeMirror-code > pre.HyperMD-header.HyperMD-header-1:first-child,
 .cm-s-hypermd-light .CodeMirror-code > :first-child pre.HyperMD-header.HyperMD-header-1 {
     padding-top: 0 !important;
-    padding-bottom: 32px !important;
 }
 
-/* Only the FIRST H1 in the document gets the hard underline. */
-.cm-s-hypermd-light .CodeMirror-code pre.HyperMD-header.HyperMD-header-1:not(:nth-child(1 of pre.HyperMD-header.HyperMD-header-1)) {
-    background-image: none !important;
-    padding-bottom: 0 !important;
+/* Keep the breathing room after the first H1 (what the underline used to
+   reserve), but no visible rule. Subsequent H1s stay tight. */
+.cm-s-hypermd-light .CodeMirror-code pre.HyperMD-header.HyperMD-header-1:nth-child(1 of pre.HyperMD-header.HyperMD-header-1) {
+    padding-bottom: 16px !important;
+}
+
+/* A header that sits immediately after the first H1 (no blank line between)
+   uses only the H1's bottom padding for separation - drop its own top
+   padding so the two don't stack into an oversized gap. */
+.cm-s-hypermd-light .CodeMirror-code pre.HyperMD-header.HyperMD-header-1:nth-child(1 of pre.HyperMD-header.HyperMD-header-1) + pre.HyperMD-header {
+    padding-top: 0 !important;
 }
 
 .cm-s-hypermd-light pre.HyperMD-header.HyperMD-header-2 {
@@ -252,6 +250,26 @@
 .cm-s-hypermd-light pre.HyperMD-quote-1 {
     background: color-mix(in srgb, var(--color-neo-blue) 5%, var(--col-bg)) !important;
 }
+/* hypermd.css hardcodes escape colors to #CAA / #666 - match the theme text. */
+.cm-s-hypermd-light span.cm-hmd-escape-backslash,
+.cm-s-hypermd-light span.cm-hmd-escape-char {
+    color: var(--col-tx) !important;
+}
+/* Hide the leading/trailing "dummy" table separators HyperMD inserts. */
+.cm-s-hypermd-light pre.HyperMD-table-row span.cm-hmd-table-sep.cm-hmd-table-sep-dummy {
+    visibility: hidden !important;
+}
+/* Round the outer corners of a multi-line blockquote, matching the code-block treatment. */
+.cm-s-hypermd-light pre.HyperMD-quote-1:first-child,
+.cm-s-hypermd-light :not(pre.HyperMD-quote-1) + pre.HyperMD-quote-1 {
+    border-top-left-radius: 7px !important;
+    border-top-right-radius: 7px !important;
+}
+.cm-s-hypermd-light pre.HyperMD-quote-1:last-child,
+.cm-s-hypermd-light pre.HyperMD-quote-1:has(+ :not(pre.HyperMD-quote-1)) {
+    border-bottom-left-radius: 7px !important;
+    border-bottom-right-radius: 7px !important;
+}
 
 /* `>` marker in neo-blue. No !important so hypermd.css's
    `pre.hmd-inactive-line span.cm-formatting-quote { color: transparent }`
@@ -293,6 +311,14 @@
     border-left: none !important;
     border-right: none !important;
     border-radius: 0 !important;
+}
+.cm-s-hypermd-light div.HyperMD-codeblock-begin-bg {
+    border-top-left-radius: 7px !important;
+    border-top-right-radius: 7px !important;
+}
+.cm-s-hypermd-light div.HyperMD-codeblock-end-bg {
+    border-bottom-left-radius: 7px !important;
+    border-bottom-right-radius: 7px !important;
 }
 
 .cm-s-hypermd-light pre.HyperMD-codeblock {
@@ -392,6 +418,14 @@
 .message:hover {
     background: var(--color-neo-orange) !important;
 }
+/* Light theme: keep the complete-btn checkmark blue regardless of state,
+   distinct from the orange message-hover wash. */
+.complete-btn,
+.complete-btn:hover,
+.message.completed .complete-btn,
+.message.completed .complete-btn:hover {
+    color: var(--color-neo-blue) !important;
+}
 .complete-btn:hover {
     background: transparent !important;
 }
@@ -412,8 +446,8 @@
 }
 .message.actions-pinned,
 .message.selected {
-    background: color-mix(in srgb, var(--color-neo-orange) 18%, transparent) !important;
-    border-color: var(--color-neo-orange) !important;
+    background: color-mix(in srgb, var(--color-neo-blue) 18%, transparent) !important;
+    border-color: var(--color-neo-blue) !important;
 }
 
 .cm-s-hypermd-light .CodeMirror-line {
@@ -440,15 +474,8 @@
 #search, #move,
 #search-input, #move-input,
 #nav-buttons,
-.message,
-.message:first-child,
-.message:last-child,
-.message:only-child,
 .message-content,
 .message-actions,
-.action-btn,
-.complete-btn,
-.btn-label,
 .CodeMirror-hints,
 .CodeMirror-hint,
 .sidebar-ctx-menu {

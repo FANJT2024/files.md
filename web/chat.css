@@ -66,20 +66,28 @@
     width: 20px;
     height: 20px;
 }
+.complete-btn svg path {
+    stroke-width: 3;
+}
 
-.complete-btn:hover {
+.complete-btn:hover,
+.message.completed .complete-btn:hover {
     opacity: 1;
-    background: var(--col-bg);
+    color: var(--color-neo-orange);
 }
 
 .message.completed .message-content {
     text-decoration: line-through;
+    text-decoration-thickness: 2px;
     opacity: 0.5;
 }
 
 .message.completed .complete-btn {
     opacity: 1;
-    color: var(--col-link);
+    color: var(--color-neo-orange);
+}
+.message.completed .complete-btn svg path {
+    stroke-width: 4;
 }
 
 .message:first-child {
@@ -94,7 +102,7 @@
     border-radius: 10px;
 }
 
-.message:hover {
+.message:hover:not(:has(.complete-btn:hover)) {
     background: var(--col-bg-active);
     z-index: 1;
 }
@@ -103,8 +111,8 @@
     border-bottom: none;
 }
 
-.message-content:hover {
-    background: var(--col-bg-active) !important;
+.message:hover:not(:has(.complete-btn:hover)) .message-content {
+    background: var(--color-neo-orange) !important;
 }
 
 
@@ -300,7 +308,7 @@
     bottom: 100%;
     left: 50%;
     transform: translateX(-50%);
-    margin-bottom: 4px;
+    margin-bottom: 6px;
     padding: 4px 8px;
     background: var(--col-bg);
     border: 1px solid var(--col-border);
