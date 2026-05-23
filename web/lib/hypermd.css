@@ -81,14 +81,21 @@ pre.CodeMirror-line:has(.hmd-fold-code-stub.hmd-fold-code-mermaid) {
 .hmd-fold-code-stub.hmd-fold-code-mermaid {
     position: absolute;
     right: 8px;
+    top: 4px;
     margin: 0 !important;
     z-index: 1;
     background: transparent !important;
     border: none !important;
     color: var(--color-neo-orange) !important;
     padding: 0 !important;
-    font-size: 13px !important;
-    font-weight: 700 !important;
+    line-height: 0 !important;
+    display: inline-flex;
+    align-items: center;
+}
+.hmd-fold-code-stub.hmd-fold-code-mermaid svg {
+    width: 16px;
+    height: 16px;
+    display: block;
 }
 .CodeMirror pre.CodeMirror-line:has(.cm-math):not(:has(.cm-math-1)) {
     line-height: 1.2 !important;
@@ -588,7 +595,7 @@ pre.CodeMirror-line:has(.hmd-fold-code-stub.hmd-fold-code-mermaid) {
     text-decoration: none;
 }
 .cm-s-hypermd-light pre.HyperMD-codeblock {
-    line-height: 1.2;
+    line-height: 1.3 !important;
     color: #922;
 }
 .cm-s-hypermd-light pre.HyperMD-codeblock span.cm-inline-code {

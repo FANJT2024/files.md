@@ -323,6 +323,31 @@
                         activedLines[line].push(oRange);
                 }
             }
+            // PATCHED, when caret sits inside a fenced code block, also reveal
+            // the opening and closing ``` lines so the user can see both fences
+            // while editing the body.
+            var lineCount = cm.lineCount();
+            var fencesToReveal = {};
+            for (var lineStr in activedLines) {
+                var lineNum = ~~lineStr;
+                var stateAt = lineNum < lineCount ? cm.getStateAfter(lineNum) : null;
+                var statePrev = lineNum > 0 ? cm.getStateAfter(lineNum - 1) : null;
+                var inFence = (stateAt && stateAt.fencedEndRE) || (statePrev && statePrev.fencedEndRE);
+                if (!inFence) continue;
+                var start = lineNum;
+                while (start > 0 && cm.getStateAfter(start - 1).fencedEndRE) start--;
+                var end = start;
+                while (end < lineCount - 1 && cm.getStateAfter(end).fencedEndRE) end++;
+                if (cm.getStateAfter(end).fencedEndRE) continue; // unclosed fence
+                fencesToReveal[start] = true;
+                fencesToReveal[end] = true;
+            }
+            for (var fenceLineStr in fencesToReveal) {
+                var fenceLine = ~~fenceLineStr;
+                if (activedLines[fenceLine]) continue;
+                var lineLen = cm.getLine(fenceLine).length;
+                activedLines[fenceLine] = [[{ line: fenceLine, ch: 0 }, { line: fenceLine, ch: lineLen }]];
+            }
             this._rangesInLine = activedLines;
             if (DEBUG)
                 console.log("======= OP START " + Object.keys(activedLines));
