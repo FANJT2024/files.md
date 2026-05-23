@@ -10,7 +10,6 @@ docker_run: # run container, host 80 -> container 8080
 	$(DOCKER) run --rm -it -p 80:8080 \
 		-v files-md-storage:/app/storage \
 		-v files-md-tokens:/app/tokens \
-		-e API_URL=http://api.localhost \
 		-e APP_URL=http://localhost \
 		-e STORAGE_DIR=/app/storage \
 		-e TOKENS_DIR=/app/tokens \

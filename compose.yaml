@@ -9,8 +9,8 @@ services:
       - storage:/app/storage
       - tokens:/app/tokens
     environment:
-      API_URL: http://api.localhost
       APP_URL: http://localhost
+      # API_URL: http://api.localhost # Uncomment if you want synchronization API
       STORAGE_DIR: /app/storage
       TOKENS_DIR: /app/tokens
       CERT_DIR: "" # Provide a dir if you want HTTPS enabled, e.g. /opt/certs
