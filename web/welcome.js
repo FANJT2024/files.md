@@ -313,14 +313,19 @@ const WELCOME_FILES = {
     "My project.md": {
         "content":
             "```mermaid\n" +
-            "sequenceDiagram\n" +
-            "    Alice ->> Bob: Hello Bob, how are you?\n" +
-            "    Bob-->>John: How about you John?\n" +
-            "    Bob--x Alice: I am good thanks!\n" +
-            "    Bob-x John: I am good thanks!\n" +
-            "    Note right of John: Bob thinks a long<br/>long time, so long<br/>that the text does<br/>not fit on a row.\n\n" +
-            "    Bob-->Alice: Checking with John...\n" +
-            "    Alice->John: Yes... John, how are you?\n" +
+            "flowchart LR\n" +
+            "    I1[thought] --> H\n" +
+            "    I2[idea] --> H\n" +
+            "    I3[request] --> H\n" +
+            "    I4[task] --> H\n" +
+            "    H[🧠 head]\n" +
+            "    H -->|hold| D[😩 drained]\n" +
+            "    H -->|dump| C[💬 chat]\n" +
+            "    C --> N[📝 notes]\n" +
+            "    C --> J[💚 journal]\n" +
+            "    C --> T[✅ tasks]\n" +
+            "    C --> L[🛒 checklists]\n" +
+            "    C --> P[💼 project]\n" +
             "```\n\n" +
             "You can dump project related thoughts here.",
         isFile: true,
