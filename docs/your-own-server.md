@@ -9,6 +9,18 @@ Initialize server with folders and systemd service. Tested on Debian-based syste
 $ make init_server host=user@example.com salt=$(head -c 32 /dev/urandom | base64)
 ```
 
+Configure the `/app/.env` file:
+```
+BOT_API_TOKEN=<TELEGRAM_API_TOKEN_IF_NEEDED>
+STORAGE_DIR=/app/storage
+CERT_DIR=/opt/files.md
+TOKENS_DIR=/opt/files.md/tokens
+LOG_FILE=server.log
+API_URL=https://api.yourdomain.com
+APP_URL=https://app.youdomain.com
+```
+
+
 Deploy a systemd service:
 ```bash
 $ make deploy_systemd host=<YOUR_SSH_HOST>

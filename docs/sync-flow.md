@@ -1,6 +1,6 @@
 # Sync flow
 
-How `openFile`, `syncCurrentEditor`, `syncTextsWithServer`, and `syncLocalFileWithServer` hand off work, and how the server knows what to send or receive.
+How `openFile`, `syncCurrentEditor`, `syncFilesWithServer`, and `syncLocalFileWithServer` hand off work, and how the server knows what to send or receive.
 
 ## Triggers and who calls whom
 
@@ -9,7 +9,7 @@ flowchart TD
     U[User: sidebar click, link click, popstate] -->|openFile| OF[openFile]
     Timer1[setInterval 1000ms saver] -->|syncCurrentEditor| SCE[syncCurrentEditor]
     Focus[focusin / focus event] -->|syncCurrentEditor| SCE
-    Timer2[setInterval syncTextsWithServer + syncMediaFiles] -->|syncTextsWithServer| STS[syncTextsWithServer]
+    Timer2[setInterval syncFilesWithServer + syncMediaFiles] -->|syncFilesWithServer| STS[syncFilesWithServer]
 
     OF -->|save previous editor before swapping| SCE
     SCE -->|switchAwayEditor=false: end of fn| SLF[syncLocalFileWithServer]
@@ -73,7 +73,7 @@ sequenceDiagram
     participant Client
     participant Server
 
-    Note over Client: syncTextsWithServer fires
+    Note over Client: syncFilesWithServer fires
     Client->>Client: collect modified and deleted files (skip editor and editor2 paths)
     Client->>Server: POST /syncFilenames with modified, deleted, timestamps
     Server-->>Client: files, timestamps, renames
@@ -99,7 +99,7 @@ sequenceDiagram
 
 Two mechanisms, running in parallel:
 
-1. **Batch: `syncTextsWithServer` → `POST /syncFilenames`.** The client sends:
+1. **Batch: `syncFilesWithServer` → `POST /syncFilenames`.** The client sends:
    - `modified`: files whose disk `lastModified` is newer than the `lastClientSynced` pointer recorded in `server.files` for that path.
    - `deleted`: files present in the client's `server.files` snapshot but no longer on disk.
    - `timestamps`: a per-directory pointer telling the server "everything I've seen up to here." The server replies with files newer than each directory's pointer. **The two currently-open editor files are skipped on both send and receive** (`files.js:230` and `files.js:577`) - they're handled by the per-file path instead, to avoid racing with the user's active edits.
