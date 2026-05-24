@@ -229,6 +229,10 @@
                 var scrollInfo = cm.getScrollInfo();
                 var savedTop = scrollInfo.top;
                 var savedLeft = scrollInfo.left;
+                // Tell Fold's cursorActivity handler to skip its immediate
+                // viewport refold - it would otherwise create markers during
+                // this flow and cause scroll jumps that defeat our restore.
+                cm._hmdSkipViewportFold = true;
                 cm.operation(function () {
                     var pos = marker.find();
                     if (pos) cm.setCursor(pos.from, null, { scroll: false });
@@ -239,6 +243,7 @@
                 // settles. requestAnimationFrame fires before the next paint.
                 requestAnimationFrame(function () {
                     cm.scrollTo(savedLeft, savedTop);
+                    cm._hmdSkipViewportFold = false;
                 });
             }, false);
             // PATCHED: helps with instant mermaid rendering
