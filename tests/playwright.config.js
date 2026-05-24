@@ -4,6 +4,8 @@ const path = require('path');
 
 module.exports = defineConfig({
     testDir: '.',
+    // Skip perf tests by default; `make perf` opts in via PERF=1.
+    testIgnore: process.env.PERF ? undefined : '**/perf.spec.js',
     fullyParallel: true,
     forbidOnly: !!process.env.CI,
     retries: process.env.CI ? 2 : 0,
