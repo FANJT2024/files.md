@@ -210,49 +210,6 @@
             new core_1.FlipFlop(
             /** CHANGED */ function (expr) { _this.onPreview && _this.onPreview(expr); },
             /** HIDE    */ function () { _this.onPreviewEnd && _this.onPreviewEnd(); }, null).bind(this, "editingExpr");
-            // PATCHED: math markers persist as DOM widgets even after the
-            // underlying syntax changes - e.g. wrapping rendered math in a
-            // code fence leaves the KaTeX widget pinned over what is now
-            // literal code. On every batched change, walk all math markers
-            // and clear any whose start no longer carries a math-begin token.
-            cm.on("changes", function () {
-                var marks = cm.getAllMarks();
-                for (var i = 0; i < marks.length; i++) {
-                    var m = marks[i];
-                    if (!m["mathRenderer"]) continue;
-                    var pos = m.find();
-                    if (!pos) continue;
-                    // Token-based check (handles cases where the markdown
-                    // tokenizer has correctly entered fence state).
-                    var token = cm.getTokenAt({ line: pos.from.line, ch: pos.from.ch + 1 });
-                    if (!token || !/formatting-math-begin\b/.test(token.type || "")) {
-                        m.clear();
-                        continue;
-                    }
-                    // Fallback for unclosed ``` fences: the markdown tokenizer
-                    // only propagates state.code = -1 for ONE line past an
-                    // unclosed opener, so the token-check above misses these.
-                    // Walk backward from the math line counting ``` lines; if
-                    // we hit an odd count (unclosed opener above), the math
-                    // is "inside" a fence even if the tokenizer disagrees.
-                    var fenceCount = 0;
-                    for (var ln = pos.from.line - 1; ln >= 0; ln--) {
-                        if (/^\s*```/.test(cm.getLine(ln))) fenceCount++;
-                    }
-                    if (fenceCount % 2 === 1) {
-                        m.clear();
-                    }
-                }
-            });
-            // PATCHED: rescan only the viewport on cursor activity. Bounded
-            // work (visible lines only), keeps math re-rendering correctly
-            // after the user removes a ``` fence and clicks/moves cursor.
-            cm.on("cursorActivity", function () {
-                var foldAddon = fold_1.getAddon(cm);
-                var view = cm.getViewport();
-                foldAddon.startFold.stop();
-                foldAddon.startFoldImmediately(view.from, view.to);
-            });
         }
         FoldMath.prototype.createRenderer = function (container, mode) {
             var RendererClass = this.renderer || DumbRenderer;
