@@ -182,6 +182,15 @@ var __extends = (this && this.__extends) || (function () {
                 if (DEBUG)
                     console.timeEnd('CA');
                 _this.startQuickFold();
+                // PATCHED: Unfold everything in viewport immediately to prevent flickering:
+                // content (math, mermaid, images, etc.) renders immediately
+                // on cursor activity instead of waiting for the 100ms
+                // debounced full-doc fold.
+                var scroll = cm.getScrollInfo();
+                var from = cm.lineAtHeight(scroll.top, "local");
+                var to = cm.lineAtHeight(scroll.top + scroll.clientHeight, "local") + 1;
+                _this.startFold.stop();
+                _this.startFoldImmediately(from, to);
             });
             return _this;
         }

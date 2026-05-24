@@ -210,24 +210,6 @@
             new core_1.FlipFlop(
             /** CHANGED */ function (expr) { _this.onPreview && _this.onPreview(expr); },
             /** HIDE    */ function () { _this.onPreviewEnd && _this.onPreviewEnd(); }, null).bind(this, "editingExpr");
-            // PATCHED: rescan only the viewport on cursor activity. Bounded
-            // work (visible lines only), keeps math re-rendering correctly
-            // after the user removes a ``` fence and clicks/moves cursor.
-            // Gate on a cached flag so plain markdown files (no fenced code,
-            // no `$` math) don't pay the per-cursor re-fold cost.
-            var hasMermaid = false;
-            var updateHasMermaid = function () {
-                hasMermaid = cm.getValue().indexOf('```mermaid') !== -1;
-            };
-            cm.on("changes", updateHasMermaid);
-            updateHasMermaid();
-            cm.on("cursorActivity", function () {
-                if (!hasMermaid) return;
-                var foldAddon = fold_1.getAddon(cm);
-                var view = cm.getViewport();
-                foldAddon.startFold.stop();
-                foldAddon.startFoldImmediately(view.from, view.to);
-            });
         }
         FoldMath.prototype.createRenderer = function (container, mode) {
             var RendererClass = this.renderer || DumbRenderer;

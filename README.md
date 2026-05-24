@@ -339,6 +339,7 @@ Read 4K randomly from SSD = 150,000 ns
 ```
 
 ## ADRs (Architecture Decision Records)
+- `24.05.2026` Unfold everything (images, math, mermaid) in viewport immediately. It prevents flickering and doesn't add performance penalty.  
 - `22.05.2026` Added Mermaid support. It was decided to lazy-load the script, because mermaid.min.js size is 3MB. It's quite a load to load synchronously for such a small app. 
 - `20.05.2026` Added LaTeX support, even though I wasn't happy about +20 font files. LaTeX is text-based and LLM-friendly. Text + Math will cover pretty much everything. 
 - `06.05.2026` Moved from Today.md to Chat.md. CustDev showed that users have trouble grasping "today" concept. And besides, "open chat" phrase has meaning in both bot and webapp.
