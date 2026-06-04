@@ -5,9 +5,10 @@ Private, quiet space for thinking. Simple app for `.md` files.
 
 <p align="center">
 <img src="https://github.com/zakirullin/files.md/raw/main/web/img/appdark.png" alt="Files.md screenshot" title="Files.md"/>
-    An app for Zettelkasten, Second Brain, Notes, Journaling, To Do lists, Checklists, and more. <br/>
     English · <a href="README.zh-CN.md">简体中文</a>
 </p>
+
+An app for Zettelkasten, Second Brain, Notes, Journaling, To Do lists, Checklists, and more.  
 
 You can store your whole life:
 - 📌 Notes
