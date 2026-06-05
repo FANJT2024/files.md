@@ -3,9 +3,10 @@
 # Files.md  
 一处私密、安静的思考空间。一款只为你 `.md` 文件而生的简单应用。
 
-[English](README.md) · 简体中文
-
+<p align="center">
 <img src="https://github.com/zakirullin/files.md/raw/main/web/img/appdark.png" alt="Files.md screenshot" title="Files.md"/>
+    <a href="README.md">English</a> · 简体中文
+</p>
 
 你的整段人生，都可以放在这里：
 - 📌 笔记
@@ -23,6 +24,8 @@
 
 线上体验：[app.files.md](https://app.files.md)（Beta）。主站：[files.md](https://files.md)。
 
+你可以把它用作第二大脑、卡片盒笔记（Zettelkasten）、笔记、日记、任务、清单等等。
+
 **这个项目我已经做了 5 年。** 欢迎 **[在 GitHub 上支持作者 💚](https://github.com/sponsors/zakirullin)**。
 
 [随手记下想法](#随手记下想法) · [如何深入思考](#如何深入思考) · [第二大脑？](#第二大脑) · [日记、任务、清单](#日记)
@@ -35,6 +38,7 @@
 - **本地优先，文件不会离开你的设备**
 - 自由开源
 - 代码极其简洁。**一个人或一个 LLM 能把整个项目装进脑子里**
+- 换句话说，这个项目具有[低认知负荷](https://github.com/zakirullin/cognitive-load)
 - 代码库为 LLM 留好了扩展空间，随你按需添砖加瓦
 - 便携，没有任何构建系统，直接打开 `web/index.html` 即可
 - 同步开箱即用，但完全可选
