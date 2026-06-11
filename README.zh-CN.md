@@ -87,7 +87,14 @@
     <img src="https://github.com/zakirullin/files.md/raw/main/web/img/bot.gif" alt="Saving things in bot" title="Saving things in bot" width="350"/>
 </div>
 
-就这样。
+就这样，你的笔记已经保存到一个 `.md` 文件里了。
+
+机器人的完整功能：
+<div align="center">
+    <img src="https://github.com/zakirullin/files.md/raw/main/web/img/bot.png" width="700"/>
+</div>
+
+别担心——默认情况下它比看上去简单得多。
 
 [Telegram 机器人入口](https://t.me/FilesMDBot)。**其他即时通讯工具也会陆续支持。**
 
