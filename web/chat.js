@@ -573,39 +573,61 @@ function attachEventListeners() {
     });
 
     chat.addEventListener('mousedown', function (e) {
-        // If clicking outside messages, prepare for multi-select
+        // Mousedown in empty space (the margins around centered messages, or
+        // the gaps between them): draw a marquee rectangle and select every
+        // message it touches.
         if (!e.target.closest('.message')) {
-            let allMessages = Array.from(chat.querySelectorAll('.message'));
-            let startMessage = null;
+            if (e.button !== 0) return;
+            e.preventDefault(); // don't start a native text selection
+            const startX = e.clientX, startY = e.clientY;
+            const messages = Array.from(chat.querySelectorAll('.message'));
+            const additive = isMetaKey(e) || e.shiftKey;
+            const preselected = additive
+                ? messages.filter(m => m.classList.contains('selected'))
+                : [];
+            let rectEl = null;
+            let dragging = false;
+
+            const intersects = (a, b) =>
+                a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top;
 
             function handleMouseMove(e) {
-                const currentMessage = e.target.closest('.message');
-                if (currentMessage) {
-                    document.getSelection().removeAllRanges(); // Prevent text selection
+                const dx = e.clientX - startX, dy = e.clientY - startY;
+                if (!dragging && Math.abs(dx) < 4 && Math.abs(dy) < 4) return;
+                dragging = true;
+                document.getSelection().removeAllRanges();
 
-                    if (!startMessage) {
-                        startMessage = currentMessage;
-                        document.querySelectorAll('.message.selected').forEach(m => m.classList.remove('selected'));
-                        currentMessage.classList.add('selected');
-                    } else if (currentMessage !== startMessage) {
-                        // Select range like normal message selection
-                        const startIndex = allMessages.indexOf(startMessage);
-                        const endIndex = allMessages.indexOf(currentMessage);
-                        const minIndex = Math.min(startIndex, endIndex);
-                        const maxIndex = Math.max(startIndex, endIndex);
-
-                        document.querySelectorAll('.message.selected').forEach(m => m.classList.remove('selected'));
-
-                        for (let i = minIndex; i <= maxIndex; i++) {
-                            allMessages[i].classList.add('selected');
-                        }
-                    }
+                if (!rectEl) {
+                    rectEl = document.createElement('div');
+                    rectEl.className = 'chat-marquee';
+                    document.body.appendChild(rectEl);
+                    chat.classList.add('block-selecting');
                 }
+
+                const left = Math.min(startX, e.clientX);
+                const top = Math.min(startY, e.clientY);
+                const width = Math.abs(dx), height = Math.abs(dy);
+                rectEl.style.left = left + 'px';
+                rectEl.style.top = top + 'px';
+                rectEl.style.width = width + 'px';
+                rectEl.style.height = height + 'px';
+
+                const marquee = {left, top, right: left + width, bottom: top + height};
+                messages.forEach(m => {
+                    const hit = intersects(marquee, m.getBoundingClientRect());
+                    m.classList.toggle('selected', hit || preselected.includes(m));
+                });
             }
 
             function handleMouseUp() {
                 document.removeEventListener('mousemove', handleMouseMove);
                 document.removeEventListener('mouseup', handleMouseUp);
+                if (rectEl) rectEl.remove();
+                chat.classList.remove('block-selecting');
+                // Plain click on empty space (no drag): clear the selection.
+                if (!dragging && !additive) {
+                    document.querySelectorAll('.message.selected').forEach(m => m.classList.remove('selected'));
+                }
             }
 
             document.addEventListener('mousemove', handleMouseMove);
